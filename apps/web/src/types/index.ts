@@ -18,16 +18,17 @@ export interface Content {
   backdrop_url: string | null;
   video_url: string | null;
   trailer_url: string | null;
-  cast: CastMember[];
+  cast: Array<{ name: string; role: string }>;
   type: 'MOVIE' | 'SERIES';
   featured: boolean;
   created_at: string;
 }
 
-export interface CastMember {
-  name: string;
-  role: string;
-  image?: string;
+export interface ContentListResponse {
+  data: Content[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 export interface AuthResponse {
@@ -44,18 +45,4 @@ export interface RegisterRequest {
   email: string;
   password: string;
   full_name?: string;
-}
-
-export interface ContentListResponse {
-  data: Content[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-export interface WatchProgress {
-  id: string;
-  content_id: string;
-  progress_seconds: number;
-  last_watched: string;
 }

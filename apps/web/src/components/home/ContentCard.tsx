@@ -11,7 +11,7 @@ export function ContentCard({ content }: ContentCardProps) {
       <div className="relative overflow-hidden rounded-lg bg-card border transition-transform group-hover:scale-105">
         <div className="aspect-video relative">
           <img
-            src={content.thumbnail}
+            src={content.thumbnail_url}
             alt={content.title}
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -27,9 +27,9 @@ export function ContentCard({ content }: ContentCardProps) {
           <p className="text-sm text-muted-foreground line-clamp-2">
             {content.description}
           </p>
-          {content.rating && (
+          {content.rating !== null && content.rating !== undefined && (
             <div className="mt-2 text-sm text-muted-foreground">
-              ⭐ {content.rating.toFixed(1)}
+              ⭐ {typeof content.rating === 'number' ? content.rating.toFixed(1) : content.rating}
             </div>
           )}
         </div>

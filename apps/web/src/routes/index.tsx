@@ -5,33 +5,16 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { BrowsePage } from '@/pages/BrowsePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import App from '@/App'; // Import the test App component
 
 const router = createBrowserRouter([
   {
+    path: '/test',
+    element: <App />, // Use the test App component for /test route
+  },
+  {
     path: '/',
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <LandingPage />,
-      },
-      {
-        path: 'login',
-        element: <LoginPage />,
-      },
-      {
-        path: 'register',
-        element: <RegisterPage />,
-      },
-      {
-        path: 'browse',
-        element: <BrowsePage />,
-      },
-      {
-        path: '*',
-        element: <NotFoundPage />,
-      },
-    ],
+    element: <Layout children={<LandingPage />} />, // Pass children directly
   },
 ]);
 
