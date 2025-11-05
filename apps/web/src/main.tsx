@@ -1,8 +1,9 @@
 import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
-import { AppRouter } from './routes/index.tsx'
+import App from './App.tsx'
 
 // React Query DevTools (optional - install @tanstack/react-query-devtools to use)
 // Lazy load to avoid breaking build if package is not installed
@@ -31,14 +32,16 @@ document.documentElement.classList.add('dark')
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AppRouter />
-      {ReactQueryDevtools && (
-        <Suspense fallback={null}>
-          {/* @ts-expect-error - Optional package, may not be installed */}
-          <ReactQueryDevtools initialIsOpen={false} />
-        </Suspense>
-      )}
-    </QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <App />
+        {ReactQueryDevtools && (
+          <Suspense fallback={null}>
+            {/* @ts-expect-error - Optional package, may not be installed */}
+            <ReactQueryDevtools initialIsOpen={false} />
+          </Suspense>
+        )}
+      </QueryClientProvider>
+    </BrowserRouter>
   </StrictMode>,
 )
