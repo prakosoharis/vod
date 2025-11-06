@@ -1,67 +1,92 @@
-Update BrowsePage.tsx to add multiple content rows with different data sources.
+Update Navbar component to show different UI when user is logged in.
 
-UPDATE FILE: src/pages/BrowsePage.tsx
+UPDATE FILE: src/components/layout/Navbar.tsx
 
-Add these content rows using React Query:
+Add logged-in state detection and UI changes:
 
-1. Continue Watching (if user has watch progress):
-   - Fetch from user.service.getContinueWatching()
-   - Show only if has data (conditional render)
-
-2. Trending Now:
-   - Fetch from content.service.getTrendingContent()
-
-3. Made in Indonesia:
-   - Fetch content.service.getAllContent({ genre: 'Indonesian' })
-   - Or filter by type/genre
-
-4. New Releases:
-   - Fetch content.service.getAllContent({ sort: 'newest' })
-   - Or use created_at sorting
-
-5. Popular Movies:
-   - Fetch content.service.getAllContent({ type: 'MOVIE', sort: 'popular' })
-
-6. Genre-based rows (Action, Drama, Horror):
-   - Multiple queries for different genres
-
-React Query implementation:
+1. Check authentication:
 ```typescript
-// Multiple queries
-const { data: trending } = useQuery({
-  queryKey: ['trending'],
-  queryFn: () => contentService.getTrendingContent()
-})
+import { useAuthStore } from '@/stores/authStore'
 
-const { data: indonesian } = useQuery({
-  queryKey: ['indonesian'],
-  queryFn: () => contentService.getAllContent({ limit: 20 })
-})
-
-// Continue watching (conditional)
-const { data: continueWatching } = useQuery({
-  queryKey: ['continue-watching'],
-  queryFn: () => userService.getContinueWatching(),
-  enabled: !!user // Only if logged in
-})
+const Navbar = () => {
+  const { isAuthenticated, user, logout } = useAuthStore()
+  // ...
+}
 ```
 
-Row order:
-1. Continue Watching (if exists)
-2. Trending Now
-3. Made in Indonesia
-4. New Releases
-5. Popular Movies
-6. Genre rows (Action, Drama, Horror, Comedy)
+2. Hide "Login" and "Sign Up" buttons when authenticated
 
-Styling:
-- Proper spacing between rows (space-y-12)
-- Rows overlap hero banner for depth (-mt-32)
-- Bottom padding for scroll (pb-20)
+3. Show user section (right side):
+   - Search icon (optional)
+   - User avatar with dropdown
 
-Conditional rendering:
-- Only show "Continue Watching" if data exists
-- Show loading skeleton for each row while fetching
+4. User Avatar:
+   - Circle image or initials
+   - Click to toggle dropdown menu
+   - Use useState for dropdown state
+
+5. Dropdown Menu (on avatar click):
+   - Profile (link to /profile - placeholder)
+   - My List (link to /my-list - placeholder)
+   - Account Settings (link to /settings - placeholder)
+   - Divider (border line)
+   - Logout button (calls authStore.logout())
+
+Implementation:
+```typescript
+const [showDropdown, setShowDropdown] = useState(false)
+
+// In navbar right section:
+{isAuthenticated ? (
+  <div className="relative">
+    {/* Avatar */}
+    <button
+      onClick={() => setShowDropdown(!showDropdown)}
+      className="w-10 h-10 rounded bg-red-600 flex items-center justify-center"
+    >
+      {user?.full_name?.[0] || 'U'}
+    </button>
+
+    {/* Dropdown */}
+    {showDropdown && (
+      <div className="absolute right-0 mt-2 w-48 bg-black/90 border border-gray-700 rounded">
+        <Link to="/profile" className="block px-4 py-2 hover:bg-gray-800">
+          Profile
+        </Link>
+        <Link to="/my-list" className="block px-4 py-2 hover:bg-gray-800">
+          Daftar Saya
+        </Link>
+        <Link to="/settings" className="block px-4 py-2 hover:bg-gray-800">
+          Pengaturan
+        </Link>
+        <div className="border-t border-gray-700 my-1" />
+        <button
+          onClick={() => {
+            logout()
+            navigate('/')
+          }}
+          className="block w-full text-left px-4 py-2 hover:bg-gray-800"
+        >
+          Keluar
+        </button>
+      </div>
+    )}
+  </div>
+) : (
+  <>
+    <Link to="/login">Login</Link>
+    <Link to="/register">Sign Up</Link>
+  </>
+)}
+```
+
+Dropdown features:
+- Click outside to close (useEffect + event listener)
+- Smooth fade in/out
+- Positioned below avatar (absolute right-0)
+- Dark background with border
+
+Optional: Add search icon before avatar.
 
 OUTPUT:
-Complete updated BrowsePage.tsx with all content rows and React Query.
+Updated src/components/layout/Navbar.tsx with logged-in state UI.
