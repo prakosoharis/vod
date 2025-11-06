@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { HeroBanner } from '@/components/home/HeroBanner'
-import { ContentRow } from '@/components/home/ContentRow'
+import ContentRow from '@/components/home/ContentRow'
 import { contentService } from '@/services/content.service'
 import type { Content } from '@/types'
 
