@@ -66,7 +66,8 @@ const BrowsePage = () => {
     <div className="bg-black min-h-screen">
       {heroContent && <HeroBanner content={heroContent} />}
 
-      <div className="relative -mt-32 z-10 space-y-12 pb-20 px-4 sm:px-6 lg:px-8">
+      {/* Negative margin to overlap hero */}
+      <div className="relative -mt-32 z-10 pt-24 space-y-12 pb-20">
         {trending && trending.length > 0 && (
           <ContentRow title="Trending Sekarang" contents={trending} />
         )}
