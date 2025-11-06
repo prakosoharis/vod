@@ -8,13 +8,16 @@ const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  // State for mobile menu, scroll detection, and dropdown
+  // State for mobile menu, scroll detection, dropdown, and search
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Ref for dropdown click outside detection
+  // Refs for dropdown and search click outside detection
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   // Scroll detection effect
   useEffect(() => {
@@ -32,11 +35,30 @@ const Navbar = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
       }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearch(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSearch(false);
+      setSearchQuery('');
+    }
+  };
+
+  // Toggle search
+  const toggleSearch = () => {
+    setShowSearch(!showSearch);
+    setShowDropdown(false); // Close dropdown when opening search
+  };
 
   // Handle logout
   const handleLogout = () => {
@@ -102,7 +124,11 @@ const Navbar = () => {
               <div className="relative" ref={dropdownRef}>
                 <div className="flex items-center space-x-3">
                   {/* Search Icon */}
-                  <button className="text-white/80 hover:text-white transition-colors duration-200">
+                  <button
+                    onClick={toggleSearch}
+                    className="text-white/80 hover:text-white transition-colors duration-200"
+                    aria-label="Search"
+                  >
                     <Search size={20} />
                   </button>
 
@@ -165,6 +191,36 @@ const Navbar = () => {
             )}
           </div>
 
+          {/* Search Overlay */}
+          {showSearch && (
+            <div className="absolute inset-x-0 top-full bg-black/95 backdrop-blur-md border-b border-gray-700 z-40" ref={searchRef}>
+              <form onSubmit={handleSearch} className="max-w-4xl mx-auto px-4 py-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cari film, series..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-gray-800 text-white px-12 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 placeholder-gray-400"
+                    autoFocus
+                  />
+                  <Search
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={20}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSearch(false)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    aria-label="Close search"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMenu}
@@ -202,6 +258,25 @@ const Navbar = () => {
             >
               Harga
             </a>
+
+            {/* Mobile Search (for authenticated users) */}
+            {isAuthenticated && (
+              <div className="border-b border-gray-700 pb-4">
+                <form onSubmit={handleSearch} className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cari film, series..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-gray-800 text-white px-10 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 placeholder-gray-400"
+                  />
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
+                </form>
+              </div>
+            )}
 
             {/* Mobile Auth Section */}
             {isAuthenticated ? (
