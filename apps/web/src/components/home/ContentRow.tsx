@@ -41,7 +41,7 @@ const ContentRow = ({ title, contents }: ContentRowProps) => {
         {/* Scrollable Container */}
         <div
           ref={scrollRef}
-          className="flex gap-2 overflow-x-scroll overflow-y-hidden scrollbar-hide scroll-smooth"
+          className="flex gap-4 overflow-x-scroll overflow-y-hidden scrollbar-hide scroll-smooth"
         >
           {contents.map((content) => (
             <div key={content.id} className="shrink-0 w-[60vw] sm:w-[40vw] md:w-[30vw] lg:w-[22vw] xl:w-[18vw]">
