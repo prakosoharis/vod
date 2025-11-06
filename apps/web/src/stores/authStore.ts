@@ -8,6 +8,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: string | null;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
   login: (email: string, password: string) => Promise<void>;
@@ -23,6 +24,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      error: null,
 
       setUser: (user) => {
         set({ user, isAuthenticated: !!user });
@@ -39,38 +41,42 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email: string, password: string) => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, error: null });
           const response = await authService.login({ email, password });
           set({
             user: response.user,
             token: response.token,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
-        } catch (error) {
-          set({ isLoading: false });
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+          set({ isLoading: false, error: errorMessage });
           throw error;
         }
       },
 
       register: async (email: string, password: string, full_name?: string) => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, error: null });
           const response = await authService.register({ email, password, full_name });
           set({
             user: response.user,
             token: response.token,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
-        } catch (error) {
-          set({ isLoading: false });
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+          set({ isLoading: false, error: errorMessage });
           throw error;
         }
       },
 
       logout: () => {
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false, error: null });
         authService.logout();
       },
 

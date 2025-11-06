@@ -18,9 +18,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
 
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
 
   const {
@@ -33,19 +32,18 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setApiError(null);
       await login(data.email, data.password);
       navigate('/browse');
     } catch (error: any) {
-      setApiError(error.response?.data?.message || 'Login gagal. Silakan coba lagi.');
+      // Error is handled by the store
     }
   };
 
   return (
     <div className="space-y-6">
-      {apiError && (
+      {error && (
         <div className="p-4 bg-red-600 text-white rounded-md text-sm">
-          {apiError}
+          {error}
         </div>
       )}
 
@@ -113,6 +111,35 @@ export function LoginForm() {
           )}
         </Button>
       </form>
+
+      {/* Divider */}
+      <div className="flex items-center gap-4 my-2">
+        <div className="h-px bg-gray-700 flex-1" />
+        <span className="text-gray-400 text-sm">Atau lanjutkan dengan</span>
+        <div className="h-px bg-gray-700 flex-1" />
+      </div>
+
+      {/* Social Buttons */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => alert('Social login akan diimplementasikan nanti')}
+          className="h-12 w-full inline-flex items-center justify-center gap-3 rounded-md border border-gray-600 bg-white/90 text-gray-900 hover:bg-gray-100 transition-colors"
+        >
+          {/* Simple Google G */}
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-black font-bold">G</span>
+          <span className="font-medium">Google</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => alert('Social login akan diimplementasikan nanti')}
+          className="h-12 w-full inline-flex items-center justify-center gap-3 rounded-md border border-gray-600 bg-white/90 text-gray-900 hover:bg-gray-100 transition-colors"
+        >
+          {/* Simple Facebook f */}
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#1877F2] text-white font-bold">f</span>
+          <span className="font-medium">Facebook</span>
+        </button>
+      </div>
     </div>
   );
 }

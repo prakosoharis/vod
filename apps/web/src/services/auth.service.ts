@@ -51,19 +51,14 @@ export const authService = {
 
   /**
    * Logout user
-   * Removes token from localStorage and clears user state
+   * Removes token from localStorage
    */
   logout(): void {
     try {
       // Remove token from localStorage
       localStorage.removeItem(TOKEN_KEY);
-      
-      // Clear user state
-      useAuthStore.getState().logout();
     } catch (error) {
       console.error('Logout error:', error);
-      // Still clear token even if store fails
-      localStorage.removeItem(TOKEN_KEY);
     }
   },
 

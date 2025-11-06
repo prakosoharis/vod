@@ -1,9 +1,6 @@
-# Register Page Implementation
+# AuthStore Enhancement Tasks
 
-## Tasks
-- [x] Update src/components/auth/RegisterForm.tsx with complete form including all required fields, validation, password strength indicator, and authStore integration
-- [x] Update src/pages/RegisterPage.tsx with proper layout matching LoginPage but with wider card and register-specific content
-- [ ] Test form validation for all fields
-- [ ] Test password strength indicator
-- [ ] Test registration flow (submit, loading, redirect, error handling)
-- [ ] Verify mobile responsiveness and styling
+- [ ] Update authStore.ts to add error state and enhance error handling in actions (login, register, checkAuth, logout)
+- [ ] Verify auth.service.ts meets requirements (login, register, getMe with token handling)
+- [ ] Confirm forms (LoginForm.tsx, RegisterForm.tsx) integrate correctly with updated authStore
+- [ ] Provide usage examples for authStore integration with forms
