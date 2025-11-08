@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Play, Plus, ChevronDown } from 'lucide-react'
+import { Play, Plus, Check, ChevronDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { userService } from '@/services/auth.service'
 import type { Content } from '@/types'
 
 interface ContentCardProps {
@@ -10,6 +12,46 @@ interface ContentCardProps {
 
 const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
+  const [isInList, setIsInList] = useState(false)
+  const queryClient = useQueryClient()
+
+  const addToListMutation = useMutation({
+    mutationFn: () => userService.addToWatchlist(content.id),
+    onMutate: async () => {
+      // Optimistic update
+      setIsInList(true)
+    },
+    onSuccess: () => {
+      // Invalidate watchlist query to refetch
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+    },
+    onError: () => {
+      // Revert on error
+      setIsInList(false)
+    }
+  })
+
+  const removeFromListMutation = useMutation({
+    mutationFn: () => userService.removeFromWatchlist(content.id),
+    onMutate: async () => {
+      setIsInList(false)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+    },
+    onError: () => {
+      setIsInList(true)
+    }
+  })
+
+  const toggleWatchlist = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click
+    if (isInList) {
+      removeFromListMutation.mutate()
+    } else {
+      addToListMutation.mutate()
+    }
+  }
 
   return (
     <div
@@ -44,13 +86,15 @@ const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
               </button>
             </Link>
             <button
-              className="p-2 border border-white rounded-full hover:bg-white/10"
-              onClick={(e) => {
-                e.stopPropagation()
-                // Placeholder: Add to list functionality
-              }}
+              className={`p-2 border rounded-full hover:bg-white/10 transition-colors ${
+                isInList
+                  ? 'bg-green-600 border-green-600 hover:bg-green-700'
+                  : 'border-white hover:bg-white/10'
+              }`}
+              onClick={toggleWatchlist}
+              title={isInList ? "Hapus dari Daftar" : "Tambah ke Daftar"}
             >
-              <Plus size={16} />
+              {isInList ? <Check size={16} /> : <Plus size={16} />}
             </button>
             <button
               className="p-2 border border-white rounded-full hover:bg-white/10 transition-colors"

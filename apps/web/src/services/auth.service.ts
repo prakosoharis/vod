@@ -101,6 +101,64 @@ export const authService = {
       throw error;
     }
   },
+
+  /**
+   * Add content to user's watchlist
+   * @param contentId - Content ID to add
+   * @returns API response
+   */
+  async addToWatchlist(contentId: string) {
+    try {
+      const response = await api.post('/user/watchlist', { content_id: contentId });
+      return response.data;
+    } catch (error) {
+      console.error('Add to watchlist error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Remove content from user's watchlist
+   * @param contentId - Content ID to remove
+   * @returns API response
+   */
+  async removeFromWatchlist(contentId: string) {
+    try {
+      const response = await api.delete(`/user/watchlist/${contentId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Remove from watchlist error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get user's watchlist
+   * @returns Array of watchlisted content
+   */
+  async getWatchlist() {
+    try {
+      const response = await api.get('/user/watchlist');
+      return response.data;
+    } catch (error) {
+      console.error('Get watchlist error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get continue watching list
+   * @returns Array of content for continue watching
+   */
+  async getContinueWatching() {
+    try {
+      const response = await api.get('/user/continue-watching');
+      return response.data;
+    } catch (error) {
+      console.error('Get continue watching error:', error);
+      throw error;
+    }
+  },
 };
 
 export const userService = authService;

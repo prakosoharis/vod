@@ -5,6 +5,7 @@ import LoginPage from '../pages/LoginPage'
 import RegisterPage from '../pages/RegisterPage'
 import BrowsePage from '../pages/BrowsePage'
 import VideoPlayerPage from '../pages/VideoPlayerPage'
+import MyListPage from '../pages/MyListPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 
@@ -24,6 +25,14 @@ const AppRoutes = () => {
           <VideoPlayerPage />
         </ProtectedRoute>
       } />
+      <Route
+        path="/my-list"
+        element={
+          <ProtectedRoute>
+            <MyListPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
     </Routes>
   )
