@@ -5,9 +5,10 @@ import { useMemo } from 'react'
 
 export interface HeroBannerProps {
   content: Content
+  onInfoClick?: (content: Content) => void
 }
 
-export const HeroBanner = ({ content }: HeroBannerProps) => {
+export const HeroBanner = ({ content, onInfoClick }: HeroBannerProps) => {
   if (!content) return null
 
   const year = useMemo(() => {
@@ -79,7 +80,10 @@ export const HeroBanner = ({ content }: HeroBannerProps) => {
                 <span>Putar</span>
               </button>
             </Link>
-            <button className="flex items-center justify-center gap-2 px-8 sm:px-10 py-3 sm:py-3.5 bg-white/15 text-white font-bold rounded-md hover:bg-white/20 active:bg-white/10 transition-colors border border-white/25 focus:outline-none focus:ring-2 focus:ring-white/40">
+            <button
+              onClick={() => onInfoClick?.(content)}
+              className="flex items-center justify-center gap-2 px-8 sm:px-10 py-3 sm:py-3.5 bg-white/15 text-white font-bold rounded-md hover:bg-white/20 active:bg-white/10 transition-colors border border-white/25 focus:outline-none focus:ring-2 focus:ring-white/40"
+            >
               <Info className="h-5 w-5" />
               <span>Info Lebih Lanjut</span>
             </button>

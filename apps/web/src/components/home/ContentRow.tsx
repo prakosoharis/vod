@@ -6,9 +6,10 @@ import { ContentCard } from './ContentCard';
 export interface ContentRowProps {
   title: string;
   contents: Content[];
+  onInfoClick?: (content: Content) => void;
 }
 
-const ContentRow = ({ title, contents }: ContentRowProps) => {
+const ContentRow = ({ title, contents, onInfoClick }: ContentRowProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -45,7 +46,7 @@ const ContentRow = ({ title, contents }: ContentRowProps) => {
         >
           {contents.map((content) => (
             <div key={content.id} className="shrink-0 w-[60vw] sm:w-[40vw] md:w-[30vw] lg:w-[22vw] xl:w-[18vw]">
-              <ContentCard content={content} />
+              <ContentCard content={content} onInfoClick={onInfoClick} />
             </div>
           ))}
         </div>

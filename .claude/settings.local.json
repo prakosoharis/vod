@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(npm run dev:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(pnpm prisma generate:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma@5.22.0 generate:*)",
+      "Bash(node:*)",
+      "Bash(npx prisma@5.22.0 migrate dev:*)",
+      "Bash(pnpm seed:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

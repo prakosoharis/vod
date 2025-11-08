@@ -5,9 +5,10 @@ import type { Content } from '@/types'
 
 interface ContentCardProps {
   content: Content
+  onInfoClick?: (content: Content) => void
 }
 
-const ContentCard = ({ content }: ContentCardProps) => {
+const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
@@ -52,11 +53,12 @@ const ContentCard = ({ content }: ContentCardProps) => {
               <Plus size={16} />
             </button>
             <button
-              className="p-2 border border-white rounded-full hover:bg-white/10"
+              className="p-2 border border-white rounded-full hover:bg-white/10 transition-colors"
               onClick={(e) => {
                 e.stopPropagation()
-                // Placeholder: Open detail modal
+                onInfoClick?.(content)
               }}
+              title="Info Lebih Lanjut"
             >
               <ChevronDown size={16} />
             </button>
