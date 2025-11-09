@@ -93,7 +93,7 @@ const Navbar = () => {
             className="text-2xl md:text-2xl font-bold text-[#e50914] hover:text-red-400 transition-colors duration-200"
             onClick={closeMenu}
           >
-            StreamKita
+            Alkamus
           </Link>
 
           {/* Desktop Navigation Links */}

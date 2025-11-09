@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient, ContentType } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -666,6 +667,43 @@ const seedData: SeedContent[] = [
 ];
 
 async function main() {
+  console.log('Seeding users...');
+
+  // Create test users
+  const testUsers = [
+    {
+      email: 'admin@alkamus.com',
+      full_name: 'Admin Alkamus',
+      password: 'admin123',
+    },
+    {
+      email: 'user@alkamus.com',
+      full_name: 'Test User',
+      password: 'user123',
+    }
+  ];
+
+  for (const user of testUsers) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: user.email },
+    });
+
+    if (!existingUser) {
+      const hashedPassword = await bcrypt.hash(user.password, 10);
+
+      await prisma.user.create({
+        data: {
+          email: user.email,
+          full_name: user.full_name,
+          password_hash: hashedPassword,
+        },
+      });
+      console.log(`Created user: ${user.email}`);
+    } else {
+      console.log(`User already exists: ${user.email}`);
+    }
+  }
+
   console.log('Seeding content...');
 
   for (const item of seedData) {

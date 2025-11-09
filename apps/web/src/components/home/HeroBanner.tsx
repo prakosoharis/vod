@@ -12,13 +12,9 @@ export const HeroBanner = ({ content, onInfoClick }: HeroBannerProps) => {
   if (!content) return null
 
   const year = useMemo(() => {
-    if (!content.release_date) return undefined
-    try {
-      return new Date(content.release_date).getFullYear()
-    } catch {
-      return undefined
-    }
-  }, [content.release_date])
+    if (!content.year) return undefined
+    return content.year
+  }, [content.year])
 
   return (
     <div className="relative w-full h-[80vh] sm:h-[70vh] text-white">
@@ -58,14 +54,14 @@ export const HeroBanner = ({ content, onInfoClick }: HeroBannerProps) => {
                 {content.rating}
               </span>
             )}
-            {Array.isArray(content.genres) && content.genres.length > 0 && (
+            {Array.isArray(content.genre) && content.genre.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {content.genres.slice(0, 3).map((g) => (
+                {content.genre.slice(0, 3).map((g: string) => (
                   <span
-                    key={typeof g === 'string' ? g : (g as any).name}
+                    key={g}
                     className="px-2 py-0.5 rounded bg-white/10 border border-white/10 backdrop-blur-[1px]"
                   >
-                    {typeof g === 'string' ? g : (g as any).name}
+                    {g}
                   </span>
                 ))}
               </div>

@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 export const useAuth = () => {
   const navigate = useNavigate();
-  const { login: setAuth, logout: clearAuth, user, isAuthenticated } = useAuthStore();
+  const { setUser, setToken, user, isAuthenticated } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,7 +15,8 @@ export const useAuth = () => {
       setLoading(true);
       setError(null);
       const response = await authService.login(credentials);
-      setAuth(response.user, response.token);
+      setUser(response.user);
+      setToken(response.token);
       navigate('/browse');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
@@ -30,7 +31,8 @@ export const useAuth = () => {
       setLoading(true);
       setError(null);
       const response = await authService.register(credentials);
-      setAuth(response.user, response.token);
+      setUser(response.user);
+      setToken(response.token);
       navigate('/browse');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -46,7 +48,8 @@ export const useAuth = () => {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      clearAuth();
+      setUser(null);
+      setToken(null);
       navigate('/');
     }
   };

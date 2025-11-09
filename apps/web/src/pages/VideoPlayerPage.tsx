@@ -17,7 +17,6 @@ import { useQuery } from '@tanstack/react-query'
 import { contentService } from '@/services/content.service'
 import ContentRow from '@/components/home/ContentRow'
 import ContentDetailModal from '@/components/content/ContentDetailModal'
-import VideoPlayerActions from '@/components/video/VideoPlayerActions'
 import type { Content } from '@/types'
 
 const VideoPlayerPage = () => {
@@ -36,7 +35,7 @@ const VideoPlayerPage = () => {
   const [selectedQuality, setSelectedQuality] = useState('Auto')
 
   // Controls timeout
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>()
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false)
@@ -496,7 +495,7 @@ const VideoPlayerPage = () => {
         </div>
 
         {/* Cast Section (Optional) */}
-        {false && content?.cast && content.cast.length > 0 && (
+        {false && content && 'cast' in content && content.cast && content.cast.length > 0 && (
           <div className="border-t border-gray-800 pt-6">
             <h2 className="text-lg md:text-xl font-semibold mb-4 text-white">
               Pemain & Kru
@@ -517,10 +516,10 @@ const VideoPlayerPage = () => {
       </div>
 
         {/* More Like This Section */}
-        {similarContent && similarContent.length > 0 && (
+        {similarContent && similarContent.length > 0 && content && (
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <h2 className="text-2xl font-bold text-white mb-4">Mirip dengan {content.title}</h2>
-            <ContentRow contents={similarContent} onInfoClick={openModal} />
+            <ContentRow title="" contents={similarContent} onInfoClick={openModal} />
           </div>
         )}
 

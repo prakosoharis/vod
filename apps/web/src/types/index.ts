@@ -46,3 +46,7 @@ export interface RegisterRequest {
   password: string;
   full_name?: string;
 }
+
+// Export aliases for useAuth hook compatibility
+export type LoginCredentials = LoginRequest;
+export type RegisterCredentials = RegisterRequest;

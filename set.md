@@ -1,173 +1,316 @@
-Implement watchlist feature - users can add/remove content to their personal list.
+Rebrand entire application from "StreamKita" to "Alkamus" - replace all occurrences in UI, text, descriptions, and logos.
 
 PROJECT CONTEXT:
-- Users can add content to "My List"
-- Accessible from browse page, content cards, detail modal
-- Create dedicated "My List" page
-- Optimistic updates (instant UI feedback)
+- Current brand: StreamKita
+- New brand: Alkamus
+- Need to replace in: Navbar, Footer, Landing Page, Auth Pages, All descriptions, Meta tags, etc.
 
-TASK 1: ADD/REMOVE FUNCTIONALITY
+FILES TO UPDATE:
 
-UPDATE user.service.ts:
+========================================
+FILE 1: src/components/layout/Navbar.tsx
+========================================
+
+FIND AND REPLACE:
+
+Old:
 ```typescript
-export const userService = {
-  // ... existing methods
-
-  async addToWatchlist(contentId: string) {
-    const response = await api.post('/user/watchlist', { content_id: contentId })
-    return response.data
-  },
-
-  async removeFromWatchlist(contentId: string) {
-    const response = await api.delete(`/user/watchlist/${contentId}`)
-    return response.data
-  },
-
-  async getWatchlist() {
-    const response = await api.get('/user/watchlist')
-    return response.data
-  }
-}
-```
-
-TASK 2: UPDATE ContentCard.tsx
-
-Add "Add to List" button functionality:
-```typescript
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Check } from 'lucide-react'
-
-const ContentCard = ({ content }: ContentCardProps) => {
-  const queryClient = useQueryClient()
-  const [isInList, setIsInList] = useState(false)
-
-  const addToListMutation = useMutation({
-    mutationFn: () => userService.addToWatchlist(content.id),
-    onMutate: async () => {
-      // Optimistic update
-      setIsInList(true)
-    },
-    onSuccess: () => {
-      // Invalidate watchlist query to refetch
-      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
-    },
-    onError: () => {
-      // Revert on error
-      setIsInList(false)
-    }
-  })
-
-  const removeFromListMutation = useMutation({
-    mutationFn: () => userService.removeFromWatchlist(content.id),
-    onMutate: async () => {
-      setIsInList(false)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
-    },
-    onError: () => {
-      setIsInList(true)
-    }
-  })
-
-  const toggleWatchlist = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent card click
-    if (isInList) {
-      removeFromListMutation.mutate()
-    } else {
-      addToListMutation.mutate()
-    }
-  }
-
-  return (
-    // ... card JSX
-    <button 
-      onClick={toggleWatchlist}
-      className="..."
-    >
-      {isInList ? <Check size={16} /> : <Plus size={16} />}
-    </button>
-  )
-}
-```
-
-TASK 3: CREATE MY LIST PAGE
-
-FILE: src/pages/MyListPage.tsx
-```typescript
-import { useQuery } from '@tanstack/react-query'
-import { userService } from '@/RetryHPContinueservices/user.service'
-import ContentCard from '@/components/home/ContentCard'
-import Layout from '@/components/layout/Layout'
-const MyListPage = () => {
-const { data: watchlist, isLoading } = useQuery({
-queryKey: ['watchlist'],
-queryFn: () => userService.getWatchlist()
-})
-if (isLoading) {
-return (
-<Layout>
-<div className="min-h-screen bg-black flex items-center justify-center">
-<div className="text-white">Loading...</div>
-</div>
-</Layout>
-)
-}
-return (
-<Layout>
-<div className="min-h-screen bg-black pt-24 px-8">
-<div className="max-w-7xl mx-auto">
-<h1 className="text-4xl font-bold mb-8">Daftar Saya</h1>
-      {!watchlist || watchlist.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-gray-400 text-xl mb-4">
-            Daftar Anda masih kosong
-          </p>
-          <p className="text-gray-500">
-            Tambahkan film dan series favorit Anda ke daftar
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {watchlist.map((item: any) => (
-            <ContentCard key={item.content_id} content={item} />
-          ))}
-        </div>
-      )}
-    </div>
-  </div>
-</Layout>
-)
-}
-export default MyListPage
-
-TASK 4: ADD ROUTE
-
-UPDATE src/routes/AppRoutes.tsx:
-```typescript
-import MyListPage from '../pages/MyListPage'
-
-<Route 
-  path="/my-list" 
-  element={
-    <ProtectedRoute>
-      <MyListPage />
-    </ProtectedRoute>
-  } 
-/>
-```
-
-TASK 5: UPDATE NAVBAR DROPDOWN
-
-Update Navbar.tsx dropdown link:
-```typescript
-<Link to="/my-list" className="...">
-  Daftar Saya
+<Link to="/" className="text-2xl font-bold text-red-600">
+  StreamKita
 </Link>
 ```
 
-OUTPUT:
-- Updated ContentCard.tsx with add/remove functionality
-- Created MyListPage.tsx
-- Updated routes
-- Updated user.service.ts
+New:
+```typescript
+<Link to="/" className="text-2xl font-bold text-red-600">
+  Alkamus
+</Link>
+```
+
+========================================
+FILE 2: src/components/layout/Footer.tsx
+========================================
+
+FIND AND REPLACE:
+
+Old:
+```typescript
+{/* Column 1: Brand */}
+<div>
+  <h3 className="text-2xl font-bold text-red-600 mb-4">StreamKita</h3>
+  <p className="text-sm text-gray-400 leading-relaxed">
+    Platform streaming favorit Anda untuk film dan acara TV terbaik dari Indonesia dan seluruh dunia.
+  </p>
+</div>
+
+{/* Copyright */}
+<p className="text-sm text-gray-500">
+  © 2025 StreamKita. All rights reserved.
+</p>
+```
+
+New:
+```typescript
+{/* Column 1: Brand */}
+<div>
+  <h3 className="text-2xl font-bold text-red-600 mb-4">Alkamus</h3>
+  <p className="text-sm text-gray-400 leading-relaxed">
+    Platform streaming pilihan untuk konten hiburan berkualitas dari dalam dan luar negeri.
+  </p>
+</div>
+
+{/* Copyright */}
+<p className="text-sm text-gray-500">
+  © 2025 Alkamus. All rights reserved.
+</p>
+```
+
+========================================
+FILE 3: src/pages/LandingPage.tsx
+========================================
+
+FIND AND REPLACE ALL:
+
+1. Hero Section - Main Heading:
+Old: "Tonton Konten Unlimited Indonesia & Internasional"
+New: "Nikmati Hiburan Tanpa Batas Bersama Alkamus"
+
+2. Hero Section - Subheading:
+Old: "Streaming ribuan film, series & lebih banyak lagi. Batalkan kapan saja."
+New: "Ribuan film dan series berkualitas dalam satu platform. Bebas batalkan kapan saja."
+
+3. Section Heading:
+Old: "Mengapa Memilih StreamKita?"
+New: "Mengapa Memilih Alkamus?"
+
+4. Meta Description (if any):
+Old references to "StreamKita"
+New: "Alkamus"
+
+========================================
+FILE 4: src/pages/LoginPage.tsx
+========================================
+
+FIND AND REPLACE:
+
+Old:
+```typescript
+<div className="text-center mb-8">
+  <h1 className="text-3xl font-bold text-red-600 mb-2">StreamKita</h1>
+  <p className="text-gray-400">Masuk ke akun Anda</p>
+</div>
+```
+
+New:
+```typescript
+<div className="text-center mb-8">
+  <h1 className="text-3xl font-bold text-red-600 mb-2">Alkamus</h1>
+  <p className="text-gray-400">Masuk ke akun Anda</p>
+</div>
+```
+
+========================================
+FILE 5: src/pages/RegisterPage.tsx
+========================================
+
+FIND AND REPLACE:
+
+Old:
+```typescript
+<div className="text-center mb-8">
+  <h1 className="text-3xl font-bold text-red-600 mb-2">StreamKita</h1>
+  <p className="text-gray-400">Daftar akun baru</p>
+</div>
+```
+
+New:
+```typescript
+<div className="text-center mb-8">
+  <h1 className="text-3xl font-bold text-red-600 mb-2">Alkamus</h1>
+  <p className="text-gray-400">Daftar akun baru</p>
+</div>
+```
+
+========================================
+FILE 6: src/pages/NotFoundPage.tsx
+========================================
+
+No brand name in this file usually, but check if any reference exists.
+
+========================================
+FILE 7: public/index.html (or index.html in root)
+========================================
+
+FIND AND REPLACE:
+
+Old:
+```html
+<title>StreamKita - Platform Streaming Indonesia</title>
+<meta name="description" content="StreamKita - Platform streaming untuk film dan series Indonesia dan internasional">
+```
+
+New:
+```html
+<title>Alkamus - Platform Streaming Berkualitas</title>
+<meta name="description" content="Alkamus - Platform streaming terbaik untuk hiburan berkualitas dari dalam dan luar negeri">
+```
+
+========================================
+FILE 8: package.json (BOTH apps/web and apps/api)
+========================================
+
+FIND AND REPLACE:
+
+apps/web/package.json:
+Old: `"name": "streamkita-web"`
+New: `"name": "alkamus-web"`
+
+apps/api/package.json:
+Old: `"name": "streamkita-api"`
+New: `"name": "alkamus-api"`
+
+========================================
+FILE 9: docker-compose.yml (if exists)
+========================================
+
+FIND AND REPLACE:
+
+Old:
+```yaml
+container_name: streamkita-postgres
+POSTGRES_DB: streamkita_dev
+```
+
+New:
+```yaml
+container_name: alkamus-postgres
+POSTGRES_DB: alkamus_dev
+```
+
+Also update volume name:
+Old: `postgres_data` or `streamkita_data`
+New: `alkamus_data`
+
+========================================
+FILE 10: apps/api/.env
+========================================
+
+FIND AND REPLACE DATABASE_URL:
+
+Old:
+DATABASE_URL="postgresql://streamkita:streamkita123@localhost:5432/streamkita_dev"
+
+New:
+DATABASE_URL="postgresql://alkamus:alkamus123@localhost:5432/alkamus_dev"
+
+========================================
+FILE 11: README.md (if exists)
+========================================
+
+Replace all mentions of "StreamKita" with "Alkamus"
+
+========================================
+ADDITIONAL CHECKS:
+========================================
+
+Search entire project for case-insensitive occurrences:
+- "StreamKita" → "Alkamus"
+- "streamkita" → "alkamus"
+- "STREAMKITA" → "ALKAMUS"
+
+Use VSCode Find & Replace (Ctrl+Shift+H):
+1. Find: StreamKita (case insensitive)
+2. Replace: Alkamus
+3. Replace All in all files
+
+Exclude folders:
+- node_modules
+- dist
+- build
+- .git
+
+========================================
+LOGO/FAVICON (Optional - if you want actual logo)
+========================================
+
+If you have Alkamus logo image:
+1. Replace public/logo.png or public/favicon.ico
+2. Update logo reference in Navbar:
+```typescript
+<Link to="/" className="flex items-center gap-2">
+  <img src="/logo.png" alt="Alkamus" className="h-8 w-8" />
+  <span className="text-2xl font-bold text-red-600">Alkamus</span>
+</Link>
+```
+
+For now (without logo image), text-only brand is fine.
+
+========================================
+VERIFICATION CHECKLIST:
+========================================
+
+After replacement, verify these pages show "Alkamus":
+[ ] Landing page (/, hero section)
+[ ] Landing page (footer)
+[ ] Navbar (all pages)
+[ ] Login page (heading)
+[ ] Register page (heading)
+[ ] Browse page (navbar)
+[ ] Video player page (back button destination name)
+[ ] Footer on all pages
+[ ] Browser tab title
+[ ] Meta description
+
+Test search in code:
+[ ] Search "StreamKita" → should find 0 results (except in git history)
+[ ] Search "streamkita" → should find 0 results (except package names)
+
+========================================
+FINAL STEPS:
+========================================
+
+1. After all replacements, run:
+```bash
+cd apps/web
+npm run dev
+
+cd apps/api
+pnpm dev
+```
+
+2. Check browser:
+- Open http://localhost:5173
+- Verify all "StreamKita" changed to "Alkamus"
+- Check Navbar, Footer, Landing page
+
+3. Test database:
+- If using Docker, recreate container:
+```bash
+docker-compose down -v
+docker-compose up -d
+cd apps/api
+pnpm prisma migrate dev --name init
+pnpm seed
+```
+
+4. Commit changes:
+```bash
+git add .
+git commit -m "Rebrand: StreamKita → Alkamus"
+git push
+```
+
+========================================
+OUTPUT REQUIRED:
+========================================
+
+Provide:
+1. List of all files that were updated
+2. Count of replacements made per file
+3. Any files that might need manual review
+4. Verification that app runs without errors after rebrand
+
+Make sure NO references to "StreamKita" remain except in:
+- Git history (OK)
+- node_modules (ignore)
+- This conversation (OK)

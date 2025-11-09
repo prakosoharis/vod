@@ -5,7 +5,7 @@ import ContentRow from '../home/ContentRow'
 import type { Content } from '@/types'
 
 // Extended types for content with additional properties
-interface ContentWithDetails extends Content {
+interface ContentWithDetails extends Omit<Content, 'duration' | 'backdrop_url'> {
   backdrop_url?: string
   duration?: string
   cast?: Array<{
@@ -46,27 +46,31 @@ const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onC
   // Action button handlers
   const handlePlayClick = () => {
     // Navigate to video player and close modal
-    navigate(`/watch/${content.id}`)
-    onClose()
+    if (content) {
+      navigate(`/watch/${content.id}`)
+      onClose()
+    }
   }
 
   const handleAddToList = () => {
     // Placeholder for watchlist functionality
-    console.log('Added to watchlist:', content.title)
-    // TODO: Implement watchlist API call
-    // Show feedback to user
-    alert(`"${content.title}" ditambahkan ke daftar menonton!`)
+    if (content) {
+      console.log('Added to watchlist:', content.title)
+      // TODO: Implement watchlist API call
+      // Show feedback to user
+      alert(`"${content.title}" ditambahkan ke daftar menonton!`)
+    }
   }
 
   const handleShare = () => {
     // Placeholder for share functionality
-    if (navigator.share) {
+    if (content && navigator.share) {
       navigator.share({
         title: content.title,
-        text: content.description || `Tonton ${content.title} di StreamKita!`,
+        text: content.description || `Tonton ${content.title} di Alkamus!`,
         url: `${window.location.origin}/watch/${content.id}`
-      }).catch(err => console.log('Share cancelled'))
-    } else {
+      }).catch(() => console.log('Share cancelled'))
+    } else if (content) {
       // Fallback: Copy to clipboard
       navigator.clipboard.writeText(`${window.location.origin}/watch/${content.id}`)
       alert('Link disalin ke clipboard!')
