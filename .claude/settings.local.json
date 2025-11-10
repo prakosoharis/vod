@@ -41,7 +41,10 @@
       "Bash(xargs -r git rm:*)",
       "Bash(while read:*)",
       "Bash(do git rm:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(pip install:*)",
+      "Bash(python3 -)",
+      "Bash(xargs -I {} git rm:*)"
     ],
     "deny": [],
     "ask": []
