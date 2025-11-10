@@ -14,7 +14,7 @@ if (isDev) {
   const { createProxyMiddleware } = require('http-proxy-middleware');
 
   app.use('/api', createProxyMiddleware({
-    target: 'http://localhost:3001',
+    target: 'http://localhost:3005',
     changeOrigin: true,
     secure: false,
   }));

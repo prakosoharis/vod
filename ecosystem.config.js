@@ -18,10 +18,11 @@ module.exports = {
     {
       name: 'alkamus-web',
       script: 'server.js',
-      cwd: '/var/www/alkamus/vod',
+      cwd: '/var/www/alkamus/vod/apps/web',
       instances: 1,
       env: {
-        NODE_ENV: 'production'
+        NODE_ENV: 'production',
+        PORT: 3000
       },
       error_file: '/var/log/streamkita-web-error.log',
       out_file: '/var/log/streamkita-web-out.log',
