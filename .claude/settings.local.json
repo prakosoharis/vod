@@ -26,7 +26,15 @@
       "Bash(pm2:*)",
       "Bash(ip:*)",
       "Bash(ss:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(CI=true pnpm install:*)",
+      "Bash(pnpm approve-builds)",
+      "Bash(chmod:*)",
+      "Bash(NODE_ENV=production ./setup.sh:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
