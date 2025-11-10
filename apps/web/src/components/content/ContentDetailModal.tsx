@@ -5,9 +5,7 @@ import ContentRow from '../home/ContentRow'
 import type { Content } from '@/types'
 
 // Extended types for content with additional properties
-interface ContentWithDetails extends Omit<Content, 'duration' | 'backdrop_url'> {
-  backdrop_url?: string
-  duration?: string
+interface ContentWithDetails extends Omit<Content, 'cast'> {
   cast?: Array<{
     name: string
     role: string

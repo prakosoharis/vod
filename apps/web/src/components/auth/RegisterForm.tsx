@@ -50,7 +50,7 @@ export function RegisterForm() {
     watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(registerSchema as any),
   });
 
   const password = watch('password', '');

@@ -60,20 +60,26 @@ export async function register(request, reply) {
 export async function login(request, reply) {
     try {
         const body = loginSchema.parse(request.body);
+        console.log('🔍 Login attempt for email:', body.email);
         // Find user
         const user = await prisma.user.findUnique({
             where: { email: body.email },
         });
         if (!user) {
+            console.log('❌ User not found:', body.email);
             reply.code(401).send({ error: 'Invalid email or password' });
             return;
         }
+        console.log('✅ User found:', user.email, 'ID:', user.id);
         // Verify password
         const isValidPassword = await bcrypt.compare(body.password, user.password_hash);
+        console.log('🔑 Password verification result:', isValidPassword);
         if (!isValidPassword) {
+            console.log('❌ Invalid password for:', body.email);
             reply.code(401).send({ error: 'Invalid email or password' });
             return;
         }
+        console.log('✅ Login successful for:', body.email);
         // Generate token
         const token = generateToken(this, {
             userId: user.id,

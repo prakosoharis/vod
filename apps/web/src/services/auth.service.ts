@@ -1,5 +1,4 @@
 import api from './api';
-import { useAuthStore } from '../stores/authStore';
 import type { RegisterRequest, LoginRequest, AuthResponse, User } from '../types';
 
 const TOKEN_KEY = 'token';

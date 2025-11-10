@@ -1,11 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { LandingPage } from '@/pages/LandingPage';
-import { LoginPage } from '@/pages/LoginPage';
-import { RegisterPage } from '@/pages/RegisterPage';
-import { BrowsePage } from '@/pages/BrowsePage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
-import App from '@/App'; // Import the test App component
+import Layout from '@/components/layout/Layout';
+import LandingPage from '@/pages/LandingPage';
+import App from '@/App';
 
 const router = createBrowserRouter([
   {
@@ -14,7 +10,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <Layout children={<LandingPage />} />, // Pass children directly
+    element: <Layout><LandingPage /></Layout>,
   },
 ]);
 

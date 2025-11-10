@@ -9,7 +9,6 @@ import App from './App.tsx'
 // Lazy load to avoid breaking build if package is not installed
 const ReactQueryDevtools = import.meta.env.DEV
   ? lazy(() =>
-      // @ts-expect-error - Optional package, may not be installed
       import('@tanstack/react-query-devtools')
         .then((res) => ({ default: res.ReactQueryDevtools }))
         .catch(() => ({ default: (_props: { initialIsOpen?: boolean }) => null }))
@@ -37,7 +36,6 @@ createRoot(document.getElementById('root')!).render(
         <App />
         {ReactQueryDevtools && (
           <Suspense fallback={null}>
-            {/* @ts-expect-error - Optional package, may not be installed */}
             <ReactQueryDevtools initialIsOpen={false} />
           </Suspense>
         )}

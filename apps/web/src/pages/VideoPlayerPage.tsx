@@ -35,7 +35,7 @@ const VideoPlayerPage = () => {
   const [selectedQuality, setSelectedQuality] = useState('Auto')
 
   // Controls timeout
-  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false)
@@ -495,13 +495,13 @@ const VideoPlayerPage = () => {
         </div>
 
         {/* Cast Section (Optional) */}
-        {false && content && 'cast' in content && content.cast && content.cast.length > 0 && (
+        {false && (content as any)?.cast && (content as any).cast.length > 0 && (
           <div className="border-t border-gray-800 pt-6">
             <h2 className="text-lg md:text-xl font-semibold mb-4 text-white">
               Pemain & Kru
             </h2>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-              {content.cast.slice(0, 10).map((member, idx) => (
+              {(content as any).cast.slice(0, 10).map((member: any, idx: number) => (
                 <div key={idx} className="flex-shrink-0 text-center">
                   <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-800 rounded-full mb-2" />
                   <p className="text-xs md:text-sm font-medium max-w-[80px] truncate text-white">
