@@ -1,0 +1,117 @@
+import { useState } from 'react'
+import { Play, Plus, Check, ChevronDown } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { userService } from '@/services/auth.service'
+import type { Content } from '@/types'
+
+interface ContentCardProps {
+  content: Content
+  onInfoClick?: (content: Content) => void
+}
+
+const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
+  const [isHovered, setIsHovered] = useState(false)
+  const [isInList, setIsInList] = useState(false)
+  const queryClient = useQueryClient()
+
+  const addToListMutation = useMutation({
+    mutationFn: () => userService.addToWatchlist(content.id),
+    onMutate: async () => {
+      // Optimistic update
+      setIsInList(true)
+    },
+    onSuccess: () => {
+      // Invalidate watchlist query to refetch
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+    },
+    onError: () => {
+      // Revert on error
+      setIsInList(false)
+    }
+  })
+
+  const removeFromListMutation = useMutation({
+    mutationFn: () => userService.removeFromWatchlist(content.id),
+    onMutate: async () => {
+      setIsInList(false)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+    },
+    onError: () => {
+      setIsInList(true)
+    }
+  })
+
+  const toggleWatchlist = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click
+    if (isInList) {
+      removeFromListMutation.mutate()
+    } else {
+      addToListMutation.mutate()
+    }
+  }
+
+  return (
+    <div
+      className="relative min-w-[250px] h-[140px] cursor-pointer transition-transform duration-300 hover:scale-105"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Thumbnail */}
+      <img
+        src={content.thumbnail_url}
+        alt={content.title}
+        className="w-full h-full object-cover rounded"
+        loading="lazy"
+      />
+
+      {/* Hover Overlay */}
+      {isHovered && (
+        <div className="absolute inset-0 bg-black/80 rounded p-4 flex flex-col justify-between">
+          {/* Title & Metadata */}
+          <div>
+            <h3 className="font-bold text-sm mb-1">{content.title}</h3>
+            <p className="text-xs text-gray-400">
+              {content.year} • {content.genre?.[0] ?? 'General'}
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Link to={`/watch/${content.id}`}>
+              <button className="p-2 bg-white text-black rounded-full hover:bg-gray-200">
+                <Play size={16} fill="black" />
+              </button>
+            </Link>
+            <button
+              className={`p-2 border rounded-full hover:bg-white/10 transition-colors ${
+                isInList
+                  ? 'bg-green-600 border-green-600 hover:bg-green-700'
+                  : 'border-white hover:bg-white/10'
+              }`}
+              onClick={toggleWatchlist}
+              title={isInList ? "Hapus dari Daftar" : "Tambah ke Daftar"}
+            >
+              {isInList ? <Check size={16} /> : <Plus size={16} />}
+            </button>
+            <button
+              className="p-2 border border-white rounded-full hover:bg-white/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation()
+                onInfoClick?.(content)
+              }}
+              title="Info Lebih Lanjut"
+            >
+              <ChevronDown size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export { ContentCard }
+
