@@ -36,7 +36,12 @@
       "Bash(git commit:*)",
       "Bash(git rm:*)",
       "Bash(git push:*)",
-      "Bash(git filter-branch:*)"
+      "Bash(git filter-branch:*)",
+      "Bash(xargs git rm:*)",
+      "Bash(xargs -r git rm:*)",
+      "Bash(while read:*)",
+      "Bash(do git rm:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
