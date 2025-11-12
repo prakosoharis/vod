@@ -44,7 +44,9 @@
       "Bash(done)",
       "Bash(pip install:*)",
       "Bash(python3 -)",
-      "Bash(xargs -I {} git rm:*)"
+      "Bash(xargs -I {} git rm:*)",
+      "Bash(find:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []

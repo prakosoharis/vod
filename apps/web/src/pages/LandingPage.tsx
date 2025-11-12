@@ -11,7 +11,7 @@ export const LandingPage: React.FC = () => {
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] bg-[length:20px_20px]"></div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 text-shadow-lg">
-            Nikmati Hiburan Tanpa Batas Bersama Alkamus
+            Nikmati Hiburan Tanpa Batas Bersama MOST
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-8">
             Ribuan film dan series berkualitas dalam satu platform. Bebas batalkan kapan saja.
@@ -34,7 +34,7 @@ export const LandingPage: React.FC = () => {
       <main>
         <section className="py-20 px-4 max-w-7xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
-            Mengapa Memilih Alkamus?
+            Mengapa Memilih MOST?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature Card 1 */}

@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { HeroBanner } from '@/components/home/HeroBanner'
 import ContentRow from '@/components/home/ContentRow'
+import FeaturedCarousel from '@/components/home/FeaturedCarousel'
 import ContentDetailModal from '@/components/content/ContentDetailModal'
 import { contentService } from '@/services/content.service'
 import { userService } from '@/services/auth.service'
@@ -167,11 +167,17 @@ const BrowsePage = () => {
     return <LoadingSkeleton />
   }
 
-  const heroContent = (featured && featured[0]) as Content | undefined
 
   return (
     <div className="bg-black min-h-screen">
-      {heroContent && <HeroBanner content={heroContent} onInfoClick={openModal} />}
+      {/* Featured Carousel */}
+      {featured && featured.length >= 3 && (
+        <FeaturedCarousel
+          contents={featured}
+          onInfoClick={openModal}
+          autoPlayInterval={5000}
+        />
+      )}
 
       {/* Negative margin to overlap hero */}
       <div className="relative -mt-22 z-10 space-y-12 pb-20 pt-8">

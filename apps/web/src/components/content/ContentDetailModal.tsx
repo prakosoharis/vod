@@ -65,7 +65,7 @@ const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onC
     if (content && navigator.share) {
       navigator.share({
         title: content.title,
-        text: content.description || `Tonton ${content.title} di Alkamus!`,
+        text: content.description || `Tonton ${content.title} di MOST!`,
         url: `${window.location.origin}/watch/${content.id}`
       }).catch(() => console.log('Share cancelled'))
     } else if (content) {

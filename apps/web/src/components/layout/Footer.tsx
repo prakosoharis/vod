@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Column 1: Brand */}
           <div>
-            <h3 className="text-2xl font-bold text-red-600 mb-4">Alkamus</h3>
+            <h3 className="text-2xl font-bold text-red-600 mb-4">MOST</h3>
             <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
               Platform streaming pilihan untuk konten hiburan berkualitas dari dalam dan luar negeri.
             </p>
@@ -99,7 +99,7 @@ const Footer = () => {
             <h4 className="text-lg font-semibold text-white mb-4">Ikuti Kami</h4>
             <div className="flex space-x-4 mb-4">
               <a
-                href="https://twitter.com/alkamus"
+                href="https://twitter.com/most"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-5 h-5 p-2 bg-gray-800 rounded-full text-gray-400 hover:text-red-600 hover:bg-gray-700 transition-colors duration-200"
@@ -108,7 +108,7 @@ const Footer = () => {
                 <Twitter size={20} />
               </a>
               <a
-                href="https://facebook.com/alkamus"
+                href="https://facebook.com/most"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-5 h-5 p-2 bg-gray-800 rounded-full text-gray-400 hover:text-red-600 hover:bg-gray-700 transition-colors duration-200"
@@ -117,7 +117,7 @@ const Footer = () => {
                 <Facebook size={20} />
               </a>
               <a
-                href="https://instagram.com/alkamus"
+                href="https://instagram.com/most"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-5 h-5 p-2 bg-gray-800 rounded-full text-gray-400 hover:text-red-600 hover:bg-gray-700 transition-colors duration-200"
@@ -126,7 +126,7 @@ const Footer = () => {
                 <Instagram size={20} />
               </a>
               <a
-                href="https://youtube.com/@alkamus"
+                href="https://youtube.com/@most"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-5 h-5 p-2 bg-gray-800 rounded-full text-gray-400 hover:text-red-600 hover:bg-gray-700 transition-colors duration-200"
@@ -143,7 +143,7 @@ const Footer = () => {
 
         {/* Copyright section */}
         <div className="mt-12 pt-8 border-t border-gray-800 text-center">
-          <p className="text-sm text-gray-500">© 2025 Alkamus. All rights reserved.</p>
+          <p className="text-sm text-gray-500">© 2025 MOST. All rights reserved.</p>
           <div className="mt-2 text-xs text-gray-600">
             <Link to="/privacy" className="hover:text-gray-400 transition-colors duration-200">
               Kebijakan Privasi
