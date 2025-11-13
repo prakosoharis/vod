@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search } from 'lucide-react';
+import { Menu, X, Search, Radio } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
 const Navbar = () => {
@@ -110,6 +110,15 @@ const Navbar = () => {
             >
               Jelajah
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/live"
+                className="text-sm font-medium text-[#e50914] hover:text-red-400 hover:underline px-4 py-2 transition-all duration-200 flex items-center gap-1"
+              >
+                <Radio size={14} className="animate-pulse" />
+                Live
+              </Link>
+            )}
             <a
               href="#pricing"
               className="text-sm font-medium text-white/80 hover:text-white hover:underline px-4 py-2 transition-all duration-200"
@@ -251,6 +260,16 @@ const Navbar = () => {
             >
               Jelajah
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/live"
+                onClick={closeMenu}
+                className="block w-full py-4 px-6 text-[#e50914] hover:text-red-400 transition-colors duration-200 flex items-center gap-2"
+              >
+                <Radio size={16} className="animate-pulse" />
+                Live Streaming
+              </Link>
+            )}
             <a
               href="#pricing"
               onClick={closeMenu}

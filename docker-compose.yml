@@ -19,6 +19,43 @@ services:
       timeout: 5s
       retries: 5
 
+# Nginx RTMP Streaming Server
+  nginx-rtmp:
+    image: alfg/nginx-rtmp:latest
+    container_name: nginx-rtmp
+    ports:
+      - "1935:1935"   # RTMP port
+      - "8080:80"     # HLS HTTP port
+    volumes:
+      - ./rtmp/nginx-rtmp.conf:/usr/local/nginx/conf/nginx.conf
+      - ./rtmp/hls:/usr/local/nginx/html/hls
+      - ./rtmp/data:/usr/local/nginx/html/data
+    environment:
+      - NGINX_PORT=80
+    restart: unless-stopped
+    networks:
+      - live-streaming
+
+  # Live Chat Server
+  live-chat:
+    build:
+      context: ./rtmp/chat
+      dockerfile: Dockerfile
+    container_name: live-chat
+    ports:
+      - "3007:3007"
+    environment:
+      - NODE_ENV=production
+      - PORT=3007
+      - CORS_ORIGIN=http://deluwang.online,http://live.deluwang.online
+    restart: unless-stopped
+    networks:
+      - live-streaming
+
 volumes:
   postgres_data:
     driver: local
+
+networks:
+  live-streaming:
+    driver: bridge

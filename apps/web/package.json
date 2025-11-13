@@ -2,7 +2,7 @@
   "name": "alkamus-web",
   "private": true,
   "version": "0.0.0",
-    "scripts": {
+  "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -22,12 +22,14 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "express": "^4.21.2",
+    "hls.js": "^1.6.14",
     "http-proxy-middleware": "^3.0.3",
     "lucide-react": "^0.552.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.66.0",
     "react-router-dom": "^7.9.5",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^4.1.12",

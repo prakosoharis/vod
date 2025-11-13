@@ -6,6 +6,7 @@ import RegisterPage from '../pages/RegisterPage'
 import BrowsePage from '../pages/BrowsePage'
 import VideoPlayerPage from '../pages/VideoPlayerPage'
 import MyListPage from '../pages/MyListPage'
+import LiveStreamingPage from '../pages/LiveStreamingPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 
@@ -18,6 +19,11 @@ const AppRoutes = () => {
       <Route path="/browse" element={
         <ProtectedRoute>
           <Layout><BrowsePage /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/live" element={
+        <ProtectedRoute>
+          <LiveStreamingPage />
         </ProtectedRoute>
       } />
       <Route path="/watch/:id" element={
