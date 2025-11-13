@@ -21,8 +21,6 @@ export default function DashboardLayout() {
   const { user, logout } = useAuth()
   const location = useLocation()
 
-  console.log('DashboardLayout - Rendering with user:', user, 'location:', location.pathname)
-
   const handleLogout = () => {
     logout()
   }
@@ -177,9 +175,7 @@ export default function DashboardLayout() {
         {/* Page content */}
         <main className="py-6">
           <div className="px-4 sm:px-6 lg:px-8">
-            {console.log('DashboardLayout - About to render Outlet')}
             <Outlet />
-            {console.log('DashboardLayout - Outlet rendered')}
           </div>
         </main>
       </div>

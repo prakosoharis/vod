@@ -8,12 +8,9 @@ import Users from './pages/Users'
 import Movies from './pages/Movies'
 
 function AppContent() {
-  const { isAuthenticated, loading, user } = useAuth()
-
-  console.log('AppContent - isAuthenticated:', isAuthenticated, 'loading:', loading, 'user:', user)
+  const { isAuthenticated, loading } = useAuth()
 
   if (loading) {
-    console.log('AppContent - Showing loading screen')
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -24,14 +21,10 @@ function AppContent() {
     )
   }
 
-  console.log('AppContent - Rendering routes, isAuthenticated:', isAuthenticated)
-
   if (!isAuthenticated) {
-    console.log('AppContent - Redirecting to login')
     return <Navigate to="/login" replace />
   }
 
-  console.log('AppContent - Rendering protected routes')
   return (
     <Routes>
       <Route
