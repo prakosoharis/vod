@@ -78,7 +78,12 @@ const LiveStreamingPage = () => {
 
   const initializeChat = () => {
     try {
-      socketRef.current = io(CONFIG.CHAT_SERVER);
+      socketRef.current = io(CONFIG.CHAT_SERVER, {
+        path: '/socket.io/',
+        transports: ['websocket', 'polling'],
+        secure: true,
+        rejectUnauthorized: false
+      });
 
       socketRef.current.on('connect', () => {
         console.log('Connected to chat server');
@@ -258,8 +263,11 @@ const LiveStreamingPage = () => {
 
   // Copy OBS settings to clipboard
   const copyOBSSettings = () => {
-    const obsSettings = `Server: rtmp://live.deluwang.online/live
-Stream Key: ${defaultStreamKey}`;
+    const obsSettings = `Server: rtmp://161.97.65.21/live
+Stream Key: ${defaultStreamKey}
+
+NOTE: Gunakan Direct IP karena Cloudflare tidak support RTMP.
+HLS untuk penonton tetap pakai: https://live.deluwang.online/hls/${defaultStreamKey}.m3u8`;
 
     navigator.clipboard.writeText(obsSettings).then(() => {
       alert('✅ Settings copied to clipboard!\n\n' + obsSettings);
@@ -514,7 +522,7 @@ Stream Key: ${defaultStreamKey}`;
                     <div className="flex justify-between items-center">
                       <span className="text-gray-400">Server:</span>
                       <div className="flex items-center gap-2">
-                        <code className="bg-gray-800 px-2 py-1 rounded text-xs">rtmp://live.deluwang.online/live</code>
+                        <code className="bg-gray-800 px-2 py-1 rounded text-xs">rtmp://161.97.65.21/live</code>
                         <Button size="sm" onClick={copyOBSSettings} className="text-xs px-2 py-1">
                           Copy
                         </Button>
@@ -572,6 +580,13 @@ Stream Key: ${defaultStreamKey}`;
                     </li>
                   </ol>
 
+                  <div className="bg-yellow-900/30 border border-yellow-800 rounded-lg p-3 text-xs mb-3">
+                    <p className="text-yellow-300 font-medium mb-1">⚠️ Penting:</p>
+                    <p className="text-yellow-200">
+                      Gunakan <strong>Direct IP (rtmp://161.97.65.21)</strong> untuk OBS karena Cloudflare tidak support RTMP protocol.
+                      Penonton tetap menggunakan HTTPS domain untuk menonton.
+                    </p>
+                  </div>
                   <div className="bg-red-900/30 border border-red-800 rounded-lg p-3 text-xs">
                     <p className="text-red-300 font-medium mb-1">🎯 Catatan:</p>
                     <p className="text-red-200">
