@@ -48,8 +48,8 @@ const LiveStreamingPage = () => {
 
   // Configuration
   const CONFIG = {
-    HLS_URL: (streamKey: string) => `http://live.deluwang.online/hls/${streamKey}.m3u8`,
-    CHAT_SERVER: 'http://live.deluwang.online:3007',
+    HLS_URL: (streamKey: string) => `https://live.deluwang.online/hls/${streamKey}.m3u8`,
+    CHAT_SERVER: 'https://live.deluwang.online',
     RECONNECT_INTERVAL: 5000
   };
 
