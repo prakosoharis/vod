@@ -198,8 +198,8 @@ export async function createContent(
       featured?: boolean;
     } | undefined;
 
-    if (!body?.title || !body?.description || !body?.genre || !body?.year || !body?.rating || !body?.duration || !body?.type) {
-      reply.code(400).send({ error: 'Required fields: title, description, genre, year, rating, duration, type' });
+    if (!body?.title || !body?.description || !body?.genre || !body?.year || !body?.rating || !body?.duration || !body?.type || !body?.thumbnail_url) {
+      reply.code(400).send({ error: 'Required fields: title, description, genre, year, rating, duration, type, thumbnail_url' });
       return;
     }
 
@@ -211,7 +211,7 @@ export async function createContent(
         year: body.year,
         rating: new (await import('@prisma/client')).Prisma.Decimal(body.rating),
         duration: body.duration,
-        thumbnail_url: body.thumbnail_url || undefined,
+        thumbnail_url: body.thumbnail_url,
         backdrop_url: body.backdrop_url || undefined,
         video_url: body.video_url || undefined,
         trailer_url: body.trailer_url || undefined,
