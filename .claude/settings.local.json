@@ -53,7 +53,9 @@
       "Bash(npm install:*)",
       "Bash(docker:*)",
       "Bash(npm run seed:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(./scripts/local-migrate.sh:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

@@ -2,16 +2,27 @@
 
 Platform streaming terbaik untuk hiburan berkualitas dari dalam dan luar negeri.
 
+**🎬 Complete Platform Features:**
+- **Video Streaming**: Film dan series dengan kualitas HD
+- **Admin Backoffice**: Manajemen konten dan user yang lengkap
+- **RESTful API**: Backend yang robust dan scalable
+- **Responsive Design**: Optimal di desktop dan mobile
+
 ## 🏗️ Project Structure
 
 ```
 vod/
 ├── apps/
 │   ├── api/              # Fastify backend API
-│   └── web/              # React frontend application
+│   ├── web/              # React frontend application
+│   └── backoffice/       # React admin dashboard
+├── scripts/
+│   ├── local-migrate.sh  # Local migration script
+│   └── server-migrate.sh # Server migration script
 ├── docker-compose.yml    # PostgreSQL database
 ├── ecosystem.config.js   # PM2 configuration
-└── setup.sh             # Automated setup script
+├── setup.sh             # Automated setup script
+└── DATABASE_SYNC_GUIDE.md # Database sync guide
 ```
 
 ## 🚀 Quick Start
@@ -24,11 +35,11 @@ git clone <repository-url>
 cd vod
 chmod +x setup.sh
 
-# Run production setup
-NODE_ENV=production ./setup.sh
+# Run production setup (for server)
+./setup.sh production
 ```
 
-### For Development (Local)
+### For Development (Local Laptop)
 
 ```bash
 # Clone and setup
@@ -36,8 +47,8 @@ git clone <repository-url>
 cd vod
 chmod +x setup.sh
 
-# Run development setup
-./setup.sh
+# Run development setup (for local)
+./setup.sh development
 
 # Start development servers
 # Terminal 1 - API:
@@ -109,6 +120,7 @@ VITE_API_BASE_URL=http://localhost:3005
 
 - **API**: http://localhost:3005
 - **Web**: http://localhost:3000
+- **Backoffice Admin**: http://localhost:3006
 - **API Health**: http://localhost:3005/health
 - **Web Health**: http://localhost:3000/health
 
@@ -130,11 +142,29 @@ pm2 startup
 ### PM2 Commands
 
 ```bash
-pm2 status          # Check status
-pm2 logs            # View logs
-pm2 restart all     # Restart all apps
-pm2 reload all      # Reload without downtime
-pm2 monit           # Monitor performance
+pm2 status                    # Check all services status
+pm2 logs                      # View all logs
+pm2 logs alkamus-api         # View API logs only
+pm2 logs alkamus-backoffice  # View backoffice logs only
+pm2 restart all              # Restart all apps
+pm2 restart alkamus-api      # Restart API only
+pm2 restart alkamus-backoffice # Restart backoffice only
+pm2 reload all               # Reload without downtime
+pm2 monit                    # Monitor performance
+```
+
+### Setup Commands
+
+```bash
+# Production setup (for server deployment)
+./setup.sh production
+
+# Development setup (for local laptop)
+./setup.sh development
+
+# Alternative using environment variables
+NODE_ENV=production ./setup.sh
+NODE_ENV=development ./setup.sh
 ```
 
 ## 🛠️ Development
@@ -155,6 +185,65 @@ cd apps/web
 pnpm dev            # Start development server
 pnpm build          # Build for production
 pnpm preview        # Preview production build
+```
+
+### Backoffice Development
+
+```bash
+cd apps/backoffice
+npm run dev         # Start development server
+npm run build       # Build for production
+npm run preview     # Preview production build
+npm run type-check  # TypeScript type checking
+```
+
+## 🔄 Database Sync (Local → Server)
+
+### Workflow untuk sync perubahan database dari local ke server:
+
+#### **Di Local (Laptop):**
+
+```bash
+# 1. Buat migration baru
+./scripts/local-migrate.sh "add_user_phone_field"
+
+# 2. Test dan review migration
+# 3. Commit ke repository
+git add apps/api/prisma/
+git commit -m "feat: add user phone field"
+git push origin main
+```
+
+#### **Di Server:**
+
+```bash
+# 1. Pull latest changes
+git pull origin main
+
+# 2. Run migration dengan backup otomatis
+./scripts/server-migrate.sh
+
+# 3. Atau backup saja (jika ingin migration manual)
+./scripts/server-migrate.sh --backup-only
+```
+
+### Available Scripts:
+- **`./scripts/local-migrate.sh "migration_name"`** - Buat migration di local
+- **`./scripts/server-migrate.sh`** - Apply migration di server dengan backup
+- **`DATABASE_SYNC_GUIDE.md`** - Panduan lengkap dan troubleshooting
+
+### Commands Manual:
+```bash
+# Local
+cd apps/api
+npx prisma migrate dev --name migration_name
+npm run seed
+
+# Server
+cd apps/api
+npx prisma migrate deploy
+npm run seed
+pm2 restart alkamus-api
 ```
 
 ## 📁 Important Files

@@ -5,11 +5,11 @@
 
 echo "🚀 Setting up Alkamus VOD project..."
 
-# Check if we're in production (server) environment
-if [ "$NODE_ENV" = "production" ] || [ "$1" = "production" ]; then
+# Check environment type
+if [ "$1" = "production" ]; then
     echo "📍 Production environment detected"
 
-    # Install dependencies for both apps
+    # Install dependencies for all apps
     echo "📦 Installing API dependencies..."
     cd apps/api && CI=true pnpm install --ignore-scripts --frozen-lockfile
     pnpm prisma generate
@@ -19,10 +19,15 @@ if [ "$NODE_ENV" = "production" ] || [ "$1" = "production" ]; then
     cd ../web && CI=true pnpm install --ignore-scripts --frozen-lockfile
     pnpm build
 
+    echo "📦 Installing Backoffice dependencies..."
+    cd ../backoffice && CI=true npm install
+    npm install express
+    npm run build
+
     cd ../..
 
     # Setup PM2 if not already running
-    if ! pm2 list | grep -q "alkamus-api"; then
+    if ! pm2 list | grep -q "alkamus-api" || ! pm2 list | grep -q "alkamus-backoffice"; then
         echo "🔧 Setting up PM2 processes..."
         pm2 start ecosystem.config.js
         pm2 save
@@ -35,11 +40,12 @@ if [ "$NODE_ENV" = "production" ] || [ "$1" = "production" ]; then
     echo "✅ Production setup complete!"
     echo "🌐 API: http://localhost:3005"
     echo "🌐 Web: http://localhost (via reverse proxy)"
+    echo "🌐 Backoffice: http://localhost:3006"
 
-else
+elif [ "$1" = "development" ]; then
     echo "📍 Development environment detected"
 
-    # Install dependencies for both apps
+    # Install dependencies for all apps
     echo "📦 Installing API dependencies..."
     cd apps/api && pnpm install
     pnpm prisma generate
@@ -47,15 +53,22 @@ else
     echo "📦 Installing Web dependencies..."
     cd ../web && pnpm install
 
+    echo "📦 Installing Backoffice dependencies..."
+    cd ../backoffice && npm install
+
     cd ../..
 
     echo "✅ Development setup complete!"
     echo "🔧 To start development servers:"
     echo "   API: cd apps/api && pnpm dev"
     echo "   Web: cd apps/web && pnpm dev"
+    echo "   Backoffice: cd apps/backoffice && npm run dev"
     echo ""
     echo "🐳 To start database (if needed):"
     echo "   docker-compose up -d"
+else
+    echo "❌ Usage: ./setup.sh [production|development]"
+    exit 1
 fi
 
 echo "🎉 Setup completed successfully!"
