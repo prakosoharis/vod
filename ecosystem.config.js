@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'alkamus-api',
       script: 'apps/api/dist/server.js',
-      cwd: '/var/www/alkamus/vod',
+      cwd: '/var/www/vod',
       instances: 'max',
       exec_mode: 'cluster',
       env: {
@@ -18,7 +18,7 @@ module.exports = {
     {
       name: 'alkamus-web',
       script: 'server.js',
-      cwd: '/var/www/alkamus/vod/apps/web',
+      cwd: '/var/www/vod/apps/web',
       instances: 1,
       env: {
         NODE_ENV: 'production',
@@ -32,7 +32,7 @@ module.exports = {
     {
       name: 'alkamus-backoffice',
       script: 'apps/backoffice/server.js',
-      cwd: '/var/www/alkamus/vod',
+      cwd: '/var/www/vod',
       instances: 1,
       env: {
         NODE_ENV: 'production',
