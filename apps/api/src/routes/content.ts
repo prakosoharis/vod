@@ -5,11 +5,18 @@ import {
   getFeaturedContent,
   getTrendingContent,
   searchContent,
-} from '../controllers/contentController.js';
+  createContent,
+  updateContent,
+} from '../controllers/contentController';
+import { authenticateRequest } from '../middleware/auth';
 
 export async function contentRoutes(fastify: FastifyInstance): Promise<void> {
   // Get all content with pagination and filters (public)
   fastify.get('/', getAllContent);
+
+  // Admin Content Management
+  fastify.post('/', { preHandler: [authenticateRequest] }, createContent);
+  fastify.put('/:id', { preHandler: [authenticateRequest] }, updateContent);
 
   // Get single content by ID (public)
   fastify.get('/:id', getContentById);

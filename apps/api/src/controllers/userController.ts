@@ -344,3 +344,121 @@ export async function getContinueWatching(
     reply.code(500).send({ error: 'Internal server error' });
   }
 }
+
+// Admin functions
+export async function getAllUsers(
+  _request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        full_name: true,
+        avatar_url: true,
+        created_at: true,
+        updated_at: true,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    reply.send(users);
+  } catch (error) {
+    reply.code(500).send({ error: 'Internal server error' });
+  }
+}
+
+export async function createUser(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  try {
+    const body = request.body as {
+      email?: string;
+      full_name?: string;
+      password?: string;
+    } | undefined;
+
+    if (!body?.email || !body?.full_name || !body?.password) {
+      reply.code(400).send({ error: 'Email, full_name, and password are required' });
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: body.email },
+    });
+
+    if (existingUser) {
+      reply.code(409).send({ error: 'User with this email already exists' });
+      return;
+    }
+
+    // Hash password
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.hash(body.password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        email: body.email,
+        full_name: body.full_name,
+        password_hash: hashedPassword,
+      },
+      select: {
+        id: true,
+        email: true,
+        full_name: true,
+        avatar_url: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    reply.code(201).send(user);
+  } catch (error) {
+    reply.code(500).send({ error: 'Internal server error' });
+  }
+}
+
+export async function updateUser(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  try {
+    const { id } = request.params as { id: string };
+    const body = request.body as {
+      full_name?: string;
+      avatar_url?: string;
+    } | undefined;
+
+    if (!body || (body.full_name === undefined && body.avatar_url === undefined)) {
+      reply.code(400).send({ error: 'Nothing to update' });
+      return;
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(body.full_name !== undefined ? { full_name: body.full_name } : {}),
+        ...(body.avatar_url !== undefined ? { avatar_url: body.avatar_url } : {}),
+      },
+      select: {
+        id: true,
+        email: true,
+        full_name: true,
+        avatar_url: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    reply.send(updated);
+  } catch (error) {
+    if ((error as any)?.code === 'P2025') {
+      reply.code(404).send({ error: 'User not found' });
+      return;
+    }
+    reply.code(500).send({ error: 'Internal server error' });
+  }
+}

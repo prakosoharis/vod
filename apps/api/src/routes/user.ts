@@ -8,13 +8,23 @@ import {
   getWatchProgress,
   updateWatchProgress,
   getContinueWatching,
-} from '../controllers/userController.js';
-import { authenticateRequest } from '../middleware/auth.js';
+  getAllUsers,
+  createUser,
+  updateUser,
+  getUserById,
+} from '../controllers/userController';
+import { authenticateRequest } from '../middleware/auth';
 
 export async function userRoutes(fastify: FastifyInstance): Promise<void> {
   // Profile
   fastify.get('/profile', { preHandler: [authenticateRequest] }, getProfile);
   fastify.put('/profile', { preHandler: [authenticateRequest] }, updateProfile);
+
+  // Admin User Management
+  fastify.get('/all', { preHandler: [authenticateRequest] }, getAllUsers);
+  fastify.post('/', { preHandler: [authenticateRequest] }, createUser);
+  fastify.get('/:id', getUserById);
+  fastify.put('/:id', { preHandler: [authenticateRequest] }, updateUser);
 
   // Watchlist
   fastify.get('/watchlist', { preHandler: [authenticateRequest] }, getWatchlist);

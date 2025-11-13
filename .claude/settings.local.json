@@ -46,7 +46,14 @@
       "Bash(python3 -)",
       "Bash(xargs -I {} git rm:*)",
       "Bash(find:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(npm run update-posters:*)",
+      "Bash(PORT=3006 npm run dev:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(docker:*)",
+      "Bash(npm run seed:*)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []
