@@ -71,7 +71,7 @@ export default function Movies() {
           const [name, role] = c.trim().split(' as ')
           return { name: name.trim(), role: role?.trim() || 'Actor' }
         }).filter(c => c.name),
-        type: formData.type,
+        type: formData.type as 'MOVIE' | 'SERIES',
         featured: formData.featured
       })
       setShowCreateModal(false)
@@ -104,7 +104,7 @@ export default function Movies() {
           const [name, role] = c.trim().split(' as ')
           return { name: name.trim(), role: role?.trim() || 'Actor' }
         }).filter(c => c.name),
-        type: formData.type,
+        type: formData.type as 'MOVIE' | 'SERIES',
         featured: formData.featured
       })
       setShowEditModal(false)
