@@ -126,4 +126,86 @@ export async function searchContent(request, reply) {
         reply.code(500).send({ error: 'Internal server error' });
     }
 }
+// Admin Content Management
+export async function createContent(request, reply) {
+    try {
+        const body = request.body;
+        if (!body?.title || !body?.description || !body?.genre || !body?.year || !body?.rating || !body?.duration || !body?.type || !body?.thumbnail_url) {
+            reply.code(400).send({ error: 'Required fields: title, description, genre, year, rating, duration, type, thumbnail_url' });
+            return;
+        }
+        const content = await prisma.content.create({
+            data: {
+                title: body.title,
+                description: body.description,
+                genre: body.genre,
+                year: body.year,
+                rating: new (await import('@prisma/client')).Prisma.Decimal(body.rating),
+                duration: body.duration,
+                thumbnail_url: body.thumbnail_url,
+                backdrop_url: body.backdrop_url || undefined,
+                video_url: body.video_url || undefined,
+                trailer_url: body.trailer_url || undefined,
+                cast: body.cast || [],
+                type: body.type,
+                featured: body.featured || false,
+            },
+        });
+        reply.code(201).send(content);
+    }
+    catch (error) {
+        console.error('Error creating content:', error);
+        reply.code(500).send({ error: 'Internal server error' });
+    }
+}
+export async function updateContent(request, reply) {
+    try {
+        const { id } = request.params;
+        const body = request.body;
+        if (!body || Object.keys(body).length === 0) {
+            reply.code(400).send({ error: 'Nothing to update' });
+            return;
+        }
+        const updateData = {};
+        if (body.title !== undefined)
+            updateData.title = body.title;
+        if (body.description !== undefined)
+            updateData.description = body.description;
+        if (body.genre !== undefined)
+            updateData.genre = body.genre;
+        if (body.year !== undefined)
+            updateData.year = body.year;
+        if (body.rating !== undefined)
+            updateData.rating = new (await import('@prisma/client')).Prisma.Decimal(body.rating);
+        if (body.duration !== undefined)
+            updateData.duration = body.duration;
+        if (body.thumbnail_url !== undefined)
+            updateData.thumbnail_url = body.thumbnail_url;
+        if (body.backdrop_url !== undefined)
+            updateData.backdrop_url = body.backdrop_url;
+        if (body.video_url !== undefined)
+            updateData.video_url = body.video_url;
+        if (body.trailer_url !== undefined)
+            updateData.trailer_url = body.trailer_url;
+        if (body.cast !== undefined)
+            updateData.cast = body.cast;
+        if (body.type !== undefined)
+            updateData.type = body.type;
+        if (body.featured !== undefined)
+            updateData.featured = body.featured;
+        const updated = await prisma.content.update({
+            where: { id },
+            data: updateData,
+        });
+        reply.send(updated);
+    }
+    catch (error) {
+        if (error?.code === 'P2025') {
+            reply.code(404).send({ error: 'Content not found' });
+            return;
+        }
+        console.error('Error updating content:', error);
+        reply.code(500).send({ error: 'Internal server error' });
+    }
+}
 //# sourceMappingURL=contentController.js.map
