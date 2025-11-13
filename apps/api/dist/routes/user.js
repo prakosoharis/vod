@@ -1,5 +1,5 @@
-import { getProfile, updateProfile, getWatchlist, addToWatchlist, removeFromWatchlist, getWatchProgress, updateWatchProgress, getContinueWatching, getAllUsers, createUser, updateUser, getUserById, } from '../controllers/userController';
-import { authenticateRequest } from '../middleware/auth';
+import { getProfile, updateProfile, getWatchlist, addToWatchlist, removeFromWatchlist, getWatchProgress, updateWatchProgress, getContinueWatching, getAllUsers, createUser, updateUser, getUserById, } from '../controllers/userController.js';
+import { authenticateRequest } from '../middleware/auth.js';
 export async function userRoutes(fastify) {
     // Profile
     fastify.get('/profile', { preHandler: [authenticateRequest] }, getProfile);

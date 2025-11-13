@@ -55,7 +55,12 @@
       "Bash(npm run seed:*)",
       "Bash(tasklist:*)",
       "Bash(./scripts/local-migrate.sh:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(nginx:*)",
+      "Bash(systemctl:*)",
+      "Bash(nslookup:*)",
+      "Bash(ping:*)",
+      "Bash(ufw status:*)"
     ],
     "deny": [],
     "ask": []

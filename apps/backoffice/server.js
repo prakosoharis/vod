@@ -8,8 +8,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3006;
 
-// Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, 'dist')));
+// Serve static files from the dist directory with proper MIME types
+app.use(express.static(path.join(__dirname, 'dist'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js')) {
+      res.set('Content-Type', 'application/javascript');
+    } else if (filePath.endsWith('.css')) {
+      res.set('Content-Type', 'text/css');
+    } else if (filePath.endsWith('.mjs')) {
+      res.set('Content-Type', 'application/javascript');
+    }
+  }
+}));
 
 // For all other routes, serve the index.html file
 app.get(/.*/, (req, res) => {

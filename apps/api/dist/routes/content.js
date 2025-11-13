@@ -1,5 +1,5 @@
-import { getAllContent, getContentById, getFeaturedContent, getTrendingContent, searchContent, createContent, updateContent, } from '../controllers/contentController';
-import { authenticateRequest } from '../middleware/auth';
+import { getAllContent, getContentById, getFeaturedContent, getTrendingContent, searchContent, createContent, updateContent, } from '../controllers/contentController.js';
+import { authenticateRequest } from '../middleware/auth.js';
 export async function contentRoutes(fastify) {
     // Get all content with pagination and filters (public)
     fastify.get('/', getAllContent);

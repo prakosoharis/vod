@@ -5,6 +5,7 @@ import DashboardLayout from './components/DashboardLayout'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Movies from './pages/Movies'
+import Login from './pages/Login'
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth()
@@ -20,17 +21,17 @@ function AppContent() {
     )
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-
   return (
     <Routes>
       <Route
         path="/login"
-        element={<Navigate to="/dashboard" replace />}
+        element={
+          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+        }
       />
-      <Route path="/" element={<DashboardLayout />}>
+      <Route path="/" element={
+        isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" replace />
+      }>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="users" element={<Users />} />
         <Route path="movies" element={<Movies />} />
