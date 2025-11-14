@@ -40,16 +40,16 @@ const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         try {
-          videoRef.current?.play().catch(e => {
-            console.error('Autoplay failed:', e);
+          videoRef.current?.play().catch(() => {
+            // Silently handle autoplay error
           });
         } catch (e) {
-          console.error('Autoplay failed:', e);
+          // Silently handle autoplay error
         }
       });
 
-      hls.on(Hls.Events.ERROR, (_, data) => {
-        console.error('HLS Error:', data);
+      hls.on(Hls.Events.ERROR, () => {
+        // Silently handle HLS errors
       });
 
       return () => {
@@ -87,7 +87,7 @@ const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
           await videoRef.current.requestPictureInPicture();
         }
       } catch (error) {
-        console.error('Picture-in-Picture error:', error);
+        // Silently handle Picture-in-Picture error
       }
     }
   };

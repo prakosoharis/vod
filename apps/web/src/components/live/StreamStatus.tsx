@@ -39,11 +39,8 @@ const StreamStatus: React.FC<StreamStatusProps> = ({
   const copyStreamKey = () => {
     const key = customStreamKey.trim() || defaultStreamKey;
     navigator.clipboard.writeText(key)
-      .then(() => {
-        console.log('Stream key copied to clipboard');
-      })
-      .catch((err) => {
-        console.error('Failed to copy:', err);
+      .catch(() => {
+        // Silently handle copy error
       });
   };
 

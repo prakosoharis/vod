@@ -115,7 +115,6 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLogout }) => {
               onClick={() => {
                 setShowDropdown(false)
                 // Navigate to settings when implemented
-                console.log('Settings clicked')
               }}
               className="flex items-center gap-3 w-full px-4 py-2 text-white hover:bg-white/10 transition-colors duration-200"
             >

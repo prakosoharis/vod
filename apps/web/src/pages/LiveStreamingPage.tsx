@@ -62,8 +62,7 @@ HLS untuk penonton tetap pakai: https://live.deluwang.online/hls/${defaultStream
 
     navigator.clipboard.writeText(obsSettings).then(() => {
       alert('✅ Settings copied to clipboard!\n\n' + obsSettings);
-    }).catch(err => {
-      console.error('Failed to copy:', err);
+    }).catch(() => {
       prompt('Copy these OBS settings:', obsSettings);
     });
   };

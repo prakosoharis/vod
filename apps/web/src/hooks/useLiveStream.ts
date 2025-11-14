@@ -42,7 +42,6 @@ const useLiveStream = (config: LiveStreamConfig) => {
             startTime = statusData.startTime;
           }
         } catch (error) {
-          console.warn('Failed to fetch stream status:', error);
           viewerCount = Math.floor(Math.random() * 100) + 1; // Fallback for demo
         }
       }
@@ -56,7 +55,6 @@ const useLiveStream = (config: LiveStreamConfig) => {
 
       setLastChecked(new Date());
     } catch (error) {
-      console.error('Error checking stream status:', error);
       setStreamStatus({
         isLive: false,
         streamKey: null,

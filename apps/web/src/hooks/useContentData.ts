@@ -52,7 +52,6 @@ const useContentData = ({ contentId, enabled = true }: UseContentDataProps): Use
           .filter(item => item.id !== content.id)
           .slice(0, 8);
       } catch (error) {
-        console.error('Failed to fetch similar content:', error);
         return [];
       }
     },

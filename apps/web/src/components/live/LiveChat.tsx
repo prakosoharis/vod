@@ -48,7 +48,6 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
       });
 
       socketRef.current.on('connect', () => {
-        console.log('Connected to chat server');
         setIsConnected(true);
         socketRef.current?.emit('userInfo', {
           username: user?.full_name || user?.email?.split('@')[0] || 'Anonymous'
@@ -56,7 +55,6 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
       });
 
       socketRef.current.on('disconnect', () => {
-        console.log('Disconnected from chat server');
         setIsConnected(false);
       });
 
@@ -75,13 +73,11 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
         setViewerCount(count);
       });
 
-      socketRef.current.on('connect_error', (error) => {
-        console.error('Failed to connect to chat server:', error);
+      socketRef.current.on('connect_error', () => {
         setIsConnected(false);
       });
 
     } catch (error) {
-      console.error('Failed to connect to chat server:', error);
       setIsConnected(false);
     }
   };

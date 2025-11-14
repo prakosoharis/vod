@@ -53,7 +53,6 @@ const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onC
   const handleAddToList = () => {
     // Placeholder for watchlist functionality
     if (content) {
-      console.log('Added to watchlist:', content.title)
       // TODO: Implement watchlist API call
       // Show feedback to user
       alert(`"${content.title}" ditambahkan ke daftar menonton!`)
@@ -67,7 +66,9 @@ const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onC
         title: content.title,
         text: content.description || `Tonton ${content.title} di MOST!`,
         url: `${window.location.origin}/watch/${content.id}`
-      }).catch(() => console.log('Share cancelled'))
+      }).catch(() => {
+        // Silently handle share cancellation
+      })
     } else if (content) {
       // Fallback: Copy to clipboard
       navigator.clipboard.writeText(`${window.location.origin}/watch/${content.id}`)

@@ -46,7 +46,7 @@ export const useAuth = () => {
     try {
       await authService.logout();
     } catch (err) {
-      console.error('Logout error:', err);
+      // Silently handle logout error
     } finally {
       setUser(null);
       setToken(null);

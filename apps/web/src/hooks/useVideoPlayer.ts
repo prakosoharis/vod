@@ -47,7 +47,9 @@ const useVideoPlayer = (options: VideoPlayerOptions = {}) => {
       if (state.isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play().catch(console.error);
+        videoRef.current.play().catch(() => {
+        // Silently handle autoplay error
+      });
       }
       updateState({ isPlaying: !state.isPlaying });
     }
@@ -85,9 +87,13 @@ const useVideoPlayer = (options: VideoPlayerOptions = {}) => {
   const toggleFullscreen = useCallback(() => {
     if (videoRef.current) {
       if (!document.fullscreenElement) {
-        videoRef.current.requestFullscreen().catch(console.error);
+        videoRef.current.requestFullscreen().catch(() => {
+          // Silently handle fullscreen error
+        });
       } else {
-        document.exitFullscreen().catch(console.error);
+        document.exitFullscreen().catch(() => {
+          // Silently handle fullscreen error
+        });
       }
     }
   }, []);
