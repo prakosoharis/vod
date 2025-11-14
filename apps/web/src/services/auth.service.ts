@@ -81,7 +81,9 @@ export const authService = {
    */
   getToken(): string | null {
     try {
-      return localStorage.getItem(TOKEN_KEY);
+      const token = localStorage.getItem(TOKEN_KEY);
+      console.log('🔍 [AuthService] getToken:', token ? 'found' : 'not found');
+      return token;
     } catch (error) {
       console.error('Get token error:', error);
       return null;
@@ -94,7 +96,9 @@ export const authService = {
    */
   setToken(token: string): void {
     try {
+      console.log('💾 [AuthService] setToken: saving token');
       localStorage.setItem(TOKEN_KEY, token);
+      console.log('✅ [AuthService] setToken: token saved successfully');
     } catch (error) {
       console.error('Set token error:', error);
       throw error;

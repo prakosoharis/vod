@@ -42,15 +42,7 @@ export default function Login() {
             Masuk untuk mengakses dashboard admin
           </p>
 
-          {/* Login Info */}
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-800 text-center">
-              <strong>Test Login:</strong><br/>
-              Email: admin@alkamus.com<br/>
-              Password: admin123
-            </p>
           </div>
-        </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="rounded-md shadow-sm space-y-4">

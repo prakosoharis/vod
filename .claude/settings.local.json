@@ -71,7 +71,8 @@
       "Bash(timeout 5 bash -c \"</dev/tcp/localhost/1935\")",
       "Bash(timeout 5 bash -c \"</dev/tcp/161.97.65.21/1935\")",
       "Bash(vod_nginx-rtmp:latest)",
-      "Bash(sudo:*)"
+      "Bash(sudo:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
