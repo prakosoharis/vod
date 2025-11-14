@@ -48,7 +48,7 @@ const LiveStreamingPage = () => {
 
   // Configuration
   const CONFIG = {
-    HLS_URL: (streamKey: string) => `https://live.deluwang.online/hls/${streamKey}.m3u8`,
+    HLS_URL: (streamKey: string) => `https://live.deluwang.online/hls/${streamKey}/index.m3u8`,
     CHAT_SERVER: 'https://live.deluwang.online',
     RECONNECT_INTERVAL: 5000
   };
@@ -267,7 +267,7 @@ const LiveStreamingPage = () => {
 Stream Key: ${defaultStreamKey}
 
 NOTE: Gunakan Direct IP karena Cloudflare tidak support RTMP.
-HLS untuk penonton tetap pakai: https://live.deluwang.online/hls/${defaultStreamKey}.m3u8`;
+HLS untuk penonton tetap pakai: https://live.deluwang.online/hls/${defaultStreamKey}/index.m3u8`;
 
     navigator.clipboard.writeText(obsSettings).then(() => {
       alert('✅ Settings copied to clipboard!\n\n' + obsSettings);

@@ -21,13 +21,14 @@ services:
 
 # Nginx RTMP Streaming Server
   nginx-rtmp:
-    image: alfg/nginx-rtmp:latest
+    build:
+      context: ./rtmp
+      dockerfile: Dockerfile
     container_name: nginx-rtmp
     ports:
       - "1935:1935"   # RTMP port
       - "8080:80"     # HLS HTTP port
     volumes:
-      - ./rtmp/nginx-rtmp.conf:/usr/local/nginx/conf/nginx.conf
       - ./rtmp/hls:/usr/local/nginx/html/hls
       - ./rtmp/data:/usr/local/nginx/html/data
     environment:
