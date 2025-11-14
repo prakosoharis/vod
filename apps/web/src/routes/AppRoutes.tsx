@@ -1,46 +1,82 @@
 import { Routes, Route } from 'react-router-dom'
+import { Suspense, lazy } from 'react'
 import Layout from '../components/layout/Layout'
-import { LandingPage } from '../pages/LandingPage'
-import LoginPage from '../pages/LoginPage'
-import RegisterPage from '../pages/RegisterPage'
-import BrowsePage from '../pages/BrowsePage'
-import VideoPlayerPage from '../pages/VideoPlayerPage'
-import MyListPage from '../pages/MyListPage'
-import LiveStreamingPage from '../pages/LiveStreamingPage'
-import NotFoundPage from '../pages/NotFoundPage'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
+
+// Lazy load pages untuk code splitting
+const LandingPage = lazy(() => import('../pages/LandingPage').then(module => ({ default: module.LandingPage })))
+const LoginPage = lazy(() => import('../pages/LoginPage'))
+const RegisterPage = lazy(() => import('../pages/RegisterPage'))
+const BrowsePage = lazy(() => import('../pages/BrowsePage'))
+const VideoPlayerPage = lazy(() => import('../pages/VideoPlayerPage'))
+const MyListPage = lazy(() => import('../pages/MyListPage'))
+const LiveStreamingPage = lazy(() => import('../pages/LiveStreamingPage'))
+const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Layout><LandingPage /></Layout>} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/browse" element={
-        <ProtectedRoute>
-          <Layout><BrowsePage /></Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/live" element={
-        <ProtectedRoute>
-          <LiveStreamingPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/watch/:id" element={
-        <ProtectedRoute>
-          <VideoPlayerPage />
-        </ProtectedRoute>
-      } />
-      <Route
-        path="/my-list"
-        element={
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/" element={
+          <Layout>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LandingPage />
+            </Suspense>
+          </Layout>
+        } />
+        <Route path="/login" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <LoginPage />
+          </Suspense>
+        } />
+        <Route path="/register" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <RegisterPage />
+          </Suspense>
+        } />
+        <Route path="/browse" element={
           <ProtectedRoute>
-            <MyListPage />
+            <Layout>
+              <Suspense fallback={<LoadingSpinner />}>
+                <BrowsePage />
+              </Suspense>
+            </Layout>
           </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
-    </Routes>
+        } />
+        <Route path="/live" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LiveStreamingPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/watch/:id" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <VideoPlayerPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route
+          path="/my-list"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<LoadingSpinner />}>
+                <MyListPage />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={
+          <Layout>
+            <Suspense fallback={<LoadingSpinner />}>
+              <NotFoundPage />
+            </Suspense>
+          </Layout>
+        } />
+      </Routes>
+    </Suspense>
   )
 }
 

@@ -3,6 +3,7 @@ import { Play, Plus, Check, ChevronDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { userService } from '@/services/auth.service'
+import OptimizedImage from '@/components/ui/OptimizedImage'
 import type { Content } from '@/types'
 
 interface ContentCardProps {
@@ -60,11 +61,12 @@ const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Thumbnail */}
-      <img
+      <OptimizedImage
         src={content.thumbnail_url}
         alt={content.title}
         className="w-full h-full object-cover rounded"
-        loading="lazy"
+        format="auto"
+        placeholder="blur"
       />
 
       {/* Hover Overlay */}

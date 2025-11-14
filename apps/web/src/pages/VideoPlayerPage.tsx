@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect } from 'react'
 import {
   ArrowLeft,
   Play,
@@ -13,156 +13,47 @@ import {
   Plus,
   Share2
 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { contentService } from '@/services/content.service'
+
+// Import custom hooks
+import useVideoPlayer from '@/hooks/useVideoPlayer'
+import useContentData from '@/hooks/useContentData'
+import { useContentModal } from '@/hooks/useModal'
+
+// Import components
 import ContentRow from '@/components/home/ContentRow'
 import ContentDetailModal from '@/components/content/ContentDetailModal'
-import type { Content } from '@/types'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 const VideoPlayerPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Video state
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [showControls, setShowControls] = useState(true)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [volume, setVolume] = useState(1)
-  const [isMuted, setIsMuted] = useState(false)
-  const [showQualityMenu, setShowQualityMenu] = useState(false)
-  const [selectedQuality, setSelectedQuality] = useState('Auto')
+  // Use custom hooks
+  const {
+    videoRef,
+    state: videoState,
+    actions: videoActions
+  } = useVideoPlayer({
+    autoHideControls: true,
+    autoHideDelay: 3000
+  })
 
-  // Controls timeout
-  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Modal state
-  const [modalOpen, setModalOpen] = useState(false)
-  const [selectedContent, setSelectedContent] = useState<Content | null>(null)
-
-  // Fetch content data
-  const { data: content, isLoading, error } = useQuery<Content>({
-    queryKey: ['content', id],
-    queryFn: () => contentService.getContentById(id!),
+  const {
+    content,
+    similarContent,
+    isLoading,
+    error
+  } = useContentData({
+    contentId: id,
     enabled: !!id
   })
 
-  // Fetch similar content for "More Like This"
-  const { data: similarContent } = useQuery<Content[]>({
-    queryKey: ['similar-content', content?.genre],
-    queryFn: async () => {
-      if (!content?.genre?.[0]) return []
-      const response = await contentService.getAllContent({
-        genre: content.genre[0],
-        limit: 10
-      })
-      return response.data.filter(item => item.id !== content.id)
-    },
-    enabled: !!content?.genre?.[0]
-  })
-
-  // Auto-hide controls
-  useEffect(() => {
-    if (isPlaying && showControls) {
-      controlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false)
-      }, 3000)
-    }
-
-    return () => {
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current)
-      }
-    }
-  }, [showControls, isPlaying])
-
-  // Show controls on mouse move
-  const handleMouseMove = () => {
-    setShowControls(true)
-    if (isPlaying) {
-      // Reset timer
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current)
-      }
-      controlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false)
-      }, 3000)
-    }
-  }
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
-      }
-      setIsPlaying(!isPlaying)
-    }
-  }
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      const newMutedState = !isMuted
-      videoRef.current.muted = newMutedState
-      setIsMuted(newMutedState)
-    }
-  }
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value)
-    if (videoRef.current) {
-      videoRef.current.volume = newVolume
-      setVolume(newVolume)
-      setIsMuted(newVolume === 0)
-    }
-  }
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = parseFloat(e.target.value)
-    setCurrentTime(time)
-    if (videoRef.current) {
-      videoRef.current.currentTime = time
-    }
-  }
-
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen()
-      } else {
-        videoRef.current.requestFullscreen()
-      }
-    }
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const handleQualityChange = (quality: string) => {
-    setSelectedQuality(quality)
-    setShowQualityMenu(false)
-    // In real implementation, change video source here
-  }
-
-  // Modal handlers
-  const openModal = (contentItem: Content) => {
-    setSelectedContent(contentItem)
-    setModalOpen(true)
-  }
-
-  const closeModal = () => {
-    setModalOpen(false)
-    setSelectedContent(null)
-  }
-
-  const handleContentChange = (newContent: Content) => {
-    setSelectedContent(newContent)
-  }
+  const {
+    isOpen: modalOpen,
+    data: selectedContent,
+    open: openModal,
+    close: closeModal
+  } = useContentModal()
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -170,19 +61,19 @@ const VideoPlayerPage = () => {
       // Prevent default for video controls
       if (e.target instanceof HTMLInputElement) return
 
-      switch(e.key.toLowerCase()) {
+      switch (e.key.toLowerCase()) {
         case ' ':
         case 'spacebar':
           e.preventDefault()
-          togglePlay()
+          videoActions.togglePlay()
           break
         case 'f':
           e.preventDefault()
-          toggleFullscreen()
+          videoActions.toggleFullscreen()
           break
         case 'm':
           e.preventDefault()
-          toggleMute()
+          videoActions.toggleMute()
           break
         case 'arrowleft':
           e.preventDefault()
@@ -193,16 +84,16 @@ const VideoPlayerPage = () => {
         case 'arrowright':
           e.preventDefault()
           if (videoRef.current) {
-            videoRef.current.currentTime = Math.min(duration, videoRef.current.currentTime + 10)
+            videoRef.current.currentTime = Math.min(videoState.duration, videoRef.current.currentTime + 10)
           }
           break
         case 'arrowup':
           e.preventDefault()
-          setVolume(prev => Math.min(1, prev + 0.1))
+          videoActions.handleVolumeChange(Math.min(1, videoState.volume + 0.1))
           break
         case 'arrowdown':
           e.preventDefault()
-          setVolume(prev => Math.max(0, prev - 0.1))
+          videoActions.handleVolumeChange(Math.max(0, videoState.volume - 0.1))
           break
         case 'escape':
           e.preventDefault()
@@ -215,12 +106,12 @@ const VideoPlayerPage = () => {
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [isPlaying, duration, togglePlay, toggleFullscreen, toggleMute, setVolume])
+  }, [videoActions, videoState.duration, videoRef])
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <LoadingSpinner size="lg" />
       </div>
     )
   }
@@ -232,7 +123,7 @@ const VideoPlayerPage = () => {
           <h1 className="text-2xl font-bold text-white mb-4">Konten tidak ditemukan</h1>
           <button
             onClick={() => navigate('/browse')}
-            className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded"
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
           >
             Kembali ke Browse
           </button>
@@ -241,15 +132,19 @@ const VideoPlayerPage = () => {
     )
   }
 
+  const handleContentChange = (newContent: typeof content) => {
+    openModal(newContent)
+  }
+
   return (
     <div className="bg-black min-h-screen">
       {/* Video Player Container */}
       <div
         className="relative w-full bg-black"
-        onMouseMove={handleMouseMove}
+        onMouseMove={videoActions.showControls}
         style={{ paddingTop: '56.25%' }}
       >
-        {/* Back Button - Compact */}
+        {/* Back Button */}
         <button
           onClick={() => navigate('/browse')}
           className="absolute top-3 left-3 md:top-4 md:left-4 z-20
@@ -265,7 +160,7 @@ const VideoPlayerPage = () => {
         </button>
 
         {/* Next Episode (for series) */}
-        {content.type === 'SERIES' && isPlaying && (
+        {content.type === 'SERIES' && videoState.isPlaying && (
           <div className="absolute top-4 right-4 z-20">
             <button className="flex items-center gap-2 px-4 py-2 bg-black/50 hover:bg-black/70 rounded transition-colors">
               <SkipForward size={20} />
@@ -276,33 +171,25 @@ const VideoPlayerPage = () => {
 
         {/* Video Container */}
         <div className="absolute inset-0">
-          {/* Video Element */}
           <video
             ref={videoRef}
             className="w-full h-full object-contain"
             src={content.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
-            onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-            onLoadedMetadata={(e) => {
-              setDuration(e.currentTarget.duration)
-              setCurrentTime(0)
-            }}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onClick={togglePlay}
+            onClick={videoActions.togglePlay}
           />
         </div>
 
         {/* Controls Overlay */}
-        <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent transition-opacity duration-300 ${videoState.showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="p-3 md:p-4">
             {/* Progress Bar */}
             <div className="mb-2 md:mb-4">
               <input
                 type="range"
                 min="0"
-                max={duration}
-                value={currentTime}
-                onChange={handleSeek}
+                max={videoState.duration}
+                value={videoState.currentTime}
+                onChange={(e) => videoActions.seekTo(parseFloat(e.target.value))}
                 className="w-full h-1 md:h-0.5 appearance-none bg-gray-600 rounded-lg cursor-pointer
                          [&::-webkit-slider-thumb]:appearance-none
                          [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
@@ -316,12 +203,12 @@ const VideoPlayerPage = () => {
                          [&::-moz-range-thumb]:bg-red-600
                          [&::-moz-range-thumb]:border-none"
                 style={{
-                  background: `linear-gradient(to right, #e50914 0%, #e50914 ${(currentTime / duration) * 100}%, #4b5563 ${(currentTime / duration) * 100}%, #4b5563 100%)`
+                  background: `linear-gradient(to right, #e50914 0%, #e50914 ${(videoState.currentTime / videoState.duration) * 100}%, #4b5563 ${(videoState.currentTime / videoState.duration) * 100}%, #4b5563 100%)`
                 }}
               />
               <div className="flex justify-between text-xs md:text-sm text-white mt-1">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+                <span>{videoActions.formatTime(videoState.currentTime)}</span>
+                <span>{videoActions.formatTime(videoState.duration)}</span>
               </div>
             </div>
 
@@ -330,27 +217,27 @@ const VideoPlayerPage = () => {
               <div className="flex items-center gap-2 md:gap-3">
                 {/* Play/Pause */}
                 <button
-                  onClick={togglePlay}
+                  onClick={videoActions.togglePlay}
                   className="p-2 md:p-1.5 hover:bg-white/10 rounded-full transition"
                 >
-                  {isPlaying ? <Pause size={24} className="md:w-5 md:h-5" /> : <Play size={24} className="md:w-5 md:h-5" />}
+                  {videoState.isPlaying ? <Pause size={24} className="md:w-5 md:h-5" /> : <Play size={24} className="md:w-5 md:h-5" />}
                 </button>
 
                 {/* Volume Control */}
                 <div className="hidden sm:flex items-center gap-2 md:gap-2">
                   <button
-                    onClick={toggleMute}
+                    onClick={videoActions.toggleMute}
                     className="p-2 md:p-1.5 hover:bg-white/10 rounded-full transition"
                   >
-                    {isMuted ? <VolumeX size={24} className="md:w-5 md:h-5" /> : <Volume2 size={24} className="md:w-5 md:h-5" />}
+                    {videoState.isMuted ? <VolumeX size={24} className="md:w-5 md:h-5" /> : <Volume2 size={24} className="md:w-5 md:h-5" />}
                   </button>
                   <input
                     type="range"
                     min="0"
                     max="1"
                     step="0.1"
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
+                    value={videoState.isMuted ? 0 : videoState.volume}
+                    onChange={(e) => videoActions.handleVolumeChange(parseFloat(e.target.value))}
                     className="hidden md:block w-20 h-1 appearance-none bg-gray-600 rounded-lg
                              [&::-webkit-slider-thumb]:appearance-none
                              [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2
@@ -366,7 +253,7 @@ const VideoPlayerPage = () => {
 
                 {/* Time Display */}
                 <span className="text-sm md:text-sm text-white">
-                  {formatTime(currentTime)} / {formatTime(duration)}
+                  {videoActions.formatTime(videoState.currentTime)} / {videoActions.formatTime(videoState.duration)}
                 </span>
               </div>
 
@@ -374,21 +261,21 @@ const VideoPlayerPage = () => {
                 {/* Quality Selector */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowQualityMenu(!showQualityMenu)}
+                    onClick={videoActions.toggleQualityMenu}
                     className="flex items-center gap-1 md:gap-2 p-2 md:p-1.5 hover:bg-white/10 rounded transition"
                   >
                     <Settings size={20} className="md:w-5 md:h-5" />
-                    <span className="text-sm md:text-sm hidden md:inline">{selectedQuality}</span>
+                    <span className="text-sm md:text-sm hidden md:inline">{videoState.selectedQuality}</span>
                   </button>
 
-                  {showQualityMenu && (
+                  {videoState.showQualityMenu && (
                     <div className="absolute bottom-full right-0 mb-2 bg-black/90 rounded p-2 min-w-[100px]">
                       {['Auto', '1080p', '720p', '480p'].map(quality => (
                         <button
                           key={quality}
-                          onClick={() => handleQualityChange(quality)}
+                          onClick={() => videoActions.selectQuality(quality)}
                           className={`block w-full text-left px-2 py-1 text-sm hover:bg-white/20 rounded ${
-                            selectedQuality === quality ? 'text-primary' : 'text-white'
+                            videoState.selectedQuality === quality ? 'text-red-500' : 'text-white'
                           }`}
                         >
                           {quality}
@@ -400,7 +287,7 @@ const VideoPlayerPage = () => {
 
                 {/* Fullscreen */}
                 <button
-                  onClick={toggleFullscreen}
+                  onClick={videoActions.toggleFullscreen}
                   className="p-2 md:p-1.5 hover:bg-white/10 rounded-full transition"
                 >
                   <Maximize size={24} className="md:w-5 md:h-5" />
@@ -411,9 +298,9 @@ const VideoPlayerPage = () => {
         </div>
 
         {/* Center Play Button (when paused) */}
-        {!isPlaying && (
+        {!videoState.isPlaying && (
           <button
-            onClick={togglePlay}
+            onClick={videoActions.togglePlay}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-16 md:h-16 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300"
           >
             <Play size={40} fill="white" className="ml-1 md:w-8 md:h-8" />
@@ -421,7 +308,7 @@ const VideoPlayerPage = () => {
         )}
       </div>
 
-      {/* Content Info Section - Compact */}
+      {/* Content Info Section */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10">
         {/* Title */}
         <h1 className="text-2xl md:text-3xl font-bold mb-2 md:mb-3 text-white">
@@ -448,7 +335,7 @@ const VideoPlayerPage = () => {
           {content?.description}
         </p>
 
-        {/* Action Buttons - Compact */}
+        {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 md:gap-3 mb-8">
           <button
             onClick={() => {/* Add to watchlist functionality */}}
@@ -515,13 +402,13 @@ const VideoPlayerPage = () => {
         )}
       </div>
 
-        {/* More Like This Section */}
-        {similarContent && similarContent.length > 0 && content && (
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Mirip dengan {content.title}</h2>
-            <ContentRow title="" contents={similarContent} onInfoClick={openModal} />
-          </div>
-        )}
+      {/* More Like This Section */}
+      {similarContent && similarContent.length > 0 && content && (
+        <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
+          <h2 className="text-2xl font-bold text-white mb-4">Mirip dengan {content.title}</h2>
+          <ContentRow title="" contents={similarContent} onInfoClick={openModal} />
+        </div>
+      )}
 
       {/* Content Detail Modal */}
       <ContentDetailModal
