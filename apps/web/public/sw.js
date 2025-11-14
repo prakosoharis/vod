@@ -31,12 +31,9 @@ const CACHE_FIRST_ROUTES = [
 
 // Install event
 self.addEventListener('install', (event) => {
-  console.log('[SW] Install event triggered')
-
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Caching static assets')
         return cache.addAll(STATIC_ASSETS)
       })
       .then(() => self.skipWaiting())
@@ -45,8 +42,6 @@ self.addEventListener('install', (event) => {
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activate event triggered')
-
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -55,7 +50,6 @@ self.addEventListener('activate', (event) => {
             if (cacheName !== CACHE_NAME &&
                 cacheName !== STATIC_CACHE_NAME &&
                 cacheName !== DYNAMIC_CACHE_NAME) {
-              console.log('[SW] Deleting old cache:', cacheName)
               return caches.delete(cacheName)
             }
           })
@@ -115,8 +109,6 @@ async function networkFirst(request) {
 
     return networkResponse
   } catch (error) {
-    console.log('[SW] Network failed, trying cache:', request.url)
-
     const cachedResponse = await caches.match(request)
     if (cachedResponse) {
       return cachedResponse
@@ -149,15 +141,12 @@ async function cacheFirst(request) {
 
     return networkResponse
   } catch (error) {
-    console.log('[SW] Network failed for cache-first:', request.url)
     throw error
   }
 }
 
 // Background sync for offline actions
 self.addEventListener('sync', (event) => {
-  console.log('[SW] Background sync:', event.tag)
-
   if (event.tag === 'background-sync') {
     event.waitUntil(doBackgroundSync())
   }
@@ -165,7 +154,6 @@ self.addEventListener('sync', (event) => {
 
 async function doBackgroundSync() {
   // Handle offline actions when connection is restored
-  console.log('[SW] Performing background sync')
 }
 
 // Push notifications
@@ -202,8 +190,6 @@ self.addEventListener('push', (event) => {
 
 // Notification click
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification click:', event.notification.data)
-
   event.notification.close()
 
   if (event.action === 'explore') {
