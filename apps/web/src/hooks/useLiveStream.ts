@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 interface StreamStatus {
   isLive: boolean;
@@ -21,21 +21,42 @@ const useLiveStream = (config: LiveStreamConfig) => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
-  const checkStreamStatus = async (streamKey: string) => {
+  // Refs for debouncing and optimization
+  const lastCheckRef = useRef<string>('');
+
+  const checkStreamStatus = useCallback(async (streamKey: string) => {
+    // Debounce: Skip if same stream was checked recently (within 5 seconds)
+    const now = Date.now();
+    const lastCheckTime = lastCheckRef.current;
+    if (lastCheckTime && now - parseInt(lastCheckTime) < 5000) {
+      return;
+    }
+
     try {
       setIsLoading(true);
 
-      // Check HLS manifest
-      const response = await fetch(config.hlsUrl(streamKey), { method: 'HEAD' });
+      // AbortController for timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+      // Check HLS manifest with timeout
+      const response = await fetch(config.hlsUrl(streamKey), {
+        method: 'HEAD',
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
       const isLive = response.ok;
 
-      // Get viewer count from stream status endpoint
+      // Get viewer count from stream status endpoint (only if live)
       let viewerCount = 0;
       let startTime = undefined;
 
       if (isLive) {
         try {
-          const statusResponse = await fetch(`https://live.deluwang.online/api/stream-status/${streamKey}`);
+          const statusResponse = await fetch(`https://live.deluwang.online/api/stream-status/${streamKey}`, {
+            signal: AbortSignal.timeout(5000) // 5 second timeout for status API
+          });
           if (statusResponse.ok) {
             const statusData = await statusResponse.json();
             viewerCount = statusData.viewerCount || 0;
@@ -54,7 +75,18 @@ const useLiveStream = (config: LiveStreamConfig) => {
       });
 
       setLastChecked(new Date());
+      lastCheckRef.current = now.toString();
     } catch (error) {
+      // Silent error handling - don't log errors for offline streams (normal behavior)
+      // Only log for unexpected errors (not 404/timeout when stream is offline)
+      if (error instanceof Error &&
+          !error.message.includes('AbortError') &&
+          !error.message.includes('Timeout') &&
+          !error.message.includes('404') &&
+          !error.message.includes('Failed to fetch')) {
+        console.warn('Unexpected stream check error:', error);
+      }
+
       setStreamStatus({
         isLive: false,
         streamKey: null,
@@ -63,7 +95,7 @@ const useLiveStream = (config: LiveStreamConfig) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [config.hlsUrl]);
 
   const startStream = (streamKey: string) => {
     setStreamStatus({

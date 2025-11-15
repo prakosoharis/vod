@@ -23,43 +23,69 @@ const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
-    if (videoRef.current && Hls.isSupported()) {
+    // Only initialize HLS when stream is live
+    if (!isLive || !videoRef.current || !Hls.isSupported()) {
+      // Clean up existing HLS if stream goes offline
       if (hlsRef.current) {
         hlsRef.current.destroy();
+        hlsRef.current = null;
       }
+      return;
+    }
 
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        backBufferLength: 90
-      });
+    // Clean up existing HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+    }
 
-      hlsRef.current = hls;
+    const hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: true,
+      backBufferLength: 90,
+      maxLoadingDelay: 4,
+      maxMaxBufferLength: 30,
+      maxBufferSize: 60 * 1000 * 1000
+    });
+
+    hlsRef.current = hls;
+
+    // Only load source if stream is live
+    if (isLive) {
       hls.loadSource(streamUrl);
       hls.attachMedia(videoRef.current);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        try {
-          videoRef.current?.play().catch(() => {
-            // Silently handle autoplay error
-          });
-        } catch (e) {
-          // Silently handle autoplay error
-        }
-      });
-
-      hls.on(Hls.Events.ERROR, () => {
-        // Silently handle HLS errors
-      });
-
-      return () => {
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-          hlsRef.current = null;
-        }
-      };
     }
-  }, [streamUrl]);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      try {
+        videoRef.current?.play().catch(() => {
+          // Silently handle autoplay error
+        });
+      } catch (e) {
+        // Silently handle autoplay error
+      }
+    });
+
+    hls.on(Hls.Events.ERROR, (_event, data) => {
+      // Handle network errors gracefully when stream is offline
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR ||
+          data.type === Hls.ErrorTypes.MEDIA_ERROR ||
+          data.details === 'manifestLoadTimeOut' ||
+          data.details === 'manifestLoadError') {
+        // Don't log network errors to console spam when stream is offline
+        return;
+      }
+
+      // Log other errors that might be important
+      console.warn('HLS Error:', data.details, data.type);
+    });
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [streamUrl, isLive]);
 
   const toggleMute = () => {
     if (videoRef.current) {
