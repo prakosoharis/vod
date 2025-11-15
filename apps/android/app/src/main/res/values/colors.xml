@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Netflix-inspired Dark Theme Colors matching Web App -->
+
+    <!-- Primary Brand Colors -->
+    <color name="primary_red">#e50914</color>
+    <color name="primary_red_dark">#b20710</color>
+    <color name="primary_red_light">#f40612</color>
+
+    <!-- Background Colors -->
+    <color name="background_black">#0a0a0a</color>
+    <color name="background_dark">#141414</color>
+    <color name="background_card">#1a1a1a</color>
+    <color name="background_elevated">#262626</color>
+
+    <!-- Surface Colors -->
+    <color name="surface">#1f1f1f</color>
+    <color name="surface_variant">#2a2a2a</color>
+    <color name="surface_elevated">#333333</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#ffffff</color>
+    <color name="text_secondary">#b3b3b3</color>
+    <color name="text_tertiary">#808080</color>
+    <color name="text_hint">#6a6a6a</color>
+
+    <!-- Accent Colors -->
+    <color name="accent_gold">#f59e0b</color>
+    <color name="accent_gold_dark">#d97706</color>
+
+    <!-- Border Colors -->
+    <color name="border_light">#ffffff</color>
+    <color name="border_medium">#404040</color>
+    <color name="border_dark">#262626</color>
+
+    <!-- Status Colors -->
+    <color name="success">#22c55e</color>
+    <color name="warning">#f59e0b</color>
+    <color name="error">#ef4444</color>
+    <color name="info">#3b82f6</color>
+
+    <!-- Overlay Colors -->
+    <color name="overlay_dark">#80000000</color>
+    <color name="overlay_medium">#60000000</color>
+    <color name="overlay_light">#40000000</color>
+
+    <!-- Shimmer Colors -->
+    <color name="shimmer_background">#1a1a1a</color>
+    <color name="shimmer_highlight">#2a2a2a</color>
+
+    <!-- Common Colors -->
+    <color name="transparent">@android:color/transparent</color>
+    <color name="black">@android:color/black</color>
+    <color name="white">@android:color/white</color>
+</resources>

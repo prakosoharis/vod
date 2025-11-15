@@ -74,7 +74,11 @@
       "Bash(sudo:*)",
       "Bash(pkill:*)",
       "Bash(./setup.sh:*)",
-      "Bash(timeout 5 node:*)"
+      "Bash(timeout 5 node:*)",
+      "Bash(code:*)",
+      "Bash(./gradlew:*)",
+      "Bash(where:*)",
+      "Bash(cmd:*)"
     ],
     "deny": [],
     "ask": []

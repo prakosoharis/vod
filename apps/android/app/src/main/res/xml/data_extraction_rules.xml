@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample data extraction rules file; uncomment and customize as necessary.
+   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   for details.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Exclude sensitive user data from cloud backup -->
+        <exclude domain="sharedpref" path="user_preferences.xml"/>
+        <exclude domain="database" path="vod_database"/>
+        <exclude domain="cache"/>
+        <exclude domain="external_cache"/>
+    </cloud-backup>
+
+    <device-transfer>
+        <!-- Include user preferences during device transfer -->
+        <include domain="sharedpref" path="auth_preferences.xml"/>
+        <include domain="sharedpref" path="app_settings.xml"/>
+
+        <!-- Exclude sensitive data from device transfer -->
+        <exclude domain="sharedpref" path="user_preferences.xml"/>
+        <exclude domain="database" path="vod_database"/>
+    </device-transfer>
+</data-extraction-rules>

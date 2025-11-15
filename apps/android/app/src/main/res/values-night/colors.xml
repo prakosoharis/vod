@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme (Primary) - This will be the default theme -->
+    <color name="background_primary">#0a0a0a</color>
+    <color name="background_secondary">#141414</color>
+    <color name="background_card">#1a1a1a</color>
+    <color name="background_elevated">#262626</color>
+
+    <color name="surface">#1f1f1f</color>
+    <color name="surface_variant">#2a2a2a</color>
+
+    <color name="primary">#e50914</color>
+    <color name="primary_variant">#b20710</color>
+    <color name="on_primary">#ffffff</color>
+
+    <color name="secondary">#b3b3b3</color>
+    <color name="on_secondary">#0a0a0a</color>
+
+    <color name="text_primary">#ffffff</color>
+    <color name="text_secondary">#b3b3b3</color>
+    <color name="text_disabled">#6a6a6a</color>
+</resources>
