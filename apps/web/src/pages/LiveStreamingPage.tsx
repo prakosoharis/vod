@@ -17,8 +17,8 @@ const LiveStreamingPage = () => {
 
   // Configuration
   const CONFIG = {
-    HLS_URL: (streamKey: string) => `https://live.deluwang.online/hls/${streamKey}/index.m3u8`,
-    CHAT_SERVER: 'https://live.deluwang.online',
+    HLS_URL: (streamKey: string) => `https://live.mostara.id/hls/${streamKey}/index.m3u8`,
+    CHAT_SERVER: 'https://live.mostara.id',
     RECONNECT_INTERVAL: 5000
   };
 

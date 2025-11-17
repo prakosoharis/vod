@@ -54,7 +54,7 @@ const useLiveStream = (config: LiveStreamConfig) => {
 
       if (isLive) {
         try {
-          const statusResponse = await fetch(`https://live.deluwang.online/api/stream-status/${streamKey}`, {
+          const statusResponse = await fetch(`https://live.mostara.id/api/stream-status/${streamKey}`, {
             signal: AbortSignal.timeout(5000) // 5 second timeout for status API
           });
           if (statusResponse.ok) {

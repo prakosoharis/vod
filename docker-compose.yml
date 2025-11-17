@@ -48,7 +48,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3007
-      - CORS_ORIGIN=http://deluwang.online,http://live.deluwang.online
+      - CORS_ORIGIN=https://mostara.id,https://live.mostara.id
     restart: unless-stopped
     networks:
       - live-streaming

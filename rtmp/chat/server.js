@@ -8,7 +8,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ["http://deluwang.online"],
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ["https://mostara.id"],
     methods: ["GET", "POST"],
     credentials: true
   }
