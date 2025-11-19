@@ -43,10 +43,10 @@ const ContentRow = ({ title, contents, onInfoClick, ContentCardComponent = Conte
         {/* Scrollable Container */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-scroll overflow-y-hidden scrollbar-hide scroll-smooth"
+          className="flex gap-6 overflow-x-scroll overflow-y-hidden scrollbar-hide scroll-smooth"
         >
           {contents.map((content) => (
-            <div key={content.id} className="shrink-0 w-[45vw] sm:w-[30vw] md:w-[20vw] lg:w-[16vw] xl:w-[14vw]">
+            <div key={content.id} className="shrink-0 w-[38vw] sm:w-[24vw] md:w-[17vw] lg:w-[13vw] xl:w-[11vw]">
               <ContentCardComponent content={content} onInfoClick={onInfoClick} />
             </div>
           ))}

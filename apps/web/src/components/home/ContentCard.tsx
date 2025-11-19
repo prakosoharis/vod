@@ -56,7 +56,7 @@ const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
 
   return (
     <div
-      className="relative min-w-[160px] h-[240px] cursor-pointer transition-transform duration-300 hover:scale-105"
+      className="relative min-w-[180px] aspect-[3/4] cursor-pointer transition-transform duration-300 hover:scale-105"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -71,11 +71,11 @@ const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
 
       {/* Hover Overlay */}
       {isHovered && (
-        <div className="absolute inset-0 bg-black/80 rounded p-4 flex flex-col justify-between">
+        <div className="absolute inset-0 bg-black/80 rounded p-3 flex flex-col justify-between">
           {/* Title & Metadata */}
           <div>
-            <h3 className="font-bold text-sm mb-1">{content.title}</h3>
-            <p className="text-xs text-gray-400">
+            <h3 className="font-bold text-base mb-1">{content.title}</h3>
+            <p className="text-sm text-gray-400">
               {content.year} • {content.genre?.[0] ?? 'General'}
             </p>
           </div>
