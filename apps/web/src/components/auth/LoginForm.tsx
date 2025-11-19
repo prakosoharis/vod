@@ -15,7 +15,12 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export function LoginForm() {
+interface LoginFormProps {
+  onSuccess?: () => void;
+  isModal?: boolean;
+}
+
+export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -33,7 +38,11 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      navigate('/browse');
+      if (isModal && onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/browse');
+      }
     } catch (error: any) {
       // Error is handled by the store
     }

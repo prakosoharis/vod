@@ -37,7 +37,12 @@ const getPasswordStrength = (password: string) => {
   return { level: 'medium', color: 'bg-yellow-500' };
 };
 
-export function RegisterForm() {
+interface RegisterFormProps {
+  onSuccess?: () => void;
+  isModal?: boolean;
+}
+
+export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps = {}) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -59,7 +64,11 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       await registerUser(data.email, data.password, data.full_name);
-      navigate('/browse');
+      if (isModal && onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/browse');
+      }
     } catch (error: any) {
       // Error is handled by the store
     }

@@ -7,9 +7,10 @@ export interface ContentRowProps {
   title: string;
   contents: Content[];
   onInfoClick?: (content: Content) => void;
+  ContentCardComponent?: React.ComponentType<{ content: Content; onInfoClick?: (content: Content) => void }>;
 }
 
-const ContentRow = ({ title, contents, onInfoClick }: ContentRowProps) => {
+const ContentRow = ({ title, contents, onInfoClick, ContentCardComponent = ContentCard }: ContentRowProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -45,8 +46,8 @@ const ContentRow = ({ title, contents, onInfoClick }: ContentRowProps) => {
           className="flex gap-4 overflow-x-scroll overflow-y-hidden scrollbar-hide scroll-smooth"
         >
           {contents.map((content) => (
-            <div key={content.id} className="shrink-0 w-[60vw] sm:w-[40vw] md:w-[30vw] lg:w-[22vw] xl:w-[18vw]">
-              <ContentCard content={content} onInfoClick={onInfoClick} />
+            <div key={content.id} className="shrink-0 w-[45vw] sm:w-[30vw] md:w-[20vw] lg:w-[16vw] xl:w-[14vw]">
+              <ContentCardComponent content={content} onInfoClick={onInfoClick} />
             </div>
           ))}
         </div>

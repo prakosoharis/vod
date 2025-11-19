@@ -56,7 +56,7 @@ const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
 
   return (
     <div
-      className="relative min-w-[250px] h-[140px] cursor-pointer transition-transform duration-300 hover:scale-105"
+      className="relative min-w-[160px] h-[240px] cursor-pointer transition-transform duration-300 hover:scale-105"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
