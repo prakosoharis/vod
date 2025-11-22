@@ -1,11 +1,14 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import dotenv from 'dotenv';
+import path from 'path';
 import { registerJwt } from './utils/jwt.js';
 import { authRoutes } from './routes/auth.js';
 import { userRoutes } from './routes/user.js';
 import { contentRoutes } from './routes/content.js';
+import { uploadRoutes } from './routes/upload.js';
 import prisma from './config/database.js';
 // Load environment variables
 dotenv.config();
@@ -19,7 +22,7 @@ async function build() {
     });
     // CORS
     await fastify.register(cors, {
-        origin: true,
+        origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id'],
         credentials: true,
     });
     // Multipart for file uploads
@@ -30,6 +33,12 @@ async function build() {
     });
     // JWT
     await registerJwt(fastify);
+    // Static file serving for uploads (use current working directory)
+    await fastify.register(fastifyStatic, {
+        root: path.join(process.cwd(), 'uploads'),
+        prefix: '/api/uploads/',
+        decorateReply: false,
+    });
     // Request logging hook (development only)
     if (isDev) {
         fastify.addHook('onRequest', async (request) => {
@@ -61,6 +70,7 @@ async function build() {
     await fastify.register(authRoutes, { prefix: '/api/auth' });
     await fastify.register(userRoutes, { prefix: '/api/user' });
     await fastify.register(contentRoutes, { prefix: '/api/content' });
+    await fastify.register(uploadRoutes, { prefix: '/api' });
     // Global error handler
     fastify.setErrorHandler((error, request, reply) => {
         const statusCode = error.statusCode || 500;

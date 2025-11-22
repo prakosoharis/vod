@@ -16,7 +16,6 @@ export default function Uploads() {
   const [uploadType, setUploadType] = useState<'thumbnail' | 'backdrop' | 'avatar' | 'logo'>('thumbnail')
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
-  const [dragActive, setDragActive] = useState(false)
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return

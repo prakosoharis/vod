@@ -7,8 +7,8 @@ import {
   searchContent,
   createContent,
   updateContent,
-} from '../controllers/contentController';
-import { authenticateRequest } from '../middleware/auth';
+} from '../controllers/contentController.js';
+import { authenticateRequest } from '../middleware/auth.js';
 
 export async function contentRoutes(fastify: FastifyInstance): Promise<void> {
   // Get all content with pagination and filters (public)
