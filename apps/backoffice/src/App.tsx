@@ -5,6 +5,7 @@ import DashboardLayout from './components/DashboardLayout'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Movies from './pages/Movies'
+import Uploads from './pages/Uploads'
 import Login from './pages/Login'
 
 function AppContent() {
@@ -35,6 +36,7 @@ function AppContent() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="users" element={<Users />} />
         <Route path="movies" element={<Movies />} />
+        <Route path="uploads" element={<Uploads />} />
         <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

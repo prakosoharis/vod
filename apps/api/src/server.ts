@@ -1,12 +1,20 @@
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply, FastifyError } from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import dotenv from 'dotenv';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { registerJwt } from './utils/jwt.js';
 import { authRoutes } from './routes/auth.js';
 import { userRoutes } from './routes/user.js';
 import { contentRoutes } from './routes/content.js';
+import { uploadRoutes } from './routes/upload.js';
 import prisma from './config/database.js';
+
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +44,13 @@ async function build(): Promise<FastifyInstance> {
 
   // JWT
   await registerJwt(fastify);
+
+  // Static file serving for uploads (use current working directory)
+  await fastify.register(fastifyStatic, {
+    root: path.join(process.cwd(), 'uploads'),
+    prefix: '/api/uploads/',
+    decorateReply: false,
+  });
 
   // Request logging hook (development only)
   if (isDev) {
@@ -70,6 +85,7 @@ async function build(): Promise<FastifyInstance> {
   await fastify.register(authRoutes, { prefix: '/api/auth' });
   await fastify.register(userRoutes, { prefix: '/api/user' });
   await fastify.register(contentRoutes, { prefix: '/api/content' });
+  await fastify.register(uploadRoutes, { prefix: '/api' });
 
   // Global error handler
   fastify.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {

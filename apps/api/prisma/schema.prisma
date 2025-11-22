@@ -21,6 +21,7 @@ model User {
   password_hash String
   full_name    String?
   avatar_url   String?
+  local_avatar_url String?    // For uploaded avatars
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
   watchlist    Watchlist[]
@@ -40,6 +41,8 @@ model Content {
   duration     String
   thumbnail_url String
   backdrop_url String?
+  local_thumbnail_url String?  // For uploaded thumbnails
+  local_backdrop_url String?   // For uploaded backdrops
   video_url    String?
   trailer_url  String?
   cast         Json

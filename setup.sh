@@ -12,6 +12,9 @@ if [ "$1" = "production" ]; then
     # Install dependencies for all apps
     echo "📦 Installing API dependencies..."
     cd apps/api && CI=true pnpm install --ignore-scripts --frozen-lockfile
+    # Install additional dependencies for upload functionality
+    pnpm add @fastify/static @fastify/multipart uuid
+    pnpm add -D @types/uuid
     pnpm prisma generate
     pnpm build
 
@@ -21,6 +24,8 @@ if [ "$1" = "production" ]; then
 
     echo "📦 Installing Backoffice dependencies..."
     cd ../backoffice && CI=true npm install
+    # Install additional dependencies for upload functionality
+    npm install react-dropzone
     npm install express
     npm run build
 
@@ -41,6 +46,8 @@ if [ "$1" = "production" ]; then
     echo "🌐 API: http://localhost:3005"
     echo "🌐 Web: http://localhost (via reverse proxy)"
     echo "🌐 Backoffice: http://localhost:3006"
+    echo "🖼️  Upload system ready! Access dashboard at:"
+    echo "   Backoffice: http://localhost:3006 -> Upload Assets menu"
 
 elif [ "$1" = "development" ]; then
     echo "📍 Development environment detected"
@@ -48,6 +55,9 @@ elif [ "$1" = "development" ]; then
     # Install dependencies for all apps
     echo "📦 Installing API dependencies..."
     cd apps/api && pnpm install
+    # Install additional dependencies for upload functionality
+    pnpm add @fastify/static @fastify/multipart uuid
+    pnpm add -D @types/uuid
     pnpm prisma generate
 
     echo "📦 Installing Web dependencies..."
@@ -55,19 +65,53 @@ elif [ "$1" = "development" ]; then
 
     echo "📦 Installing Backoffice dependencies..."
     cd ../backoffice && npm install
+    # Install additional dependencies for upload functionality
+    npm install react-dropzone
 
     cd ../..
 
     echo "✅ Development setup complete!"
     echo "🔧 To start development servers:"
-    echo "   API: cd apps/api && pnpm dev"
-    echo "   Web: cd apps/web && pnpm dev"
-    echo "   Backoffice: cd apps/backoffice && npm run dev"
+    echo "   API: cd apps/api && pnpm dev (port 3005)"
+    echo "   Web: cd apps/web && pnpm dev (port 5173)"
+    echo "   Backoffice: cd apps/backoffice && npm run dev (port 3006)"
+    echo ""
+    echo "🖼️  Upload system ready! Access dashboard at:"
+    echo "   Backoffice: http://localhost:3006 -> Upload Assets menu"
     echo ""
     echo "🐳 To start database (if needed):"
     echo "   docker-compose up -d"
+
+elif [ "$1" = "upload-setup" ]; then
+    echo "📍 Upload-only setup detected"
+
+    # Install only upload dependencies
+    echo "📦 Installing API upload dependencies..."
+    cd apps/api && pnpm add @fastify/static @fastify/multipart uuid && pnpm add -D @types/uuid
+    pnpm prisma generate
+
+    echo "📦 Installing Backoffice upload dependencies..."
+    cd ../backoffice && npm install react-dropzone
+
+    echo "🖼️  Upload dependencies installed!"
+
+    # Run database migration if database is available
+    echo "🗄️  Running database migration..."
+    if cd apps/api && pnpm prisma migrate dev --name add_upload_fields; then
+        echo "✅ Database migration completed successfully!"
+    else
+        echo "⚠️  Database migration failed. Please run manually:"
+        echo "   cd apps/api && pnpm prisma migrate dev --name add_upload_fields"
+    fi
+    cd ../..
+
 else
-    echo "❌ Usage: ./setup.sh [production|development]"
+    echo "❌ Usage: ./setup.sh [production|development|upload-setup]"
+    echo ""
+    echo "Options:"
+    echo "  production   - Full production build with all optimizations"
+    echo "  development  - Development setup with dev dependencies"
+    echo "  upload-setup - Install only upload-related dependencies"
     exit 1
 fi
 

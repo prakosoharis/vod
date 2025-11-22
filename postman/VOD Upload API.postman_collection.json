@@ -1,0 +1,711 @@
+{
+	"info": {
+		"_postman_id": "vod-upload-api-collection",
+		"name": "VOD Upload API",
+		"description": "Postman collection for VOD platform upload endpoints. Upload images for thumbnails, backdrops, avatars, and logos.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"description": "Authentication endpoints to get JWT token for protected endpoints",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    pm.collectionVariables.set('userEmail', pm.response.json().email);",
+									"    pm.collectionVariables.set('userToken', pm.response.json().token);",
+									"    pm.test(\"✅ User registered successfully\");",
+									"    pm.test(\"📧 Email saved: \" + pm.collectionVariables.get('userEmail'));",
+									"} else {",
+									"    pm.test(\"❌ Registration failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"testuser@vod.com\",\n  \"password\": \"password123\",\n  \"full_name\": \"Test User\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    pm.collectionVariables.set('userToken', pm.response.json().token);",
+									"    pm.collectionVariables.set('userEmail', pm.response.json().user.email);",
+									"    pm.collectionVariables.set('userName', pm.response.json().user.full_name);",
+									"    pm.test(\"✅ Login successful\");",
+									"    pm.test(\"📧 User: \" + pm.collectionVariables.get('userEmail'));",
+									"    pm.test(\"👤 Name: \" + pm.collectionVariables.get('userName'));",
+									"} else {",
+									"    pm.test(\"❌ Login failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"testuser@vod.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with existing user credentials"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{userToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Get current user profile information"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📤 Upload Endpoints",
+			"description": "Upload endpoints for different types of images",
+			"item": [
+				{
+					"name": "Upload Thumbnail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test(\"✅ Thumbnail uploaded successfully\");",
+									"    pm.test(\"📁 Filename: \" + response.data.filename);",
+									"    pm.test(\"🔗 URL: \" + response.data.url);",
+									"    pm.test(\"📊 Size: \" + response.data.size + \" bytes\");",
+									"    ",
+									"    // Save URL for later use",
+									"    pm.collectionVariables.set('thumbnailUrl', response.data.url);",
+									"} else {",
+									"    pm.test(\"❌ Thumbnail upload failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{userToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Select an image file (JPG, PNG, WebP, GIF) up to 10MB"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/upload?type=thumbnail",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"upload"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "thumbnail",
+									"description": "Upload type: thumbnail, backdrop, avatar, logo"
+								}
+							]
+						},
+						"description": "Upload thumbnail image for movies/series content"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Backdrop",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test(\"✅ Backdrop uploaded successfully\");",
+									"    pm.test(\"📁 Filename: \" + response.data.filename);",
+									"    pm.test(\"🔗 URL: \" + response.data.url);",
+									"    ",
+									"    // Save URL for later use",
+									"    pm.collectionVariables.set('backdropUrl', response.data.url);",
+									"} else {",
+									"    pm.test(\"❌ Backdrop upload failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{userToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Select a backdrop image file (JPG, PNG, WebP, GIF) up to 10MB"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/upload?type=backdrop",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"upload"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "backdrop",
+									"description": "Upload type: thumbnail, backdrop, avatar, logo"
+								}
+							]
+						},
+						"description": "Upload backdrop image for movies/series content"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Avatar",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test(\"✅ Avatar uploaded successfully\");",
+									"    pm.test(\"📁 Filename: \" + response.data.filename);",
+									"    pm.test(\"🔗 URL: \" + response.data.url);",
+									"    ",
+									"    // Save URL for later use",
+									"    pm.collectionVariables.set('avatarUrl', response.data.url);",
+									"} else {",
+									"    pm.test(\"❌ Avatar upload failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{userToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Select an avatar image file (JPG, PNG, WebP, GIF) up to 10MB"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/upload?type=avatar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"upload"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "avatar",
+									"description": "Upload type: thumbnail, backdrop, avatar, logo"
+								}
+							]
+						},
+						"description": "Upload avatar image for user profiles"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Logo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test(\"✅ Logo uploaded successfully\");",
+									"    pm.test(\"📁 Filename: \" + response.data.filename);",
+									"    pm.test(\"🔗 URL: \" + response.data.url);",
+									"    ",
+									"    // Save URL for later use",
+									"    pm.collectionVariables.set('logoUrl', response.data.url);",
+									"} else {",
+									"    pm.test(\"❌ Logo upload failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{userToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Select a logo image file (JPG, PNG, WebP, GIF) up to 10MB"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/upload?type=logo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"upload"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "logo",
+									"description": "Upload type: thumbnail, backdrop, avatar, logo"
+								}
+							]
+						},
+						"description": "Upload logo image for branding"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🗂️ File Management",
+			"description": "Get file info and delete uploaded files",
+			"item": [
+				{
+					"name": "Get File Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{userToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/upload/thumbnail/example.jpg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"upload",
+								"thumbnail",
+								"example.jpg"
+							]
+						},
+						"description": "Get information about an uploaded file"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Uploaded File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"✅ File deleted successfully\");",
+									"} else {",
+									"    pm.test(\"❌ File deletion failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{userToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/upload/thumbnail/example.jpg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"upload",
+								"thumbnail",
+								"example.jpg"
+							]
+						},
+						"description": "Delete an uploaded file. Replace 'example.jpg' with actual filename"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🌐 Access Uploaded Files",
+			"description": "Direct access to uploaded files via static file serving",
+			"item": [
+				{
+					"name": "View Thumbnail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/uploads/thumbnail/example.jpg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"uploads",
+								"thumbnail",
+								"example.jpg"
+							]
+						},
+						"description": "Access uploaded thumbnail file directly. Replace 'example.jpg' with actual filename"
+					},
+					"response": []
+				},
+				{
+					"name": "View Backdrop",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/uploads/backdrop/example.jpg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"uploads",
+								"backdrop",
+								"example.jpg"
+							]
+						},
+						"description": "Access uploaded backdrop file directly. Replace 'example.jpg' with actual filename"
+					},
+					"response": []
+				},
+				{
+					"name": "View Avatar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/uploads/avatar/example.jpg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"uploads",
+								"avatar",
+								"example.jpg"
+							]
+						},
+						"description": "Access uploaded avatar file directly. Replace 'example.jpg' with actual filename"
+					},
+					"response": []
+				},
+				{
+					"name": "View Logo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/uploads/logo/example.jpg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"uploads",
+								"logo",
+								"example.jpg"
+							]
+						},
+						"description": "Access uploaded logo file directly. Replace 'example.jpg' with actual filename"
+					},
+					"response": []
+				},
+				{
+					"name": "View Poster (Custom Folder)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/uploads/poster/NAR2008X2953_Potrait.jpg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"uploads",
+								"poster",
+								"NAR2008X2953_Potrait.jpg"
+							]
+						},
+						"description": "Access poster file in custom folder. Example with your existing file."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📊 System Status",
+			"description": "Check system health and status",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test(\"✅ API is healthy\");",
+									"    pm.test(\"📊 Database: \" + response.database);",
+									"    pm.test(\"⏰ Status: \" + response.status);",
+									"} else {",
+									"    pm.test(\"❌ API health check failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check API health status and database connection"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-refresh token if it's about to expire",
+					"const token = pm.collectionVariables.get('userToken');",
+					"if (token) {",
+					"    try {",
+					"        const payload = JSON.parse(atob(token.split('.')[1]));",
+					"        const expirationTime = payload.exp * 1000;",
+					"        const currentTime = Date.now();",
+					"        ",
+					"        // If token expires within next 5 minutes, show warning",
+					"        if (expirationTime - currentTime < 300000) {",
+					"            console.log('⚠️ Token will expire soon. Consider re-authenticating.');",
+					"        }",
+					"    } catch (e) {",
+					"        console.log('Invalid token format');",
+					"    }",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global response time monitoring",
+					"const responseTime = pm.response.responseTime;",
+					"pm.test(`⏱️ Response time: ${responseTime}ms`);",
+					"",
+					"// Log environment info",
+					"console.log(`🌐 Base URL: ${pm.collectionVariables.get('baseUrl')}`);",
+					"console.log(`📧 User: ${pm.collectionVariables.get('userEmail') || 'Not authenticated'}`);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3005",
+			"description": "Base URL for API requests"
+		},
+		{
+			"key": "userToken",
+			"value": "",
+			"description": "JWT authentication token (auto-populated)"
+		},
+		{
+			"key": "userEmail",
+			"value": "",
+			"description": "Current user email (auto-populated)"
+		},
+		{
+			"key": "userName",
+			"value": "",
+			"description": "Current user name (auto-populated)"
+		},
+		{
+			"key": "thumbnailUrl",
+			"value": "",
+			"description": "Last uploaded thumbnail URL"
+		},
+		{
+			"key": "backdropUrl",
+			"value": "",
+			"description": "Last uploaded backdrop URL"
+		},
+		{
+			"key": "avatarUrl",
+			"value": "",
+			"description": "Last uploaded avatar URL"
+		},
+		{
+			"key": "logoUrl",
+			"value": "",
+			"description": "Last uploaded logo URL"
+		}
+	]
+}

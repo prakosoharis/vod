@@ -66,3 +66,5 @@ Thumbs.db
 *.env.production
 *.env.staging
 .envrc
+
+apps/api/uploads/

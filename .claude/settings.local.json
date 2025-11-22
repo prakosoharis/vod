@@ -100,7 +100,11 @@
       "Bash(.gradlew.bat app:installDebug -PreactNativeDevServerPort=8081)",
       "Bash(npx react-native clean:*)",
       "Bash(npx @react-native-community/cli run-android:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npm run prisma:migrate:*)",
+      "Bash(pnpm prisma migrate:*)",
+      "Bash(pnpm prisma db push:*)",
+      "Bash(timeout 5 bash -c \"</dev/tcp/localhost/3005\")"
     ],
     "deny": [],
     "ask": []

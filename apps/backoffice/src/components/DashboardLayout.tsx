@@ -4,6 +4,7 @@ import {
   HomeIcon,
   UserGroupIcon,
   FilmIcon,
+  CloudArrowUpIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
@@ -14,6 +15,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'User MOST', href: '/users', icon: UserGroupIcon },
   { name: 'Konten Film', href: '/movies', icon: FilmIcon },
+  { name: 'Upload Assets', href: '/uploads', icon: CloudArrowUpIcon },
 ]
 
 export default function DashboardLayout() {
