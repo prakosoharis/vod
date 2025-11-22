@@ -12,8 +12,8 @@ import {
   createUser,
   updateUser,
   getUserById,
-} from '../controllers/userController';
-import { authenticateRequest } from '../middleware/auth';
+} from '../controllers/userController.js';
+import { authenticateRequest } from '../middleware/auth.js';
 
 export async function userRoutes(fastify: FastifyInstance): Promise<void> {
   // Profile

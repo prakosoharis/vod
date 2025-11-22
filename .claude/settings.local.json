@@ -104,7 +104,8 @@
       "Bash(npm run prisma:migrate:*)",
       "Bash(pnpm prisma migrate:*)",
       "Bash(pnpm prisma db push:*)",
-      "Bash(timeout 5 bash -c \"</dev/tcp/localhost/3005\")"
+      "Bash(timeout 5 bash -c \"</dev/tcp/localhost/3005\")",
+      "Bash(npm audit fix:*)"
     ],
     "deny": [],
     "ask": []

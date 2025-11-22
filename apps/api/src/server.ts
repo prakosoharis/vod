@@ -3,8 +3,7 @@ import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import dotenv from 'dotenv';
-import path, { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import path from 'path';
 import { registerJwt } from './utils/jwt.js';
 import { authRoutes } from './routes/auth.js';
 import { userRoutes } from './routes/user.js';
@@ -12,9 +11,6 @@ import { contentRoutes } from './routes/content.js';
 import { uploadRoutes } from './routes/upload.js';
 import prisma from './config/database.js';
 
-// Fix __dirname for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -31,7 +27,7 @@ async function build(): Promise<FastifyInstance> {
 
   // CORS
   await fastify.register(cors, {
-    origin: true,
+    origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id'],
     credentials: true,
   });
 
