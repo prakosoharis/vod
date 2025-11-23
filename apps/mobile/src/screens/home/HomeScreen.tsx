@@ -49,12 +49,7 @@ const HomeScreen: React.FC = () => {
     queryFn: () => contentService.getFeaturedContent(),
   });
 
-  // Priority 1: Trending (immediate load)
-  const { data: trending, isLoading: loadingTrending, refetch: refetchTrending } = useQuery({
-    queryKey: ['trending'],
-    queryFn: () => contentService.getTrendingContent(),
-  });
-
+  
   // Priority 2: Load after 1 second delay
   const { data: indonesian, isLoading: loadingIndonesian } = useQuery({
     queryKey: ['indonesian'],
@@ -84,10 +79,7 @@ const HomeScreen: React.FC = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        refetchFeatured(),
-        refetchTrending(),
-      ]);
+      await refetchFeatured();
     } finally {
       setRefreshing(false);
     }
@@ -146,7 +138,7 @@ const HomeScreen: React.FC = () => {
   );
 
   // Only show initial loading for priority 1 content
-  const isLoadingInitial = loadingFeatured || loadingTrending;
+  const isLoadingInitial = loadingFeatured;
 
   if (isLoadingInitial && !refreshing) {
     return <LoadingSpinner fullScreen />;
@@ -184,14 +176,7 @@ const HomeScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Trending Now */}
-      {trending && trending.length > 0 && (
-        <View style={styles.section}>
-          {renderSectionHeader('Trending Sekarang')}
-          {renderContentList(trending, !isAuthenticated)}
-        </View>
-      )}
-
+      
       {/* Made in Indonesia */}
       {loadSecondary && (
         <View style={styles.section}>
