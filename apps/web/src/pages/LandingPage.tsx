@@ -143,12 +143,7 @@ export const LandingPage: React.FC = () => {
     queryFn: () => contentService.getFeaturedContent(),
   })
 
-  // Priority 1: Trending (immediate load)
-  const { data: trending, isLoading: loadingTrending } = useQuery<Content[]>({
-    queryKey: ['trending'],
-    queryFn: () => contentService.getTrendingContent(),
-  })
-
+  
   // Priority 2: Load after 1 second delay
   const { data: indonesian, isLoading: loadingIndonesian } = useQuery<Content[]>({
     queryKey: ['indonesian'],
@@ -218,8 +213,8 @@ export const LandingPage: React.FC = () => {
 
   // Only show initial loading for priority 1 content
   const isLoadingInitial = useMemo(
-    () => loadingFeatured || loadingTrending,
-    [loadingFeatured, loadingTrending]
+    () => loadingFeatured,
+    [loadingFeatured]
   )
 
   if (isLoadingInitial) {
@@ -239,17 +234,7 @@ export const LandingPage: React.FC = () => {
 
       {/* Negative margin to overlap hero */}
       <div className="relative -mt-22 z-10 space-y-12 pb-20 pt-8">
-        {/* 1. Trending Now */}
-        {trending && trending.length > 0 && (
-          <ContentRow
-            title="Trending Sekarang"
-            contents={trending}
-            onInfoClick={openModal}
-            ContentCardComponent={ProtectedContentCard}
-          />
-        )}
-
-        {/* 2. Made in Indonesia (Priority 2) */}
+        {/* 1. Made in Indonesia (Priority 2) */}
         {loadSecondary && (
           <>
             {loadingIndonesian ? (
