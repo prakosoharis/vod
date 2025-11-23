@@ -3,7 +3,6 @@ import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import dotenv from 'dotenv';
-import path from 'path';
 import { registerJwt } from './utils/jwt.js';
 import { authRoutes } from './routes/auth.js';
 import { userRoutes } from './routes/user.js';
@@ -41,9 +40,9 @@ async function build(): Promise<FastifyInstance> {
   // JWT
   await registerJwt(fastify);
 
-  // Static file serving for uploads (use current working directory)
+  // Static file serving for uploads (use fixed absolute path)
   await fastify.register(fastifyStatic, {
-    root: path.join(process.cwd(), 'uploads'),
+    root: '/var/www/vod/apps/api/uploads',
     prefix: '/api/uploads/',
     decorateReply: false,
   });
