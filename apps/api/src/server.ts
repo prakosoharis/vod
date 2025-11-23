@@ -27,7 +27,7 @@ async function build(): Promise<FastifyInstance> {
 
   // CORS
   await fastify.register(cors, {
-    origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id'],
+    origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id', '*'],
     credentials: true,
   });
 

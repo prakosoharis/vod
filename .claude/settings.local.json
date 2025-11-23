@@ -105,7 +105,17 @@
       "Bash(pnpm prisma migrate:*)",
       "Bash(pnpm prisma db push:*)",
       "Bash(timeout 5 bash -c \"</dev/tcp/localhost/3005\")",
-      "Bash(npm audit fix:*)"
+      "Bash(npm audit fix:*)",
+      "Bash(npm --version:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(adb:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm view:*)",
+      "Bash(./gradlew.exe:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(npx react-native config:*)"
     ],
     "deny": [],
     "ask": []
