@@ -115,7 +115,10 @@
       "Bash(./gradlew.exe:*)",
       "Bash(npm uninstall:*)",
       "Bash(npm cache clean:*)",
-      "Bash(npx react-native config:*)"
+      "Bash(npx react-native config:*)",
+      "Bash(git config:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []
