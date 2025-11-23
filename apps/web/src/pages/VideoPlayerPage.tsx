@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 
 // Import custom hooks
-import useVideoPlayer from '@/hooks/useVideoPlayer'
+import useVideoPlayer from '@/hooks/useVideoPlayerFixed'
 import useContentData from '@/hooks/useContentData'
 import { useContentModal } from '@/hooks/useModal'
 
