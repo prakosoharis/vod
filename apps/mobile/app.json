@@ -1,4 +1,6 @@
 {
-  "name": "mobile",
-  "displayName": "mobile"
+  "name": "AlkamusVodMobile",
+  "displayName": "Alkamus VOD",
+  "version": "1.0.0",
+  "description": "Alkamus Video on Demand Mobile Application"
 }

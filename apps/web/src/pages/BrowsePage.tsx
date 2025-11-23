@@ -57,12 +57,7 @@ const BrowsePage = () => {
     enabled: !!localStorage.getItem('token'), // Only if logged in
   })
 
-  // Priority 1: Trending (immediate load)
-  const { data: trending, isLoading: loadingTrending } = useQuery<Content[]>({
-    queryKey: ['trending'],
-    queryFn: () => contentService.getTrendingContent(),
-  })
-
+  
   // Priority 2: Load after 1 second delay
   const { data: indonesian, isLoading: loadingIndonesian } = useQuery<Content[]>({
     queryKey: ['indonesian'],
@@ -159,8 +154,8 @@ const BrowsePage = () => {
 
   // Only show initial loading for priority 1 content
   const isLoadingInitial = useMemo(
-    () => loadingFeatured || loadingTrending || loadingContinue,
-    [loadingFeatured, loadingTrending, loadingContinue]
+    () => loadingFeatured || loadingContinue,
+    [loadingFeatured, loadingContinue]
   )
 
   if (isLoadingInitial) {
@@ -186,12 +181,7 @@ const BrowsePage = () => {
           <ContentRow title="Lanjutkan Menonton" contents={continueWatching} onInfoClick={openModal} />
         )}
 
-        {/* 2. Trending Now */}
-        {trending && trending.length > 0 && (
-          <ContentRow title="Trending Sekarang" contents={trending} onInfoClick={openModal} />
-        )}
-
-        {/* 3. Made in Indonesia (Priority 2) */}
+        {/* 2. Made in Indonesia (Priority 2) */}
         {loadSecondary && (
           <>
             {loadingIndonesian ? (

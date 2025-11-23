@@ -1,93 +1,85 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React, { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-
-// Import screens
-import HomeScreen from '../screens/HomeScreen';
-import BrowseScreen from '../screens/BrowseScreen';
-import ProfileScreen from '../screens/ProfileScreen';
-import VideoPlayerScreen from '../screens/VideoPlayerScreen';
-
-// Import components
-import TabBarIcon from '../components/TabBarIcon';
-
-export type RootStackParamList = {
-  MainTabs: undefined;
-  VideoPlayer: { videoId: string; title: string };
-};
-
-export type TabParamList = {
-  Home: undefined;
-  Browse: undefined;
-  Profile: undefined;
-};
+import { useAuthStore } from '../store/authStore';
+import AuthNavigator from './AuthNavigator';
+import TabNavigator from './TabNavigator';
+import VideoPlayerScreen from '../screens/player/VideoPlayerScreen';
+import LiveStreamScreen from '../screens/live/LiveStreamScreen';
+import ContentDetailScreen from '../screens/content/ContentDetailScreen';
+import { RootStackParamList } from '../types';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<TabParamList>();
 
-function TabNavigator() {
+const AppNavigator = () => {
+  const { isAuthenticated, isLoading, hasHydrated, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    if (!hasHydrated) {
+      checkAuth();
+    }
+  }, [checkAuth, hasHydrated]);
+
+  if (isLoading || !hasHydrated) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => (
-          <TabBarIcon
-            name={
-              route.name === 'Home'
-                ? 'home'
-                : route.name === 'Browse'
-                ? 'search'
-                : 'user'
-            }
-            size={size}
-            color={color}
-            focused={focused}
-          />
-        ),
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+    <Stack.Navigator
+      screenOptions={{
         headerShown: false,
-      })}
+        cardStyle: { backgroundColor: '#000000' },
+      }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Browse" component={BrowseScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-    </Tab.Navigator>
-  );
-}
-
-function AppNavigator() {
-  return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: '#000',
-            },
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-          }}
-        >
-          <Stack.Screen
-            name="MainTabs"
-            component={TabNavigator}
-            options={{ headerShown: false }}
-          />
+      {isAuthenticated ? (
+        <>
+          <Stack.Screen name="Main" component={TabNavigator} />
           <Stack.Screen
             name="VideoPlayer"
             component={VideoPlayerScreen}
-            options={{ title: 'Video Player' }}
+            options={{
+              headerShown: true,
+              title: '',
+              headerStyle: {
+                backgroundColor: '#000000',
+                borderBottomWidth: 0,
+              },
+              headerTintColor: '#FFFFFF',
+            }}
           />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+          <Stack.Screen
+            name="LiveStream"
+            component={LiveStreamScreen}
+            options={{
+              headerShown: true,
+              title: 'Live Streaming',
+              headerStyle: {
+                backgroundColor: '#000000',
+                borderBottomWidth: 0,
+              },
+              headerTintColor: '#FFFFFF',
+            }}
+          />
+          <Stack.Screen
+            name="ContentDetail"
+            component={ContentDetailScreen}
+            options={{
+              headerShown: true,
+              title: '',
+              headerStyle: {
+                backgroundColor: '#000000',
+                borderBottomWidth: 0,
+              },
+              headerTintColor: '#FFFFFF',
+              presentation: 'modal',
+            }}
+          />
+        </>
+      ) : (
+        <Stack.Screen name="Auth" component={AuthNavigator} />
+      )}
+    </Stack.Navigator>
   );
-}
+};
 
 export default AppNavigator;

@@ -24,18 +24,6 @@ export interface Content {
   created_at: string;
 }
 
-export interface LiveStream {
-  id: string;
-  title: string;
-  description: string | null;
-  thumbnail_url: string;
-  stream_key: string;
-  is_live: boolean;
-  viewer_count: number;
-  category: string;
-  created_at: string;
-}
-
 export interface ContentListResponse {
   data: Content[];
   total: number;
@@ -59,18 +47,27 @@ export interface RegisterRequest {
   full_name?: string;
 }
 
-// Navigation Types
+// Navigation types
 export type RootStackParamList = {
-  MainTabs: undefined;
-  VideoPlayer: { videoId: string; title: string };
-  LivePlayer: { streamId: string; title: string };
-  Login: undefined;
-  Register: undefined;
-  Loading: undefined;
+  Auth: undefined;
+  Main: undefined;
+  VideoPlayer: { contentId: string };
+  LiveStream: undefined;
+  ContentDetail: { content: Content };
 };
 
-export type TabParamList = {
+export type MainTabParamList = {
   Home: undefined;
   Browse: undefined;
+  Live: undefined;
   Profile: undefined;
 };
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+};
+
+// Export aliases for compatibility
+export type LoginCredentials = LoginRequest;
+export type RegisterCredentials = RegisterRequest;

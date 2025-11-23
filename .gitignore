@@ -68,3 +68,11 @@ Thumbs.db
 .envrc
 
 apps/api/uploads/
+apps/mobile/node_modules/
+
+# React Native build files
+apps/mobile/android/app/.cxx/
+apps/mobile/android/app/build/
+apps/mobile/android/build/
+apps/mobile/ios/build/
+apps/mobile/.expo/
