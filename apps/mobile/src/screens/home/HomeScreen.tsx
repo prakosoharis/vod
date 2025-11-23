@@ -8,11 +8,13 @@ import {
   RefreshControl,
   Dimensions,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { SafeIcon } from '../../components/ui';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuthStore } from '../../store/authStore';
 import { contentService } from '../../services';
-import { Content } from '../../types';
+import { Content, RootStackParamList } from '../../types';
 import { COLORS, COLORS as COLORS_CONST } from '../../constants';
 import ContentCard from '../../components/ui/ContentCard';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -20,6 +22,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 const { width: screenWidth } = Dimensions.get('window');
 
 const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isAuthenticated } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
@@ -97,13 +100,13 @@ const HomeScreen: React.FC = () => {
       return;
     }
     // Navigate to video player
-    console.log('Navigate to video player for content:', content.id);
+    navigation.navigate('VideoPlayer', { contentId: content.id });
   };
 
   const handleInfoPress = (content: Content) => {
     setSelectedContent(content);
     // Navigate to content detail modal
-    console.log('Show content detail for:', content.id);
+    navigation.navigate('ContentDetail', { content });
   };
 
   const renderSectionHeader = (title: string) => (

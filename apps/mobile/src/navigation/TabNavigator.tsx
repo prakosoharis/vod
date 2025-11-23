@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { SafeIcon } from '../components/ui';
 import { COLORS } from '../constants';
 import HomeScreen from '../screens/home/HomeScreen';
 import BrowseScreen from '../screens/browse/BrowseScreen';
@@ -34,7 +34,7 @@ const TabNavigator = () => {
               iconName = 'home';
           }
 
-          return <Icon name={iconName} size={size} color={color} />;
+          return <SafeIcon name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textSecondary,

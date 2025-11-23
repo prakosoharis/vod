@@ -9,13 +9,16 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { contentService } from '../../services';
-import { Content } from '../../types';
+import { Content, RootStackParamList } from '../../types';
 import { COLORS } from '../../constants';
 import ContentCard from '../../components/ui/ContentCard';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const BrowseScreen: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
 
@@ -97,8 +100,8 @@ const BrowseScreen: React.FC = () => {
   const renderContentItem = ({ item }: { item: Content }) => (
     <ContentCard
       content={item}
-      onPress={() => console.log('Navigate to player:', item.id)}
-      onInfoPress={() => console.log('Show content detail:', item.id)}
+      onPress={() => navigation.navigate('VideoPlayer', { contentId: item.id })}
+      onInfoPress={() => navigation.navigate('ContentDetail', { content: item })}
       size="small"
     />
   );

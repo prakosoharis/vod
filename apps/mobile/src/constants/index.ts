@@ -1,6 +1,6 @@
-export const API_BASE_URL = 'http://161.97.65.21:3001/api';
+export const API_BASE_URL = 'https://api.mostara.id/api';
 
-export const SOCKET_URL = 'http://161.97.65.21:3001';
+export const SOCKET_URL = 'https://api.mostara.id';
 
 export const COLORS = {
   primary: '#E50914',

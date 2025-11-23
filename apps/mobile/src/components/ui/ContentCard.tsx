@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { SafeIcon } from '.';
 import LinearGradient from 'react-native-linear-gradient';
 import { Content } from '../../types';
 import { COLORS, DIMENSIONS } from '../../constants';
@@ -82,13 +82,13 @@ const ContentCard: React.FC<ContentCardProps> = ({
             style={[styles.actionButton, styles.playButton]}
             onPress={handlePress}
           >
-            <Icon name="play-arrow" size={20} color={COLORS.text} />
+            <SafeIcon name="play-arrow" size={20} color={COLORS.text} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, styles.infoButton]}
             onPress={handleInfoPress}
           >
-            <Icon name="info-outline" size={20} color={COLORS.text} />
+            <SafeIcon name="info-outline" size={20} color={COLORS.text} />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -124,7 +124,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       {/* Lock overlay */}
       {showLock && (
         <View style={styles.lockOverlay}>
-          <Icon name="lock" size={24} color={COLORS.textSecondary} />
+          <SafeIcon name="lock" size={24} color={COLORS.textSecondary} />
         </View>
       )}
 
