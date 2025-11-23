@@ -17,8 +17,8 @@ module.exports = {
     },
     {
       name: 'alkamus-web',
-      script: 'server.js',
-      cwd: '/var/www/vod/apps/web',
+      script: 'apps/web/dist/server.js',
+      cwd: '/var/www/vod',
       instances: 1,
       env: {
         NODE_ENV: 'production',

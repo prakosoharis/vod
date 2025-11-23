@@ -77,15 +77,7 @@ const BrowsePage = () => {
     enabled: loadSecondary,
   })
 
-  const { data: popularMovies, isLoading: loadingPopularMovies } = useQuery<Content[]>({
-    queryKey: ['popular-movies'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ type: 'MOVIE', limit: 20 })
-      return response.data
-    },
-    enabled: loadSecondary,
-  })
-
+  
   // Priority 3: Load after 2 seconds delay
   const { data: action, isLoading: loadingAction } = useQuery<Content[]>({
     queryKey: ['genre', 'Action'],
@@ -209,20 +201,7 @@ const BrowsePage = () => {
           </>
         )}
 
-        {/* 5. Popular Movies (Priority 2) */}
-        {loadSecondary && (
-          <>
-            {loadingPopularMovies ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Film Populer</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : popularMovies && popularMovies.length > 0 ? (
-              <ContentRow title="Film Populer" contents={popularMovies} onInfoClick={openModal} />
-            ) : null}
-          </>
-        )}
-
+  
         {/* 6. Genre rows (Priority 3) */}
         {loadGenre && (
           <>
