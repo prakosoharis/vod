@@ -9,10 +9,14 @@ const Logo: React.FC<LogoProps> = ({ onClick, className = '' }) => {
   return (
     <Link
       to="/"
-      className={`text-2xl md:text-2xl font-bold text-[#e50914] hover:text-red-400 transition-colors duration-200 ${className}`}
+      className={`flex items-center hover:opacity-80 transition-opacity duration-200 ${className}`}
       onClick={onClick}
     >
-      MOST
+      <img
+        src="/api/uploads/logos/logo1.jpg"
+        alt="Logo"
+        className="h-8 md:h-10 w-auto object-contain"
+      />
     </Link>
   )
 }
