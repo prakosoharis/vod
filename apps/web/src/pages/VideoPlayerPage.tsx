@@ -55,6 +55,49 @@ const VideoPlayerPage = () => {
     close: closeModal
   } = useContentModal()
 
+  // Prevent right-click and developer tools
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault()
+      return false
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+        (e.ctrlKey && e.key === 'u')
+      ) {
+        e.preventDefault()
+        return false
+      }
+    }
+
+    const handleDragStart = (e: DragEvent) => {
+      e.preventDefault()
+      return false
+    }
+
+    // Prevent text selection
+    const handleSelectStart = (e: Event) => {
+      e.preventDefault()
+      return false
+    }
+
+    document.addEventListener('contextmenu', handleContextMenu)
+    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('dragstart', handleDragStart)
+    document.addEventListener('selectstart', handleSelectStart)
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu)
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('dragstart', handleDragStart)
+      document.removeEventListener('selectstart', handleSelectStart)
+    }
+  }, [])
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -137,12 +180,20 @@ const VideoPlayerPage = () => {
   }
 
   return (
-    <div className="bg-black min-h-screen">
+    <div className="bg-black min-h-screen" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>
       {/* Video Player Container */}
       <div
         className="relative w-full bg-black"
         onMouseMove={videoActions.showControls}
-        style={{ paddingTop: '56.25%' }}
+        style={{
+          paddingTop: '56.25%',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          KhtmlUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none',
+          userSelect: 'none'
+        }}
       >
         {/* Back Button */}
         <button
@@ -170,12 +221,27 @@ const VideoPlayerPage = () => {
         )}
 
         {/* Video Container */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()}>
           <video
             ref={videoRef}
             className="w-full h-full object-contain"
+            style={{
+              WebkitUserSelect: 'none',
+              KhtmlUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none',
+              userSelect: 'none',
+              WebkitTouchCallout: 'none'
+            }}
             src={content.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
             onClick={videoActions.togglePlay}
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+            draggable={false}
+            controlsList="nodownload"
+            disablePictureInPicture
+            controls={false}
+            preload="metadata"
           />
         </div>
 
