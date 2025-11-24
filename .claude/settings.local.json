@@ -118,7 +118,9 @@
       "Bash(npx react-native config:*)",
       "Bash(git config:*)",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(identify:*)",
+      "Bash(/tmp/homepage.html)"
     ],
     "deny": [],
     "ask": []

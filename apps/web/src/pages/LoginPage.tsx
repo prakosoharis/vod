@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { LoginForm } from '@/components/auth/LoginForm';
+import { getLogoUrl } from '@/utils/logoUrl';
 
 const LoginPage = () => {
   return (
@@ -7,7 +8,11 @@ const LoginPage = () => {
       <div className="w-full max-w-md">
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">MOST</h1>
+            <img
+              src={getLogoUrl()}
+              alt="MOST Logo"
+              className="h-20 w-auto mx-auto mb-4 object-contain"
+            />
             <p className="text-gray-400 text-sm">Masuk ke akun Anda</p>
           </div>
 

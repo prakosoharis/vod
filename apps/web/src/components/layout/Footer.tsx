@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Twitter, Facebook, Instagram, Youtube } from 'lucide-react';
+import { getLogoUrl } from '@/utils/logoUrl';
 
 const Footer = () => {
   return (
@@ -10,7 +11,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Column 1: Brand */}
           <div>
-            <h3 className="text-2xl font-bold text-red-600 mb-4">MOST</h3>
+            <img
+              src={getLogoUrl()}
+              alt="MOST Logo"
+              className="h-16 w-auto mb-4 object-contain"
+            />
             <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
               Platform streaming pilihan untuk konten hiburan berkualitas dari dalam dan luar negeri.
             </p>

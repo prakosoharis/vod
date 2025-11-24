@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Test</title>
+    <style>
+        body {
+            background-color: #000;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            background-color: rgba(0,0,0,0.7);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .logo-container {
+            margin-right: 20px;
+        }
+        .logo-container img {
+            max-height: 48px;
+            max-width: 140px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+        }
+        .fallback-logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+        }
+        .test-info {
+            color: white;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: white;">Logo Test Page</h1>
+
+    <div class="test-info">
+        <h3>Testing Logo Component:</h3>
+        <p>Logo URL: <a href="http://localhost:5173/api/uploads/logos/logo1.jpg" target="_blank">http://localhost:5173/api/uploads/logos/logo1.jpg</a></p>
+        <p id="logo-status">Loading...</p>
+    </div>
+
+    <div class="header">
+        <div class="logo-container">
+            <img
+                id="test-logo"
+                src="http://localhost:5173/api/uploads/logos/logo1.jpg"
+                alt="MOST Logo"
+                onload="logoLoaded()"
+                onerror="logoError()"
+                style="max-height: 48px; max-width: 140px;"
+            />
+        </div>
+        <div id="fallback" style="display: none;" class="fallback-logo">MOST</div>
+    </div>
+
+    <div class="test-info">
+        <h3>Expected Behavior:</h3>
+        <ul>
+            <li>Logo should appear above with proper dimensions (max 48px height, 140px width)</li>
+            <li>Logo should be responsive and not distorted</li>
+            <li>If logo fails to load, fallback text "MOST" should appear</li>
+            <li>Hover effects should work (scaling and opacity changes)</li>
+        </ul>
+    </div>
+
+    <script>
+        function logoLoaded() {
+            document.getElementById('logo-status').innerHTML = '<span class="success">✓ Logo loaded successfully!</span>';
+            document.getElementById('test-logo').style.display = 'block';
+            document.getElementById('fallback').style.display = 'none';
+        }
+
+        function logoError() {
+            document.getElementById('logo-status').innerHTML = '<span class="error">✗ Logo failed to load, showing fallback</span>';
+            document.getElementById('test-logo').style.display = 'none';
+            document.getElementById('fallback').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
