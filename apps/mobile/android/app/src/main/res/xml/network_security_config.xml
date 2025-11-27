@@ -14,7 +14,7 @@
     </base-config>
 
     <!-- Debug configuration for development -->
-    <debug-overrides>
+    <debug-overrides cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system"/>
             <certificates src="user"/>

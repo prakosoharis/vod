@@ -76,3 +76,6 @@ apps/mobile/android/app/build/
 apps/mobile/android/build/
 apps/mobile/ios/build/
 apps/mobile/.expo/
+
+
+apps/test
