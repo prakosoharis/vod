@@ -127,7 +127,8 @@
       "Bash(netsh advfirewall firewall show rule:*)",
       "Bash(test:*)",
       "Bash(timeout 30 bash:*)",
-      "Bash(timeout 40 bash:*)"
+      "Bash(timeout 40 bash:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []
