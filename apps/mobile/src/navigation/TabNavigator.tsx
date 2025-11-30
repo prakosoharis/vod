@@ -1,5 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeIcon } from '../components/ui';
 import { COLORS } from '../constants';
 import HomeScreen from '../screens/home/HomeScreen';
@@ -34,7 +36,7 @@ const TabNavigator = () => {
               iconName = 'home';
           }
 
-          return <SafeIcon name={iconName} size={size} color={color} />;
+          return <SafeIcon name={iconName} size={20} color={color} />;
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textSecondary,
@@ -43,8 +45,19 @@ const TabNavigator = () => {
           borderTopColor: COLORS.surface,
           borderTopWidth: 1,
           height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          paddingBottom: 4,
+          paddingTop: 10,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          marginTop: 0,
+          marginBottom: 3,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 0,
+        },
+        tabBarIconStyle: {
+          marginTop: 5,
         },
         headerStyle: {
           backgroundColor: COLORS.secondary,

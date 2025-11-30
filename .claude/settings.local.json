@@ -120,7 +120,14 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Bash(identify:*)",
-      "Bash(/tmp/homepage.html)"
+      "Bash(/tmp/homepage.html)",
+      "Bash(ipconfig:*)",
+      "Bash(npm start -- --reset-cache --host 0.0.0.0)",
+      "Bash(timeout 10 bash:*)",
+      "Bash(netsh advfirewall firewall show rule:*)",
+      "Bash(test:*)",
+      "Bash(timeout 30 bash:*)",
+      "Bash(timeout 40 bash:*)"
     ],
     "deny": [],
     "ask": []

@@ -38,13 +38,7 @@ const AppNavigator = () => {
             name="VideoPlayer"
             component={VideoPlayerScreen}
             options={{
-              headerShown: true,
-              title: '',
-              headerStyle: {
-                backgroundColor: '#000000',
-                borderBottomWidth: 0,
-              },
-              headerTintColor: '#FFFFFF',
+              headerShown: false,
             }}
           />
           <Stack.Screen

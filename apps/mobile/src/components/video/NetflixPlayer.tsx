@@ -22,7 +22,7 @@ interface NetflixPlayerProps {
 }
 
 const NETFLIX_RED = '#E50914';
-const CONTROL_TIMEOUT = 4000;
+const CONTROL_TIMEOUT = 2000; // 2 seconds - faster auto-hide
 const SEEK_AMOUNT = 10; // seconds
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -43,13 +43,13 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
   const [isBuffering, setIsBuffering] = useState(false);
 
   // UI State
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [wasPlayingBeforeScrub, setWasPlayingBeforeScrub] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Animation States
-  const controlsOpacity = useRef(new Animated.Value(1)).current;
+  const controlsOpacity = useRef(new Animated.Value(0)).current;
   const seekAnimationLeft = useRef(new Animated.Value(0)).current;
   const seekAnimationRight = useRef(new Animated.Value(0)).current;
 
@@ -127,21 +127,25 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
       setCurrentTime(newTime);
     }
 
-    // Animate seek icon
+    // Animate seek icon - always start from 0
     const animation = direction === 'left' ? seekAnimationLeft : seekAnimationRight;
-    animation.setValue(1);
+    animation.setValue(0);
     Animated.sequence([
       Animated.timing(animation, {
-        toValue: 1.2,
-        duration: 150,
+        toValue: 1,
+        duration: 200,
         useNativeDriver: true,
       }),
+      Animated.delay(300),
       Animated.timing(animation, {
         toValue: 0,
         duration: 300,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(() => {
+      // Ensure animation is reset to 0 after completion
+      animation.setValue(0);
+    });
 
     setShowControls(true);
     resetControlsTimer();
@@ -231,24 +235,26 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
 
   return (
     <View style={styles.container}>
-      {/* Video Component - FULL SCREEN */}
-      <Video
-        ref={videoRef}
-        source={{ uri: source }}
-        style={styles.video}
-        resizeMode={isFullscreen ? 'cover' : 'contain'}
-        paused={!isPlaying}
-        onLoad={onLoad}
-        onProgress={onProgress}
-        onBuffer={onBuffer}
-        onError={onError}
-        controls={false}
-        playInBackground={false}
-        playWhenInactive={false}
-        progressUpdateInterval={250}
-        repeat={false}
-        reportBandwidth={true}
-      />
+      {/* Video Container - Ensures proper centering */}
+      <View style={styles.videoContainer}>
+        <Video
+          ref={videoRef}
+          source={{ uri: source }}
+          style={styles.video}
+          resizeMode="contain"
+          paused={!isPlaying}
+          onLoad={onLoad}
+          onProgress={onProgress}
+          onBuffer={onBuffer}
+          onError={onError}
+          controls={false}
+          playInBackground={false}
+          playWhenInactive={false}
+          progressUpdateInterval={250}
+          repeat={false}
+          reportBandwidth={true}
+        />
+      </View>
 
       {/* Loading Indicator */}
       {(isLoading || isBuffering) && (
@@ -257,24 +263,42 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
         </View>
       )}
 
+      {/* Seek Animation Icons - Always rendered, controlled by opacity */}
+      <View style={styles.seekIconsContainer} pointerEvents="none">
+        <Animated.View
+          style={[
+            styles.seekIconLeft,
+            {
+              opacity: seekAnimationLeft,
+              transform: [{ scale: seekAnimationLeft }],
+            },
+          ]}
+        >
+          <View style={styles.seekIconContainer}>
+            <Text style={styles.seekIconText}>⏪ 10s</Text>
+          </View>
+        </Animated.View>
+
+        <Animated.View
+          style={[
+            styles.seekIconRight,
+            {
+              opacity: seekAnimationRight,
+              transform: [{ scale: seekAnimationRight }],
+            },
+          ]}
+        >
+          <View style={styles.seekIconContainer}>
+            <Text style={styles.seekIconText}>10s ⏩</Text>
+          </View>
+        </Animated.View>
+      </View>
+
       {/* Tap zones - HANYA untuk double-tap seek, tidak menutupi bottom controls */}
       {!showControls && (
         <View style={styles.tapZonesContainer}>
           <TouchableWithoutFeedback onPress={() => handleSideTap('left')}>
-            <View style={styles.leftTapZone}>
-              <Animated.View
-                style={[
-                  styles.seekIconContainer,
-                  {
-                    opacity: seekAnimationLeft,
-                    transform: [{ scale: seekAnimationLeft }],
-                  },
-                ]}
-                pointerEvents="none"
-              >
-                <Text style={styles.seekIconText}>⏪ 10s</Text>
-              </Animated.View>
-            </View>
+            <View style={styles.leftTapZone} />
           </TouchableWithoutFeedback>
 
           <TouchableWithoutFeedback onPress={toggleControls}>
@@ -282,20 +306,7 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
           </TouchableWithoutFeedback>
 
           <TouchableWithoutFeedback onPress={() => handleSideTap('right')}>
-            <View style={styles.rightTapZone}>
-              <Animated.View
-                style={[
-                  styles.seekIconContainer,
-                  {
-                    opacity: seekAnimationRight,
-                    transform: [{ scale: seekAnimationRight }],
-                  },
-                ]}
-                pointerEvents="none"
-              >
-                <Text style={styles.seekIconText}>10s ⏩</Text>
-              </Animated.View>
-            </View>
+            <View style={styles.rightTapZone} />
           </TouchableWithoutFeedback>
         </View>
       )}
@@ -305,25 +316,28 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
         <Animated.View
           style={[styles.controlsContainer, { opacity: controlsOpacity }]}
         >
-          {/* Top Area - Transparent tap zone untuk back */}
-          <TouchableOpacity
-            style={styles.backTapZone}
-            onPress={onBack}
-            activeOpacity={0.3}
+          {/* Top Gradient Overlay with Back Button */}
+          <LinearGradient
+            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.4)', 'transparent']}
+            style={styles.topGradient}
           >
-            <LinearGradient
-              colors={['rgba(0,0,0,0.3)', 'transparent']}
-              style={styles.backGradient}
-              pointerEvents="none"
-            >
+            <View style={styles.topBar}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={onBack}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.backIcon}>←</Text>
+              </TouchableOpacity>
               <Text style={styles.videoTitle} numberOfLines={1}>
                 {title}
               </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <View style={styles.spacer} />
+            </View>
+          </LinearGradient>
 
           {/* Center Play/Pause Button */}
-          <View style={styles.centerControls}>
+          <View style={styles.centerControls} pointerEvents="box-none">
             <TouchableOpacity
               style={styles.centerPlayButton}
               onPress={togglePlayPause}
@@ -409,16 +423,23 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
     backgroundColor: '#000',
+  },
+  videoContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   video: {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    right: 0,
+    bottom: 0,
   },
   loadingContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -426,6 +447,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.7)',
     zIndex: 5,
+  },
+  seekIconsContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9,
+    pointerEvents: 'none',
+  },
+  seekIconLeft: {
+    position: 'absolute',
+    left: '15%',
+    top: '40%',
+  },
+  seekIconRight: {
+    position: 'absolute',
+    right: '15%',
+    top: '40%',
   },
   tapZonesContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -435,8 +471,6 @@ const styles = StyleSheet.create({
   leftTapZone: {
     width: '35%',
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   centerTapZone: {
     width: '30%',
@@ -445,8 +479,6 @@ const styles = StyleSheet.create({
   rightTapZone: {
     width: '35%',
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   seekIconContainer: {
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -463,24 +495,42 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
   },
-  backTapZone: {
+  topGradient: {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '30%',
-    height: '25%',
-    zIndex: 11,
+    right: 0,
+    paddingTop: 15,
+    paddingBottom: 40,
+    zIndex: 13,
   },
-  backGradient: {
-    flex: 1,
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    paddingLeft: 20,
-    paddingTop: 10,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  backIcon: {
+    fontSize: 28,
+    color: 'white',
+    fontWeight: 'bold',
   },
   videoTitle: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 18,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.9)',
+    color: 'white',
+  },
+  spacer: {
+    width: 44,
   },
   centerControls: {
     ...StyleSheet.absoluteFillObject,
