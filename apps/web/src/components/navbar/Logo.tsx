@@ -42,7 +42,7 @@ const Logo: React.FC<LogoProps> = ({ onClick, className = '' }) => {
           src={getLogoUrl()}
           alt="MOST Logo"
           width={64}
-          height={48}
+          height={56}
           className="object-contain"
           priority={true} // Logo is above the fold, so load it immediately
           placeholder="blur"
