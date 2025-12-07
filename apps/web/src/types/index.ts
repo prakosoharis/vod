@@ -24,6 +24,22 @@ export interface Content {
   created_at: string;
 }
 
+export interface LiveEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  event_type: 'GALA_PREMIERE' | 'STANDUP_COMEDY' | 'CONCERT' | 'SPECIAL_EVENT';
+  scheduled_at: string;
+  duration_minutes: number | null;
+  thumbnail_url: string;
+  backdrop_url: string | null;
+  stream_key: string;
+  host_name: string | null;
+  is_live: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ContentListResponse {
   data: Content[];
   total: number;

@@ -9,11 +9,9 @@ const LandingPage = lazy(() => import('../pages/LandingPage').then(module => ({ 
 const LoginPage = lazy(() => import('../pages/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/RegisterPage'))
 const BrowsePage = lazy(() => import('../pages/BrowsePage'))
-const UpcomingPage = lazy(() => import('../pages/UpcomingPage'))
 const VideoPlayerPage = lazy(() => import('../pages/VideoPlayerPage'))
 const MyListPage = lazy(() => import('../pages/MyListPage'))
 const LiveStreamingPage = lazy(() => import('../pages/LiveStreamingPage'))
-const LiveEventsPage = lazy(() => import('../pages/LiveEventsPage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
 
 const AppRoutes = () => {
@@ -46,24 +44,12 @@ const AppRoutes = () => {
             </Layout>
           </ProtectedRoute>
         } />
-        <Route path="/upcoming" element={
-          <Layout>
-            <Suspense fallback={<LoadingSpinner />}>
-              <UpcomingPage />
-            </Suspense>
-          </Layout>
-        } />
         <Route path="/live" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingSpinner />}>
               <LiveStreamingPage />
             </Suspense>
           </ProtectedRoute>
-        } />
-        <Route path="/live-events" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <LiveEventsPage />
-          </Suspense>
         } />
         <Route path="/watch/:id" element={
           <ProtectedRoute>

@@ -15,6 +15,13 @@ enum ContentType {
   SERIES
 }
 
+enum EventType {
+  GALA_PREMIERE
+  STANDUP_COMEDY
+  CONCERT
+  SPECIAL_EVENT
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -81,5 +88,27 @@ model WatchProgress {
 
   @@unique([user_id, content_id])
   @@map("watch_progress")
+}
+
+model LiveEvent {
+  id              String      @id @default(uuid())
+  title           String
+  description     String?     @db.Text
+  event_type      EventType
+  scheduled_at    DateTime
+  duration_minutes Int?
+  thumbnail_url   String
+  backdrop_url    String?
+  local_thumbnail_url String?
+  local_backdrop_url String?
+  stream_key      String
+  host_name       String?
+  is_live         Boolean     @default(false)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  @@index([scheduled_at])
+  @@index([is_live])
+  @@map("live_events")
 }
 

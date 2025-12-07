@@ -56,22 +56,22 @@ const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
 
   return (
     <div
-      className="relative min-w-[180px] aspect-[3/4] cursor-pointer transition-transform duration-300 hover:scale-105"
+      className="group relative min-w-[180px] aspect-[3/4] cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-accent-500/10"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Thumbnail */}
+      {/* Thumbnail with soft corners and subtle glow */}
       <OptimizedImage
         src={content.thumbnail_url}
         alt={content.title}
-        className="w-full h-full object-cover rounded"
+        className="w-full h-full object-cover rounded-xl shadow-lg group-hover:shadow-accent-500/20 transition-shadow duration-300"
         format="auto"
         placeholder="blur"
       />
 
-      {/* Hover Overlay */}
+      {/* Hover Overlay - softer, warmer */}
       {isHovered && (
-        <div className="absolute inset-0 bg-black/80 rounded p-3 flex flex-col justify-between">
+        <div className="absolute inset-0 bg-gradient-to-t from-warm-charcoal-100 via-warm-charcoal-100/95 to-warm-charcoal-100/80 rounded-xl p-3 flex flex-col justify-between backdrop-blur-sm">
           {/* Title & Metadata */}
           <div>
             <h3 className="font-bold text-base mb-1">{content.title}</h3>

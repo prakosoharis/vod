@@ -1,11 +1,102 @@
-import { useMemo, useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import ContentRow from '@/components/home/ContentRow'
-import FeaturedCarousel from '@/components/home/FeaturedCarousel'
-import ContentDetailModal from '@/components/content/ContentDetailModal'
-import { contentService } from '@/services/content.service'
-import { userService } from '@/services/auth.service'
-import type { Content } from '@/types'
+import React, { useMemo, useState, useEffect } from 'react';
+import { Lock, Play } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuthStore } from '@/stores/authStore';
+import ContentRow from '@/components/home/ContentRow';
+import FeaturedCarousel from '@/components/home/FeaturedCarousel';
+import ContentDetailModal from '@/components/content/ContentDetailModal';
+import { AuthModal } from '@/components/auth/AuthModal';
+import { contentService } from '@/services/content.service';
+import type { Content } from '@/types';
+
+// Custom ContentCard with login protection
+const ProtectedContentCard = ({ content, onInfoClick }: { content: Content; onInfoClick?: (content: Content) => void }) => {
+  const [isHovered, setIsHovered] = useState(false)
+  const { isAuthenticated } = useAuthStore()
+  const [showAuthModal, setShowAuthModal] = useState(false)
+
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!isAuthenticated) {
+      setShowAuthModal(true)
+    } else {
+      // Navigate to watch page
+      window.location.href = `/watch/${content.id}`
+    }
+  }
+
+  return (
+    <>
+      <div
+        className="relative min-w-[180px] aspect-[3/4] cursor-pointer transition-transform duration-300 hover:scale-105"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Thumbnail */}
+        <img
+          src={content.thumbnail_url}
+          alt={content.title}
+          className="w-full h-full object-cover rounded"
+        />
+
+        {/* Lock overlay for non-authenticated users */}
+        {!isAuthenticated && (
+          <div className="absolute inset-0 bg-black/60 rounded flex items-center justify-center">
+            <Lock className="w-8 h-8 text-gray-300" />
+          </div>
+        )}
+
+        {/* Hover Overlay */}
+        {isHovered && (
+          <div className="absolute inset-0 bg-black/80 rounded p-3 flex flex-col justify-between">
+            {/* Title & Metadata */}
+            <div>
+              <h3 className="font-bold text-base mb-1">{content.title}</h3>
+              <p className="text-sm text-gray-400">
+                {content.year} • {content.genre?.[0] ?? 'General'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handlePlayClick}
+                className={`p-2 rounded-full transition-all duration-200 ${
+                  isAuthenticated
+                    ? 'bg-white text-black hover:bg-gray-200'
+                    : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                }`}
+                title={isAuthenticated ? "Putar" : "Login untuk menonton"}
+              >
+                <Play size={16} fill={isAuthenticated ? "black" : "none"} />
+              </button>
+              <button
+                className="p-2 border border-white rounded-full hover:bg-white/10 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onInfoClick?.(content)
+                }}
+                title="Info Lebih Lanjut"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Login untuk Menonton Video"
+        subtitle="Nikmati konten eksklusif dengan akun Anda"
+      />
+    </>
+  )
+}
 
 const LoadingSkeleton = () => {
   return (
@@ -23,7 +114,9 @@ const LoadingSkeleton = () => {
   )
 }
 
-const BrowsePage = () => {
+export const LandingPage: React.FC = () => {
+  const {} = useAuthStore()
+
   // State for staggered loading
   const [loadSecondary, setLoadSecondary] = useState(false)
   const [loadGenre, setLoadGenre] = useState(false)
@@ -50,13 +143,6 @@ const BrowsePage = () => {
     queryFn: () => contentService.getFeaturedContent(),
   })
 
-  // Priority 1: Continue Watching (immediate load, if logged in)
-  const { data: continueWatching, isLoading: loadingContinue } = useQuery<Content[]>({
-    queryKey: ['continue-watching'],
-    queryFn: () => userService.getContinueWatching(),
-    enabled: !!localStorage.getItem('token'), // Only if logged in
-  })
-
   
   // Priority 2: Load after 1 second delay
   const { data: indonesian, isLoading: loadingIndonesian } = useQuery<Content[]>({
@@ -77,7 +163,6 @@ const BrowsePage = () => {
     enabled: loadSecondary,
   })
 
-  
   // Priority 3: Load after 2 seconds delay
   const { data: action, isLoading: loadingAction } = useQuery<Content[]>({
     queryKey: ['genre', 'Action'],
@@ -92,24 +177,6 @@ const BrowsePage = () => {
     queryKey: ['genre', 'Drama'],
     queryFn: async () => {
       const response = await contentService.getAllContent({ genre: 'Drama', limit: 20 })
-      return response.data
-    },
-    enabled: loadGenre,
-  })
-
-  const { data: horror, isLoading: loadingHorror } = useQuery<Content[]>({
-    queryKey: ['genre', 'Horror'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ genre: 'Horror', limit: 20 })
-      return response.data
-    },
-    enabled: loadGenre,
-  })
-
-  const { data: comedy, isLoading: loadingComedy } = useQuery<Content[]>({
-    queryKey: ['genre', 'Comedy'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ genre: 'Comedy', limit: 20 })
       return response.data
     },
     enabled: loadGenre,
@@ -146,14 +213,13 @@ const BrowsePage = () => {
 
   // Only show initial loading for priority 1 content
   const isLoadingInitial = useMemo(
-    () => loadingFeatured || loadingContinue,
-    [loadingFeatured, loadingContinue]
+    () => loadingFeatured,
+    [loadingFeatured]
   )
 
   if (isLoadingInitial) {
     return <LoadingSkeleton />
   }
-
 
   return (
     <div className="bg-warm-charcoal-100 min-h-screen">
@@ -167,13 +233,8 @@ const BrowsePage = () => {
       )}
 
       {/* Negative margin to overlap hero */}
-      <div className="relative -mt-22 z-10 space-y-12 pb-20 pt-8">
-        {/* 1. Continue Watching (conditional) */}
-        {continueWatching && continueWatching.length > 0 && (
-          <ContentRow title="Lanjutkan Menonton" contents={continueWatching} onInfoClick={openModal} />
-        )}
-
-        {/* 2. Made in Indonesia (Priority 2) */}
+      <div className="relative -mt-32 z-10 space-y-12 pb-20 pt-8">
+        {/* 1. Made in Indonesia (Priority 2) */}
         {loadSecondary && (
           <>
             {loadingIndonesian ? (
@@ -182,12 +243,17 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : indonesian && indonesian.length > 0 ? (
-              <ContentRow title="Buatan Indonesia" contents={indonesian} onInfoClick={openModal} />
+              <ContentRow
+                title="Buatan Indonesia"
+                contents={indonesian}
+                onInfoClick={openModal}
+                ContentCardComponent={ProtectedContentCard}
+              />
             ) : null}
           </>
         )}
 
-        {/* 4. New Releases (Priority 2) */}
+        {/* 3. New Releases (Priority 2) */}
         {loadSecondary && (
           <>
             {loadingNewReleases ? (
@@ -196,13 +262,17 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : newReleases && newReleases.length > 0 ? (
-              <ContentRow title="Rilis Terbaru" contents={newReleases} onInfoClick={openModal} />
+              <ContentRow
+                title="Rilis Terbaru"
+                contents={newReleases}
+                onInfoClick={openModal}
+                ContentCardComponent={ProtectedContentCard}
+              />
             ) : null}
           </>
         )}
 
-  
-        {/* 6. Genre rows (Priority 3) */}
+        {/* 4. Genre rows (Priority 3) */}
         {loadGenre && (
           <>
             {loadingAction ? (
@@ -211,7 +281,12 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : action && action.length > 0 ? (
-              <ContentRow title="Aksi" contents={action} onInfoClick={openModal} />
+              <ContentRow
+                title="Aksi"
+                contents={action}
+                onInfoClick={openModal}
+                ContentCardComponent={ProtectedContentCard}
+              />
             ) : null}
 
             {loadingDrama ? (
@@ -220,25 +295,12 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : drama && drama.length > 0 ? (
-              <ContentRow title="Drama" contents={drama} onInfoClick={openModal} />
-            ) : null}
-
-            {loadingHorror ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Horror</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : horror && horror.length > 0 ? (
-              <ContentRow title="Horror" contents={horror} onInfoClick={openModal} />
-            ) : null}
-
-            {loadingComedy ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Komedi</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : comedy && comedy.length > 0 ? (
-              <ContentRow title="Komedi" contents={comedy} onInfoClick={openModal} />
+              <ContentRow
+                title="Drama"
+                contents={drama}
+                onInfoClick={openModal}
+                ContentCardComponent={ProtectedContentCard}
+              />
             ) : null}
           </>
         )}
@@ -254,6 +316,7 @@ const BrowsePage = () => {
       />
     </div>
   )
-}
+};
 
-export default BrowsePage
+export default LandingPage;
+
