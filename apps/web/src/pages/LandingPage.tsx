@@ -69,6 +69,15 @@ export const LandingPage: React.FC = () => {
     },
   })
 
+  // LATEST RELEASES - Rilis Terbaru
+  const { data: latestReleases, isLoading: loadingLatest } = useQuery<Content[]>({
+    queryKey: ['latest-releases'],
+    queryFn: async () => {
+      const response = await contentService.getAllContent({ limit: 20 })
+      return response.data
+    },
+  })
+
   // Modal handlers
   const openModal = (content: Content) => {
     setSelectedContent(content)
@@ -81,7 +90,7 @@ export const LandingPage: React.FC = () => {
   }
 
   // Simple loading
-  if (loadingFeatured || loadingMovies || loadingSeries) {
+  if (loadingFeatured || loadingMovies || loadingSeries || loadingLatest) {
     return <LoadingSkeleton />
   }
 
@@ -96,22 +105,33 @@ export const LandingPage: React.FC = () => {
         />
       )}
 
+      {/* Rilis Terbaru - Mobile Priority Section */}
+      {latestReleases && latestReleases.length > 0 && (
+        <div className="pt-8 md:pt-16">
+          <ContentRow
+            title="Rilis Terbaru"
+            contents={latestReleases}
+            onInfoClick={openModal}
+          />
+        </div>
+      )}
+
       {/* Live Streaming Banner - Only show when live */}
       {streamStatus.isLive && (
-        <div className="px-12 pt-24">
+        <div className="px-6 md:px-12 pt-12 md:pt-24">
           <button
             onClick={() => navigate('/live')}
-            className="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 rounded-2xl p-8 transition-all duration-300 transform hover:scale-[1.02] cursor-pointer"
+            className="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 rounded-2xl p-6 md:p-8 transition-all duration-300 transform hover:scale-[1.02] cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Radio className="w-8 h-8 text-cream-50 animate-pulse" />
+                <Radio className="w-6 h-6 md:w-8 md:h-8 text-cream-50 animate-pulse" />
                 <div className="text-left">
-                  <h2 className="text-2xl font-bold text-cream-50 mb-1">Live Sekarang</h2>
-                  <p className="text-cream-100 text-sm">Streaming sedang berlangsung - Klik untuk menonton</p>
+                  <h2 className="text-xl md:text-2xl font-bold text-cream-50 mb-1">Live Sekarang</h2>
+                  <p className="text-cream-100 text-xs md:text-sm">Streaming sedang berlangsung - Klik untuk menonton</p>
                 </div>
               </div>
-              <div className="bg-cream-50 text-primary-500 px-6 py-2 rounded-full font-bold">
+              <div className="bg-cream-50 text-primary-500 px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold text-sm md:text-base">
                 TONTON
               </div>
             </div>

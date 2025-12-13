@@ -9,6 +9,7 @@ import { userRoutes } from './routes/user.js';
 import { contentRoutes } from './routes/content.js';
 import { uploadRoutes } from './routes/upload.js';
 import { eventRoutes } from './routes/event.js';
+import paymentRoutes from './routes/payment.js';
 import prisma from './config/database.js';
 
 
@@ -82,6 +83,7 @@ async function build(): Promise<FastifyInstance> {
   await fastify.register(userRoutes, { prefix: '/api/user' });
   await fastify.register(contentRoutes, { prefix: '/api/content' });
   await fastify.register(eventRoutes, { prefix: '/api/events' });
+  await fastify.register(paymentRoutes, { prefix: '/api/payment' });
   await fastify.register(uploadRoutes, { prefix: '/api' });
 
   // Global error handler

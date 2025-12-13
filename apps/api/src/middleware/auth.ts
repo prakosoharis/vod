@@ -39,4 +39,5 @@ export async function authenticateRequest(
 
 // Backwards-compatible export name used in routes
 export const authenticate = authenticateRequest;
+export const authMiddleware = authenticateRequest;
 

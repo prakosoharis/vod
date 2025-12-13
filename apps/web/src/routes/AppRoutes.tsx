@@ -14,6 +14,10 @@ const VideoPlayerPage = lazy(() => import('../pages/VideoPlayerPage'))
 const MyListPage = lazy(() => import('../pages/MyListPage'))
 const LiveStreamingPage = lazy(() => import('../pages/LiveStreamingPage'))
 const LiveEventsPage = lazy(() => import('../pages/LiveEventsPage'))
+const PricingPage = lazy(() => import('../pages/PricingPage'))
+const PaymentSuccessPage = lazy(() => import('../pages/PaymentSuccessPage'))
+const PaymentErrorPage = lazy(() => import('../pages/PaymentErrorPage'))
+const ProfilePage = lazy(() => import('../pages/ProfilePage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
 
 const AppRoutes = () => {
@@ -64,6 +68,32 @@ const AppRoutes = () => {
           <Suspense fallback={<LoadingSpinner />}>
             <LiveEventsPage />
           </Suspense>
+        } />
+        <Route path="/pricing" element={
+          <Layout>
+            <Suspense fallback={<LoadingSpinner />}>
+              <PricingPage />
+            </Suspense>
+          </Layout>
+        } />
+        <Route path="/payment/success" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <PaymentSuccessPage />
+          </Suspense>
+        } />
+        <Route path="/payment/error" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <PaymentErrorPage />
+          </Suspense>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Layout>
+              <Suspense fallback={<LoadingSpinner />}>
+                <ProfilePage />
+              </Suspense>
+            </Layout>
+          </ProtectedRoute>
         } />
         <Route path="/watch/:id" element={
           <ProtectedRoute>

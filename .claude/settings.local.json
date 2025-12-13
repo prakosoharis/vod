@@ -130,7 +130,12 @@
       "Bash(timeout 40 bash:*)",
       "Bash(python3:*)",
       "Bash(keytool:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npx prisma:*)",
+      "Bash(timeout 5 bash:*)",
+      "Bash(timeout 10 pnpm dev:*)",
+      "Bash(timeout 8 bash:*)",
+      "Bash(timeout 15 pnpm dev:*)"
     ],
     "deny": [],
     "ask": []

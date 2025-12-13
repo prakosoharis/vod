@@ -1,7 +1,11 @@
-import { X, Play, Plus, Share2, Star } from 'lucide-react'
-import { useEffect } from 'react'
+import { X, Play, Plus, Share2, Star, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import ContentRow from '../home/ContentRow'
+import PaymentOptionsModal from '../payment/PaymentOptionsModal'
+import { paymentService } from '@/services/payment.service'
+import { useAuthStore } from '@/stores/authStore'
 import type { Content } from '@/types'
 
 // Extended types for content with additional properties
@@ -23,6 +27,17 @@ interface ContentDetailModalProps {
 
 const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onContentChange }: ContentDetailModalProps) => {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStore()
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+
+  // Check if user has access to this content
+  const { data: accessInfo, isLoading: checkingAccess } = useQuery({
+    queryKey: ['content-access', content?.id],
+    queryFn: () => content ? paymentService.checkContentAccess(content.id) : null,
+    enabled: isOpen && !!content && isAuthenticated,
+  })
+
+  const hasAccess = accessInfo?.data?.has_access || false
 
   // Close on ESC key and prevent background scroll
   useEffect(() => {
@@ -43,7 +58,18 @@ const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onC
 
   // Action button handlers
   const handlePlayClick = () => {
-    // Navigate to video player and close modal
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+
+    if (!hasAccess) {
+      // Show payment options modal
+      setShowPaymentModal(true)
+      return
+    }
+
+    // User has access, navigate to player
     if (content) {
       navigate(`/watch/${content.id}`)
       onClose()
@@ -137,9 +163,25 @@ const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onC
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handlePlayClick}
-                className="px-6 md:px-8 py-3 bg-red-600 hover:bg-red-700 rounded text-white font-semibold flex items-center gap-2 transition-colors duration-200 transform hover:scale-105 active:scale-95"
+                disabled={checkingAccess}
+                className="px-6 md:px-8 py-3 bg-red-600 hover:bg-red-700 rounded text-white font-semibold flex items-center gap-2 transition-colors duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Play size={20} fill="white" /> Putar
+                {checkingAccess ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Memeriksa...
+                  </>
+                ) : hasAccess ? (
+                  <>
+                    <Play size={20} fill="white" />
+                    Putar
+                  </>
+                ) : (
+                  <>
+                    <Play size={20} fill="white" />
+                    {isAuthenticated ? 'Sewa/Berlangganan' : 'Login untuk Nonton'}
+                  </>
+                )}
               </button>
               <button
                 onClick={handleAddToList}
@@ -200,6 +242,15 @@ const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onC
           </div>
         )}
       </div>
+
+      {/* Payment Options Modal */}
+      {content && (
+        <PaymentOptionsModal
+          content={content}
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
     </div>
   )
 }

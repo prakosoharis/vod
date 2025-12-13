@@ -33,6 +33,10 @@ model User {
   updated_at   DateTime       @updatedAt
   watchlist    Watchlist[]
   watch_progress WatchProgress[]
+  subscriptions UserSubscription[]
+  rentals      UserRental[]
+  event_tickets EventTicket[]
+  transactions Transaction[]
 
   @@index([email])
   @@map("users")
@@ -58,6 +62,8 @@ model Content {
   created_at   DateTime       @default(now())
   watchlist    Watchlist[]
   watch_progress WatchProgress[]
+  rental_price RentalPrice?
+  rentals      UserRental[]
 
   @@index([featured])
   @@index([type])
@@ -104,11 +110,148 @@ model LiveEvent {
   stream_key      String
   host_name       String?
   is_live         Boolean     @default(false)
+  ticket_price    Decimal?    @db.Decimal(10, 2)  // Harga tiket event (nullable jika gratis)
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
+  tickets         EventTicket[]
 
   @@index([scheduled_at])
   @@index([is_live])
   @@map("live_events")
+}
+
+// ============ PAYMENT SYSTEM ============
+
+enum PaymentType {
+  RENTAL
+  SUBSCRIPTION
+  EVENT_TICKET
+}
+
+enum PaymentStatus {
+  PENDING
+  SETTLEMENT
+  FAILED
+  EXPIRED
+  REFUND
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+// Paket subscription
+model SubscriptionPlan {
+  id            String   @id @default(uuid())
+  name          String   // "VOD Unlimited"
+  description   String?  @db.Text
+  price         Decimal  @db.Decimal(10, 2)
+  duration_days Int      // 30 for monthly
+  features      Json     // {"vod": true, "live_discount": 0}
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  subscriptions UserSubscription[]
+
+  @@map("subscription_plans")
+}
+
+// User subscriptions
+model UserSubscription {
+  id              String             @id @default(uuid())
+  user_id         String
+  plan_id         String
+  status          SubscriptionStatus @default(ACTIVE)
+  started_at      DateTime           @default(now())
+  expired_at      DateTime
+  auto_renew      Boolean            @default(true)
+  cancelled_at    DateTime?
+  created_at      DateTime           @default(now())
+  updated_at      DateTime           @updatedAt
+  user            User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  plan            SubscriptionPlan   @relation(fields: [plan_id], references: [id])
+  transactions    Transaction[]
+
+  @@index([user_id])
+  @@index([status])
+  @@map("user_subscriptions")
+}
+
+// Harga rental per content
+model RentalPrice {
+  id              String   @id @default(uuid())
+  content_id      String   @unique
+  price           Decimal  @db.Decimal(10, 2)
+  duration_hours  Int      // 24 jam
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  content         Content  @relation(fields: [content_id], references: [id], onDelete: Cascade)
+  rentals         UserRental[]
+
+  @@map("rental_prices")
+}
+
+// User rentals
+model UserRental {
+  id              String      @id @default(uuid())
+  user_id         String
+  content_id      String
+  rental_price_id String
+  rented_at       DateTime    @default(now())
+  expired_at      DateTime
+  user            User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  content         Content     @relation(fields: [content_id], references: [id], onDelete: Cascade)
+  rental_price    RentalPrice @relation(fields: [rental_price_id], references: [id])
+  transaction     Transaction @relation(fields: [transaction_id], references: [id])
+  transaction_id  String      @unique
+
+  @@index([user_id, content_id])
+  @@index([expired_at])
+  @@map("user_rentals")
+}
+
+// Event tickets
+model EventTicket {
+  id              String      @id @default(uuid())
+  user_id         String
+  event_id        String
+  purchased_at    DateTime    @default(now())
+  user            User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  event           LiveEvent   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  transaction     Transaction @relation(fields: [transaction_id], references: [id])
+  transaction_id  String      @unique
+
+  @@unique([user_id, event_id])
+  @@index([user_id])
+  @@map("event_tickets")
+}
+
+// Unified transaction table
+model Transaction {
+  id                      String         @id @default(uuid())
+  user_id                 String
+  order_id                String         @unique  // Format: ORD-timestamp-random
+  payment_type            PaymentType
+  amount                  Decimal        @db.Decimal(10, 2)
+  status                  PaymentStatus  @default(PENDING)
+  payment_method          String?        // gopay, bank_transfer, qris, etc
+  midtrans_transaction_id String?        @unique
+  midtrans_token          String?
+  subscription_id         String?
+  metadata                Json?          // Store additional info
+  created_at              DateTime       @default(now())
+  updated_at              DateTime       @updatedAt
+  user                    User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  subscription            UserSubscription? @relation(fields: [subscription_id], references: [id])
+  rental                  UserRental?
+  event_ticket            EventTicket?
+
+  @@index([user_id])
+  @@index([status])
+  @@index([order_id])
+  @@map("transactions")
 }
 
