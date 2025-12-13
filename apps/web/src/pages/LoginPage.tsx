@@ -4,32 +4,33 @@ import { getLogoUrl } from '@/utils/logoUrl';
 
 const LoginPage = () => {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-warm-charcoal-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 shadow-2xl">
+        <div className="bg-warm-charcoal-50 border-2 border-accent-500/20 rounded-2xl p-8 shadow-2xl shadow-accent-500/10">
           <div className="text-center mb-8">
             <img
-              src={getLogoUrl()}
+              src="https://api.mostara.id/api/uploads/logos/logo1.jpg"
               alt="MOST Logo"
-              className="h-20 w-auto mx-auto mb-4 object-contain"
+              className="h-16 md:h-20 w-auto mx-auto mb-6 object-contain"
             />
-            <p className="text-gray-400 text-sm">Masuk ke akun Anda</p>
+            <h1 className="text-2xl font-bold text-cream-50 mb-2">Selamat Datang Kembali</h1>
+            <p className="text-cream-200 text-sm">Masuk untuk melanjutkan menonton</p>
           </div>
 
           <LoginForm />
 
-          <div className="mt-6 text-center space-y-2">
+          <div className="mt-6 text-center space-y-3">
             <Link
               to="#"
-              className="text-sm text-gray-400 hover:text-white transition-colors"
+              className="block text-sm text-cream-200 hover:text-accent-400 transition-colors"
             >
               Lupa password?
             </Link>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-cream-200">
               Belum punya akun?{' '}
               <Link
                 to="/register"
-                className="text-red-500 hover:text-red-400 transition-colors font-medium"
+                className="text-accent-400 hover:text-accent-300 transition-colors font-semibold"
               >
                 Daftar sekarang
               </Link>

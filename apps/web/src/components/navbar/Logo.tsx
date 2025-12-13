@@ -37,18 +37,12 @@ const Logo: React.FC<LogoProps> = ({ onClick, className = '' }) => {
       className={`flex items-center hover:opacity-90 transition-all duration-300 hover:scale-105 ${className}`}
       onClick={onClick}
     >
-      <div className="relative flex items-center justify-center">
-        <OptimizedImage
-          src={getLogoUrl()}
-          alt="MOST Logo"
-          width={64}
-          height={56}
-          className="object-contain"
-          priority={true} // Logo is above the fold, so load it immediately
-          placeholder="blur"
-          onError={handleImageError}
-        />
-      </div>
+      <img
+        src="https://api.mostara.id/api/uploads/logos/logo1.jpg"
+        alt="MOST Logo"
+        className="h-12 md:h-14 w-auto object-contain"
+        onError={handleImageError}
+      />
     </Link>
   )
 }

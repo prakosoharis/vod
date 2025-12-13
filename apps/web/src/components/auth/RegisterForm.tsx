@@ -22,8 +22,8 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const getPasswordStrength = (password: string) => {
-  if (password.length < 8) return { level: 'weak', color: 'bg-red-500' };
-  if (password.length < 12) return { level: 'medium', color: 'bg-yellow-500' };
+  if (password.length < 8) return { level: 'weak', color: 'bg-accent-600' };
+  if (password.length < 12) return { level: 'medium', color: 'bg-accent-500' };
 
   // Check for mix of characters
   const hasLower = /[a-z]/.test(password);
@@ -33,8 +33,8 @@ const getPasswordStrength = (password: string) => {
 
   const mixCount = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
 
-  if (mixCount >= 3) return { level: 'strong', color: 'bg-green-500' };
-  return { level: 'medium', color: 'bg-yellow-500' };
+  if (mixCount >= 3) return { level: 'strong', color: 'bg-accent-400' };
+  return { level: 'medium', color: 'bg-accent-500' };
 };
 
 interface RegisterFormProps {
@@ -75,9 +75,9 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {error && (
-        <div className="p-4 bg-red-600 text-white rounded-md text-sm">
+        <div className="p-4 bg-accent-500/20 border border-accent-500/40 text-accent-300 rounded-xl text-sm">
           {error}
         </div>
       )}
@@ -87,13 +87,13 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
           <Input
             type="text"
             placeholder="Nama Lengkap"
-            className={`h-12 text-white placeholder:text-gray-400 bg-gray-800 border-gray-600 focus:border-red-500 focus:ring-red-500 ${
-              errors.full_name ? 'border-red-500' : ''
+            className={`h-12 text-cream-50 placeholder:text-cream-200/50 bg-warm-charcoal-100 border-accent-500/30 focus:border-accent-400 focus:ring-accent-400 rounded-xl ${
+              errors.full_name ? 'border-accent-500' : ''
             }`}
             {...register('full_name')}
           />
           {errors.full_name && (
-            <p className="text-red-500 text-sm mt-1">{errors.full_name.message}</p>
+            <p className="text-accent-400 text-sm mt-1.5">{errors.full_name.message}</p>
           )}
         </div>
 
@@ -101,13 +101,13 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
           <Input
             type="email"
             placeholder="Email"
-            className={`h-12 text-white placeholder:text-gray-400 bg-gray-800 border-gray-600 focus:border-red-500 focus:ring-red-500 ${
-              errors.email ? 'border-red-500' : ''
+            className={`h-12 text-cream-50 placeholder:text-cream-200/50 bg-warm-charcoal-100 border-accent-500/30 focus:border-accent-400 focus:ring-accent-400 rounded-xl ${
+              errors.email ? 'border-accent-500' : ''
             }`}
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+            <p className="text-accent-400 text-sm mt-1.5">{errors.email.message}</p>
           )}
         </div>
 
@@ -116,15 +116,15 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
             <Input
               type={showPassword ? 'text' : 'password'}
               placeholder="Password"
-              className={`h-12 text-white placeholder:text-gray-400 bg-gray-800 border-gray-600 focus:border-red-500 focus:ring-red-500 pr-12 ${
-                errors.password ? 'border-red-500' : ''
+              className={`h-12 text-cream-50 placeholder:text-cream-200/50 bg-warm-charcoal-100 border-accent-500/30 focus:border-accent-400 focus:ring-accent-400 rounded-xl pr-12 ${
+                errors.password ? 'border-accent-500' : ''
               }`}
               {...register('password')}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-cream-200 hover:text-accent-400 transition-colors"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -132,17 +132,17 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
           {password && (
             <div className="mt-2">
               <div className="flex space-x-1">
-                <div className={`h-1 flex-1 rounded ${passwordStrength.level === 'weak' ? passwordStrength.color : passwordStrength.level === 'medium' ? passwordStrength.color : 'bg-gray-600'}`}></div>
-                <div className={`h-1 flex-1 rounded ${passwordStrength.level === 'medium' ? passwordStrength.color : passwordStrength.level === 'strong' ? passwordStrength.color : 'bg-gray-600'}`}></div>
-                <div className={`h-1 flex-1 rounded ${passwordStrength.level === 'strong' ? passwordStrength.color : 'bg-gray-600'}`}></div>
+                <div className={`h-1 flex-1 rounded ${passwordStrength.level === 'weak' ? passwordStrength.color : passwordStrength.level === 'medium' ? passwordStrength.color : 'bg-warm-charcoal-100'}`}></div>
+                <div className={`h-1 flex-1 rounded ${passwordStrength.level === 'medium' ? passwordStrength.color : passwordStrength.level === 'strong' ? passwordStrength.color : 'bg-warm-charcoal-100'}`}></div>
+                <div className={`h-1 flex-1 rounded ${passwordStrength.level === 'strong' ? passwordStrength.color : 'bg-warm-charcoal-100'}`}></div>
               </div>
-              <p className="text-xs text-gray-400 mt-1 capitalize">
+              <p className="text-xs text-cream-200 mt-1.5 capitalize">
                 Kekuatan: {passwordStrength.level === 'weak' ? 'Lemah' : passwordStrength.level === 'medium' ? 'Sedang' : 'Kuat'}
               </p>
             </div>
           )}
           {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+            <p className="text-accent-400 text-sm mt-1.5">{errors.password.message}</p>
           )}
         </div>
 
@@ -150,20 +150,20 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
           <Input
             type={showConfirmPassword ? 'text' : 'password'}
             placeholder="Konfirmasi Password"
-            className={`h-12 text-white placeholder:text-gray-400 bg-gray-800 border-gray-600 focus:border-red-500 focus:ring-red-500 pr-12 ${
-              errors.confirmPassword ? 'border-red-500' : ''
+            className={`h-12 text-cream-50 placeholder:text-cream-200/50 bg-warm-charcoal-100 border-accent-500/30 focus:border-accent-400 focus:ring-accent-400 rounded-xl pr-12 ${
+              errors.confirmPassword ? 'border-accent-500' : ''
             }`}
             {...register('confirmPassword')}
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-cream-200 hover:text-accent-400 transition-colors"
           >
             {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
           {errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
+            <p className="text-accent-400 text-sm mt-1.5">{errors.confirmPassword.message}</p>
           )}
         </div>
 
@@ -171,31 +171,31 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
           <input
             id="terms"
             type="checkbox"
-            className="h-4 w-4 text-red-600 bg-gray-800 border-gray-600 rounded focus:ring-red-500 focus:ring-2 mt-1"
+            className="h-4 w-4 text-accent-500 bg-warm-charcoal-100 border-accent-500/40 rounded focus:ring-accent-400 focus:ring-2 mt-1 cursor-pointer"
             {...register('terms')}
           />
-          <label htmlFor="terms" className="text-sm text-gray-300 leading-relaxed">
+          <label htmlFor="terms" className="text-sm text-cream-100 leading-relaxed cursor-pointer">
             Saya setuju dengan{' '}
             <Link
               to="/terms"
-              className="text-red-500 hover:text-red-400 transition-colors underline"
+              className="text-accent-400 hover:text-accent-300 transition-colors underline"
             >
               Syarat & Ketentuan
             </Link>
           </label>
         </div>
         {errors.terms && (
-          <p className="text-red-500 text-sm">{errors.terms.message}</p>
+          <p className="text-accent-400 text-sm mt-1.5">{errors.terms.message}</p>
         )}
 
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-cream-50 font-semibold text-lg rounded-full shadow-lg shadow-accent-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
         >
           {isLoading ? (
             <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cream-50 mr-2"></div>
               Daftar...
             </div>
           ) : (
@@ -203,35 +203,6 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
           )}
         </Button>
       </form>
-
-      {/* Divider */}
-      <div className="flex items-center gap-4 my-2">
-        <div className="h-px bg-gray-700 flex-1" />
-        <span className="text-gray-400 text-sm">Atau lanjutkan dengan</span>
-        <div className="h-px bg-gray-700 flex-1" />
-      </div>
-
-      {/* Social Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => alert('Social login akan diimplementasikan nanti')}
-          className="h-12 w-full inline-flex items-center justify-center gap-3 rounded-md border border-gray-600 bg-white/90 text-gray-900 hover:bg-gray-100 transition-colors"
-        >
-          {/* Simple Google G */}
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-black font-bold">G</span>
-          <span className="font-medium">Google</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => alert('Social login akan diimplementasikan nanti')}
-          className="h-12 w-full inline-flex items-center justify-center gap-3 rounded-md border border-gray-600 bg-white/90 text-gray-900 hover:bg-gray-100 transition-colors"
-        >
-          {/* Simple Facebook f */}
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#1877F2] text-white font-bold">f</span>
-          <span className="font-medium">Facebook</span>
-        </button>
-      </div>
     </div>
   );
 }

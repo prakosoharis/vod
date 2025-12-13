@@ -49,9 +49,9 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {error && (
-        <div className="p-4 bg-red-600 text-white rounded-md text-sm">
+        <div className="p-4 bg-accent-500/20 border border-accent-500/40 text-accent-300 rounded-xl text-sm">
           {error}
         </div>
       )}
@@ -61,13 +61,13 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
           <Input
             type="email"
             placeholder="Email"
-            className={`h-12 text-white placeholder:text-gray-400 bg-gray-800 border-gray-600 focus:border-red-500 focus:ring-red-500 ${
-              errors.email ? 'border-red-500' : ''
+            className={`h-12 text-cream-50 placeholder:text-cream-200/50 bg-warm-charcoal-100 border-accent-500/30 focus:border-accent-400 focus:ring-accent-400 rounded-xl ${
+              errors.email ? 'border-accent-500' : ''
             }`}
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+            <p className="text-accent-400 text-sm mt-1.5">{errors.email.message}</p>
           )}
         </div>
 
@@ -75,20 +75,20 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
           <Input
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
-            className={`h-12 text-white placeholder:text-gray-400 bg-gray-800 border-gray-600 focus:border-red-500 focus:ring-red-500 pr-12 ${
-              errors.password ? 'border-red-500' : ''
+            className={`h-12 text-cream-50 placeholder:text-cream-200/50 bg-warm-charcoal-100 border-accent-500/30 focus:border-accent-400 focus:ring-accent-400 rounded-xl pr-12 ${
+              errors.password ? 'border-accent-500' : ''
             }`}
             {...register('password')}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-cream-200 hover:text-accent-400 transition-colors"
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
           {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+            <p className="text-accent-400 text-sm mt-1.5">{errors.password.message}</p>
           )}
         </div>
 
@@ -98,9 +98,9 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
             type="checkbox"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            className="h-4 w-4 text-red-600 bg-gray-800 border-gray-600 rounded focus:ring-red-500 focus:ring-2"
+            className="h-4 w-4 text-accent-500 bg-warm-charcoal-100 border-accent-500/40 rounded focus:ring-accent-400 focus:ring-2 cursor-pointer"
           />
-          <label htmlFor="remember-me" className="ml-2 text-sm text-gray-300">
+          <label htmlFor="remember-me" className="ml-2 text-sm text-cream-100 cursor-pointer">
             Ingat saya
           </label>
         </div>
@@ -108,11 +108,11 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-cream-50 font-semibold text-lg rounded-full shadow-lg shadow-accent-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
         >
           {isLoading ? (
             <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cream-50 mr-2"></div>
               Masuk...
             </div>
           ) : (
@@ -120,35 +120,6 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
           )}
         </Button>
       </form>
-
-      {/* Divider */}
-      <div className="flex items-center gap-4 my-2">
-        <div className="h-px bg-gray-700 flex-1" />
-        <span className="text-gray-400 text-sm">Atau lanjutkan dengan</span>
-        <div className="h-px bg-gray-700 flex-1" />
-      </div>
-
-      {/* Social Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => alert('Social login akan diimplementasikan nanti')}
-          className="h-12 w-full inline-flex items-center justify-center gap-3 rounded-md border border-gray-600 bg-white/90 text-gray-900 hover:bg-gray-100 transition-colors"
-        >
-          {/* Simple Google G */}
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-black font-bold">G</span>
-          <span className="font-medium">Google</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => alert('Social login akan diimplementasikan nanti')}
-          className="h-12 w-full inline-flex items-center justify-center gap-3 rounded-md border border-gray-600 bg-white/90 text-gray-900 hover:bg-gray-100 transition-colors"
-        >
-          {/* Simple Facebook f */}
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#1877F2] text-white font-bold">f</span>
-          <span className="font-medium">Facebook</span>
-        </button>
-      </div>
     </div>
   );
 }
