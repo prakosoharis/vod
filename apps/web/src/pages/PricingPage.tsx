@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { paymentService, type SubscriptionPlan } from '@/services/payment.service';
@@ -7,7 +7,7 @@ import { Check, Loader2 } from 'lucide-react';
 
 export const PricingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [loading, setLoading] = useState(false);
 
   // Get subscription plans
@@ -36,7 +36,7 @@ export const PricingPage: React.FC = () => {
       // Open Midtrans Snap
       paymentService.openMidtransSnap(
         response.data.token,
-        (result) => {
+        () => {
           // Success
           navigate('/payment/success?order_id=' + response.data.order_id);
         },

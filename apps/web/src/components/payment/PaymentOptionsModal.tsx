@@ -31,7 +31,7 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
       // Open Midtrans Snap
       paymentService.openMidtransSnap(
         response.data.token,
-        (result) => {
+        () => {
           // Success
           onClose();
           navigate(`/watch/${content.id}`);

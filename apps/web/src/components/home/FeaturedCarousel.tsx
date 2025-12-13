@@ -127,7 +127,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
             }`}
           >
             <img
-              src={content.backdrop_url}
+              src={content.backdrop_url || content.thumbnail_url}
               alt={content.title}
               className="w-full h-full object-cover"
             />

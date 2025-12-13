@@ -51,6 +51,17 @@ export interface Transaction {
   status: 'PENDING' | 'SETTLEMENT' | 'FAILED' | 'EXPIRED';
   payment_method: string | null;
   created_at: string;
+  rental?: {
+    content_id: string;
+    content: {
+      title: string;
+    };
+  };
+  event_ticket?: {
+    event: {
+      title: string;
+    };
+  };
 }
 
 export interface PaymentResponse {

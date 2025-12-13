@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../config/database.js';
-import { snap, coreApi } from '../config/midtrans.js';
+import { snap } from '../config/midtrans.js';
 import crypto from 'crypto';
 
 // Generate unique order ID
@@ -13,7 +13,7 @@ const generateOrderId = (): string => {
 // =============== SUBSCRIPTION ===============
 
 export const getSubscriptionPlans = async (
-  request: FastifyRequest,
+  _request: FastifyRequest,
   reply: FastifyReply
 ) => {
   try {
@@ -410,14 +410,24 @@ export const buyEventTicket = async (
 
 // =============== WEBHOOK & STATUS ===============
 
+interface MidtransNotification {
+  signature_key: string;
+  order_id: string;
+  status_code: string;
+  gross_amount: string;
+  transaction_status: string;
+  fraud_status: string;
+  payment_type: string;
+}
+
 export const handleWebhook = async (
   request: FastifyRequest<{
-    Body: any;
+    Body: MidtransNotification;
   }>,
   reply: FastifyReply
 ) => {
   try {
-    const notification = request.body;
+    const notification = request.body as MidtransNotification;
 
     // Verify signature
     const serverKey = process.env.MIDTRANS_SERVER_KEY || '';

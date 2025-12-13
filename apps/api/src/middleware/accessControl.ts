@@ -136,7 +136,7 @@ export const checkEventAccess = async (
 // Optional middleware: Just check and return info, don't block
 export const getAccessInfo = async (
   request: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
+  _reply: FastifyReply
 ) => {
   try {
     const userId = (request.user as any)?.userId;

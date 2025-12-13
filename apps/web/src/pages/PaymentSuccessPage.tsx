@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Loader2, ArrowRight } from 'lucide-react';
+import { Check, Loader2, ArrowRight, X } from 'lucide-react';
 import { paymentService } from '@/services/payment.service';
 
 export const PaymentSuccessPage: React.FC = () => {
@@ -15,9 +15,9 @@ export const PaymentSuccessPage: React.FC = () => {
     queryKey: ['transaction', orderId],
     queryFn: () => orderId ? paymentService.getTransactionStatus(orderId) : null,
     enabled: !!orderId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Keep polling if status is still pending
-      return data?.status === 'PENDING' ? 2000 : false;
+      return query.state.data?.status === 'PENDING' ? 2000 : false;
     },
   });
 
