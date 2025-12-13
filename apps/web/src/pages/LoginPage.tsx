@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { LoginForm } from '@/components/auth/LoginForm';
-import { getLogoUrl } from '@/utils/logoUrl';
 
 const LoginPage = () => {
   return (

@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom'
-import OptimizedImage from '@/components/ui/OptimizedImage'
 import { useState } from 'react'
-import { getLogoUrl } from '@/utils/logoUrl'
 
 interface LogoProps {
   onClick?: () => void

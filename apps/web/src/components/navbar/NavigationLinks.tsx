@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, List } from 'lucide-react'
 import { AuthModal } from '@/components/auth/AuthModal'
 
 interface NavigationLinksProps {

@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock } from 'lucide-react';
 import type { LiveEvent } from '@/types';
 
 interface EventRowProps {
@@ -26,25 +25,6 @@ const EventRow: React.FC<EventRowProps> = ({ title, events }) => {
   const navigate = useNavigate();
 
   if (!events || events.length === 0) return null;
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('id-ID', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(date);
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short',
-    }).format(date);
-  };
 
   const formatShortDate = (dateString: string) => {
     const date = new Date(dateString);

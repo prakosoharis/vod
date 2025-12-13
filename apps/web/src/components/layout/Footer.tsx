@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { Twitter, Facebook, Instagram, Youtube } from 'lucide-react';
-import { getLogoUrl } from '@/utils/logoUrl';
 
 const Footer = () => {
   return (

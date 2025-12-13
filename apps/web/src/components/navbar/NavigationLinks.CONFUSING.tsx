@@ -21,7 +21,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
     onLinkClick?.()
   }
 
-  const handleProtectedClick = (e: React.MouseEvent, path: string) => {
+  const handleProtectedClick = (e: React.MouseEvent, _path: string) => {
     if (!isAuthenticated) {
       e.preventDefault()
       setShowAuthModal(true)

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { RegisterForm } from '@/components/auth/RegisterForm';
-import { getLogoUrl } from '@/utils/logoUrl';
 
 const RegisterPage = () => {
   return (
