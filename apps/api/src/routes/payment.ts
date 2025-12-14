@@ -5,6 +5,7 @@ import {
   rentContent,
   buyEventTicket,
   handleWebhook,
+  devWebhookSimulator,
   getTransactionStatus,
   getUserSubscription,
   checkContentAccess,
@@ -19,6 +20,9 @@ export default async function paymentRoutes(fastify: FastifyInstance) {
 
   // Webhook - no auth required
   fastify.post('/webhook', handleWebhook);
+
+  // Dev webhook simulator (only for development)
+  fastify.post('/dev-webhook/:orderId', devWebhookSimulator);
 
   // Protected routes
   fastify.register(async (protectedRoutes) => {

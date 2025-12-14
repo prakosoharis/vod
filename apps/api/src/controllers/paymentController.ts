@@ -723,3 +723,85 @@ export const cancelSubscription = async (
     return reply.status(500).send({ success: false, error: 'Failed to cancel subscription' });
   }
 };
+
+// =============== DEV WEBHOOK (ONLY FOR DEVELOPMENT) ===============
+
+export const devWebhookSimulator = async (
+  request: FastifyRequest<{
+    Params: { orderId: string };
+  }>,
+  reply: FastifyReply
+) => {
+  try {
+    // Only allow in development mode
+    if (process.env.NODE_ENV === 'production') {
+      return reply.status(403).send({ success: false, error: 'Dev webhook not available in production' });
+    }
+
+    const { orderId } = request.params;
+
+    // Get transaction
+    const transaction = await prisma.transaction.findUnique({
+      where: { order_id: orderId },
+      include: {
+        subscription: true,
+      },
+    });
+
+    if (!transaction) {
+      return reply.status(404).send({ success: false, error: 'Transaction not found' });
+    }
+
+    // Simulate successful payment
+    const paymentStatus = 'SETTLEMENT';
+
+    // Update transaction
+    await prisma.transaction.update({
+      where: { id: transaction.id },
+      data: {
+        status: paymentStatus,
+        payment_method: 'dev-simulator',
+      },
+    });
+
+    // Grant access based on payment type
+    if (paymentStatus === 'SETTLEMENT') {
+      if (transaction.payment_type === 'SUBSCRIPTION' && transaction.subscription_id) {
+        // Activate subscription
+        await prisma.userSubscription.update({
+          where: { id: transaction.subscription_id },
+          data: { status: 'ACTIVE' },
+        });
+      } else if (transaction.payment_type === 'RENTAL') {
+        // Create rental access
+        const metadata = transaction.metadata as any;
+        await prisma.userRental.create({
+          data: {
+            user_id: transaction.user_id,
+            content_id: metadata.content_id,
+            rental_price_id: metadata.rental_price_id,
+            rented_at: new Date(),
+            expired_at: new Date(metadata.expired_at),
+            transaction_id: transaction.id,
+          },
+        });
+      } else if (transaction.payment_type === 'EVENT_TICKET') {
+        // Create event ticket
+        const metadata = transaction.metadata as any;
+        await prisma.eventTicket.create({
+          data: {
+            user_id: transaction.user_id,
+            event_id: metadata.event_id,
+            purchased_at: new Date(),
+            transaction_id: transaction.id,
+          },
+        });
+      }
+    }
+
+    return reply.send({ success: true, message: 'Dev webhook simulated successfully' });
+  } catch (error) {
+    console.error('Error in dev webhook simulator:', error);
+    return reply.status(500).send({ success: false, error: 'Dev webhook simulation failed' });
+  }
+};

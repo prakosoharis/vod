@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import ContentRow from '@/components/home/ContentRow';
 import FeaturedCarousel from '@/components/home/FeaturedCarousel';
 import ContentDetailModal from '@/components/content/ContentDetailModal';
+import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal';
 import { contentService } from '@/services/content.service';
+import { paymentService } from '@/services/payment.service';
 import useLiveStream from '@/hooks/useLiveStream';
 import { Radio, Play } from 'lucide-react';
 import type { Content } from '@/types';
@@ -27,9 +29,11 @@ const LoadingSkeleton = () => (
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate()
-  const {} = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedContent, setSelectedContent] = useState<Content | null>(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentContent, setPaymentContent] = useState<Content | null>(null)
 
   // Live streaming check
   const HLS_URL = (streamKey: string) => `https://live.mostara.id/hls/${streamKey}/index.m3u8`
@@ -89,6 +93,34 @@ export const LandingPage: React.FC = () => {
     setSelectedContent(null)
   }
 
+  // Play handler - Check access before playing
+  const handlePlayClick = async (content: Content) => {
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+
+    try {
+      // Check if user has access
+      const accessInfo = await paymentService.checkContentAccess(content.id)
+
+      if (!accessInfo.data.has_access) {
+        // Show payment modal
+        setPaymentContent(content)
+        setShowPaymentModal(true)
+        return
+      }
+
+      // User has access, navigate to player
+      navigate(`/watch/${content.id}`)
+    } catch (error) {
+      console.error('Error checking access:', error)
+      // On error, show payment modal to be safe
+      setPaymentContent(content)
+      setShowPaymentModal(true)
+    }
+  }
+
   // Simple loading
   if (loadingFeatured || loadingMovies || loadingSeries || loadingLatest) {
     return <LoadingSkeleton />
@@ -101,6 +133,7 @@ export const LandingPage: React.FC = () => {
         <FeaturedCarousel
           contents={featured}
           onInfoClick={openModal}
+          onPlayClick={handlePlayClick}
           autoPlayInterval={5000}
         />
       )}
@@ -112,6 +145,7 @@ export const LandingPage: React.FC = () => {
             title="Rilis Terbaru"
             contents={latestReleases}
             onInfoClick={openModal}
+            onPlayClick={handlePlayClick}
           />
         </div>
       )}
@@ -147,8 +181,10 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl font-bold text-cream-50">Tontonan Malam Ini</h2>
           </div>
 
-          <Link to={`/watch/${movies[0].id}`}>
-            <div className="group relative bg-gradient-to-r from-warm-charcoal-50 to-warm-charcoal-100 rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-accent-500/40 transition-all duration-500 border md:border-2 border-accent-500/30 shadow-lg shadow-accent-500/10">
+          <div
+            onClick={() => handlePlayClick(movies[0])}
+            className="group relative bg-gradient-to-r from-warm-charcoal-50 to-warm-charcoal-100 rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-accent-500/40 transition-all duration-500 border md:border-2 border-accent-500/30 shadow-lg shadow-accent-500/10 cursor-pointer"
+          >
               <div className="flex flex-col md:flex-row gap-4 md:gap-8 p-4 md:p-8">
                 {/* Poster */}
                 <div className="flex-shrink-0 w-32 md:w-64 mx-auto md:mx-0">
@@ -192,7 +228,6 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          </Link>
         </div>
       )}
 
@@ -205,6 +240,7 @@ export const LandingPage: React.FC = () => {
             title="Film Lainnya"
             contents={movies.slice(1)}
             onInfoClick={openModal}
+            onPlayClick={handlePlayClick}
           />
         )}
 
@@ -214,12 +250,13 @@ export const LandingPage: React.FC = () => {
             title="Serial yang Bikin Ketagihan"
             contents={series}
             onInfoClick={openModal}
+            onPlayClick={handlePlayClick}
           />
         )}
 
       </div>
 
-      {/* Modal */}
+      {/* Modals */}
       <ContentDetailModal
         content={selectedContent}
         isOpen={modalOpen}
@@ -227,6 +264,18 @@ export const LandingPage: React.FC = () => {
         similarContent={[]}
         onContentChange={() => {}}
       />
+
+      {/* Payment Modal */}
+      {paymentContent && (
+        <PaymentOptionsModal
+          content={paymentContent}
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false)
+            setPaymentContent(null)
+          }}
+        />
+      )}
     </div>
   )
 };

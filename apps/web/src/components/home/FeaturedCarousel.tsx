@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { Play, Info } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import type { Content } from '@/types'
 
 interface FeaturedCarouselProps {
   contents: Content[]
   onInfoClick?: (content: Content) => void
+  onPlayClick?: (content: Content) => void
   autoPlayInterval?: number
 }
 
 const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
   contents,
   onInfoClick,
+  onPlayClick,
   autoPlayInterval = 5000
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -46,7 +47,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
             <img
               src={content.thumbnail_url}
               alt={content.title}
-              className="w-full h-full object-cover blur-sm scale-110"
+              className="w-full h-full object-cover"
             />
           </div>
         ))}
@@ -78,12 +79,13 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
             {/* Buttons */}
             <div className="space-y-3">
               {/* Play Button - White/Prominent */}
-              <Link to={`/watch/${currentContent.id}`} className="block">
-                <button className="w-full group flex items-center justify-center gap-2 px-8 py-3 bg-cream-50 text-warm-charcoal-100 font-bold text-base rounded-md hover:bg-cream-100 active:scale-95 transition-all duration-300 shadow-lg">
-                  <Play className="h-5 w-5 group-hover:scale-110 transition-transform" fill="currentColor" />
-                  <span>Putar</span>
-                </button>
-              </Link>
+              <button
+                onClick={() => onPlayClick?.(currentContent)}
+                className="w-full group flex items-center justify-center gap-2 px-8 py-3 bg-cream-50 text-warm-charcoal-100 font-bold text-base rounded-md hover:bg-cream-100 active:scale-95 transition-all duration-300 shadow-lg"
+              >
+                <Play className="h-5 w-5 group-hover:scale-110 transition-transform" fill="currentColor" />
+                <span>Putar</span>
+              </button>
 
               {/* Info Button */}
               {onInfoClick && (
@@ -160,13 +162,27 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
               </p>
             )}
 
-            {/* Inviting Button with warm glow */}
-            <Link to={`/watch/${currentContent.id}`}>
-              <button className="group flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-accent-500 to-accent-600 text-cream-50 font-semibold text-lg rounded-full hover:from-accent-600 hover:to-accent-700 active:scale-95 transition-all duration-300 shadow-lg shadow-accent-500/20 hover:shadow-2xl hover:shadow-accent-500/40">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => onPlayClick?.(currentContent)}
+                className="group flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-accent-500 to-accent-600 text-cream-50 font-semibold text-lg rounded-full hover:from-accent-600 hover:to-accent-700 active:scale-95 transition-all duration-300 shadow-lg shadow-accent-500/20 hover:shadow-2xl hover:shadow-accent-500/40"
+              >
                 <Play className="h-6 w-6 group-hover:scale-110 transition-transform" fill="currentColor" />
                 <span>Tonton Sekarang</span>
               </button>
-            </Link>
+
+              {/* Info Button */}
+              {onInfoClick && (
+                <button
+                  onClick={() => onInfoClick(currentContent)}
+                  className="group flex items-center gap-3 px-10 py-4 bg-warm-charcoal-50/80 backdrop-blur-md text-cream-50 font-semibold text-lg rounded-full hover:bg-warm-charcoal-50 active:scale-95 transition-all duration-300 border-2 border-cream-100/30 shadow-lg"
+                >
+                  <Info className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                  <span>Info Lebih Lanjut</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

@@ -7,10 +7,11 @@ export interface ContentRowProps {
   title: string;
   contents: Content[];
   onInfoClick?: (content: Content) => void;
-  ContentCardComponent?: React.ComponentType<{ content: Content; onInfoClick?: (content: Content) => void }>;
+  onPlayClick?: (content: Content) => void;
+  ContentCardComponent?: React.ComponentType<{ content: Content; onInfoClick?: (content: Content) => void; onPlayClick?: (content: Content) => void }>;
 }
 
-const ContentRow = ({ title, contents, onInfoClick, ContentCardComponent = ContentCard }: ContentRowProps) => {
+const ContentRow = ({ title, contents, onInfoClick, onPlayClick, ContentCardComponent = ContentCard }: ContentRowProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -47,7 +48,7 @@ const ContentRow = ({ title, contents, onInfoClick, ContentCardComponent = Conte
         >
           {contents.map((content) => (
             <div key={content.id} className="shrink-0 w-[38vw] sm:w-[24vw] md:w-[17vw] lg:w-[13vw] xl:w-[11vw]">
-              <ContentCardComponent content={content} onInfoClick={onInfoClick} />
+              <ContentCardComponent content={content} onInfoClick={onInfoClick} onPlayClick={onPlayClick} />
             </div>
           ))}
         </div>

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Play, Plus, Check, ChevronDown } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { userService } from '@/services/auth.service'
 import OptimizedImage from '@/components/ui/OptimizedImage'
@@ -9,9 +8,10 @@ import type { Content } from '@/types'
 interface ContentCardProps {
   content: Content
   onInfoClick?: (content: Content) => void
+  onPlayClick?: (content: Content) => void
 }
 
-const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
+const ContentCard = ({ content, onInfoClick, onPlayClick }: ContentCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isInList, setIsInList] = useState(false)
   const queryClient = useQueryClient()
@@ -82,11 +82,16 @@ const ContentCard = ({ content, onInfoClick }: ContentCardProps) => {
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            <Link to={`/watch/${content.id}`}>
-              <button className="p-2 bg-white text-black rounded-full hover:bg-gray-200">
-                <Play size={16} fill="black" />
-              </button>
-            </Link>
+            <button
+              className="p-2 bg-white text-black rounded-full hover:bg-gray-200"
+              onClick={(e) => {
+                e.stopPropagation()
+                onPlayClick?.(content)
+              }}
+              title="Putar"
+            >
+              <Play size={16} fill="black" />
+            </button>
             <button
               className={`p-2 border rounded-full hover:bg-white/10 transition-colors ${
                 isInList

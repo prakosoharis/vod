@@ -142,6 +142,11 @@ class PaymentService {
     return response.data.data;
   }
 
+  // Simulate webhook in development
+  async simulateDevWebhook(orderId: string): Promise<void> {
+    await api.post(`/payment/dev-webhook/${orderId}`);
+  }
+
   // Open Midtrans Snap popup
   openMidtransSnap(token: string, onSuccess?: (result: any) => void, onError?: (error: any) => void) {
     // @ts-ignore - Midtrans snap library

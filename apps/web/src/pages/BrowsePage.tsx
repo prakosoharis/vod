@@ -1,10 +1,14 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import ContentRow from '@/components/home/ContentRow'
 import FeaturedCarousel from '@/components/home/FeaturedCarousel'
 import ContentDetailModal from '@/components/content/ContentDetailModal'
+import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal'
 import { contentService } from '@/services/content.service'
 import { userService } from '@/services/auth.service'
+import { paymentService } from '@/services/payment.service'
+import { useAuthStore } from '@/stores/authStore'
 import type { Content } from '@/types'
 
 const LoadingSkeleton = () => {
@@ -24,6 +28,9 @@ const LoadingSkeleton = () => {
 }
 
 const BrowsePage = () => {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStore()
+
   // State for staggered loading
   const [loadSecondary, setLoadSecondary] = useState(false)
   const [loadGenre, setLoadGenre] = useState(false)
@@ -31,6 +38,8 @@ const BrowsePage = () => {
   // State for modal
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedContent, setSelectedContent] = useState<Content | null>(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentContent, setPaymentContent] = useState<Content | null>(null)
 
   // Load secondary content after 1 second
   useEffect(() => {
@@ -144,6 +153,34 @@ const BrowsePage = () => {
     setSelectedContent(content)
   }
 
+  // Play handler - Check access before playing
+  const handlePlayClick = async (content: Content) => {
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+
+    try {
+      // Check if user has access
+      const accessInfo = await paymentService.checkContentAccess(content.id)
+
+      if (!accessInfo.data.has_access) {
+        // Show payment modal
+        setPaymentContent(content)
+        setShowPaymentModal(true)
+        return
+      }
+
+      // User has access, navigate to player
+      navigate(`/watch/${content.id}`)
+    } catch (error) {
+      console.error('Error checking access:', error)
+      // On error, show payment modal to be safe
+      setPaymentContent(content)
+      setShowPaymentModal(true)
+    }
+  }
+
   // Only show initial loading for priority 1 content
   const isLoadingInitial = useMemo(
     () => loadingFeatured || loadingContinue,
@@ -162,6 +199,7 @@ const BrowsePage = () => {
         <FeaturedCarousel
           contents={featured}
           onInfoClick={openModal}
+          onPlayClick={handlePlayClick}
           autoPlayInterval={5000}
         />
       )}
@@ -170,7 +208,7 @@ const BrowsePage = () => {
       <div className="relative -mt-22 z-10 space-y-12 pb-20 pt-8">
         {/* 1. Continue Watching (conditional) */}
         {continueWatching && continueWatching.length > 0 && (
-          <ContentRow title="Lanjutkan Menonton" contents={continueWatching} onInfoClick={openModal} />
+          <ContentRow title="Lanjutkan Menonton" contents={continueWatching} onInfoClick={openModal} onPlayClick={handlePlayClick} />
         )}
 
         {/* 2. Made in Indonesia (Priority 2) */}
@@ -182,7 +220,7 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : indonesian && indonesian.length > 0 ? (
-              <ContentRow title="Buatan Indonesia" contents={indonesian} onInfoClick={openModal} />
+              <ContentRow title="Buatan Indonesia" contents={indonesian} onInfoClick={openModal} onPlayClick={handlePlayClick} />
             ) : null}
           </>
         )}
@@ -196,7 +234,7 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : newReleases && newReleases.length > 0 ? (
-              <ContentRow title="Rilis Terbaru" contents={newReleases} onInfoClick={openModal} />
+              <ContentRow title="Rilis Terbaru" contents={newReleases} onInfoClick={openModal} onPlayClick={handlePlayClick} />
             ) : null}
           </>
         )}
@@ -211,7 +249,7 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : action && action.length > 0 ? (
-              <ContentRow title="Aksi" contents={action} onInfoClick={openModal} />
+              <ContentRow title="Aksi" contents={action} onInfoClick={openModal} onPlayClick={handlePlayClick} />
             ) : null}
 
             {loadingDrama ? (
@@ -220,7 +258,7 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : drama && drama.length > 0 ? (
-              <ContentRow title="Drama" contents={drama} onInfoClick={openModal} />
+              <ContentRow title="Drama" contents={drama} onInfoClick={openModal} onPlayClick={handlePlayClick} />
             ) : null}
 
             {loadingHorror ? (
@@ -229,7 +267,7 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : horror && horror.length > 0 ? (
-              <ContentRow title="Horror" contents={horror} onInfoClick={openModal} />
+              <ContentRow title="Horror" contents={horror} onInfoClick={openModal} onPlayClick={handlePlayClick} />
             ) : null}
 
             {loadingComedy ? (
@@ -238,7 +276,7 @@ const BrowsePage = () => {
                 <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
               </div>
             ) : comedy && comedy.length > 0 ? (
-              <ContentRow title="Komedi" contents={comedy} onInfoClick={openModal} />
+              <ContentRow title="Komedi" contents={comedy} onInfoClick={openModal} onPlayClick={handlePlayClick} />
             ) : null}
           </>
         )}
@@ -252,6 +290,18 @@ const BrowsePage = () => {
         similarContent={similarContent}
         onContentChange={handleContentChange}
       />
+
+      {/* Payment Modal */}
+      {paymentContent && (
+        <PaymentOptionsModal
+          content={paymentContent}
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false)
+            setPaymentContent(null)
+          }}
+        />
+      )}
     </div>
   )
 }

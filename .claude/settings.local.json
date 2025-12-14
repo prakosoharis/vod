@@ -135,7 +135,11 @@
       "Bash(timeout 5 bash:*)",
       "Bash(timeout 10 pnpm dev:*)",
       "Bash(timeout 8 bash:*)",
-      "Bash(timeout 15 pnpm dev:*)"
+      "Bash(timeout 15 pnpm dev:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(timeout 2 bash:*)",
+      "Bash(timeout 3 bash:*)"
     ],
     "deny": [],
     "ask": []

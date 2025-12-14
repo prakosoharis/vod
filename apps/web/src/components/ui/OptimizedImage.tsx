@@ -201,17 +201,19 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       )}
 
       {/* Main image */}
-      <img
-        ref={imgRef}
-        src={currentSrc}
-        alt={alt}
-        className={cn(
-          'w-full h-full object-cover transition-opacity duration-300',
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        )}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-      />
+      {currentSrc && (
+        <img
+          ref={imgRef}
+          src={currentSrc}
+          alt={alt}
+          className={cn(
+            'w-full h-full object-cover transition-opacity duration-300',
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          )}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+        />
+      )}
 
       {/* Loading indicator */}
       {!isLoaded && !isError && (
