@@ -22,7 +22,7 @@ interface NetflixPlayerProps {
 }
 
 const NETFLIX_RED = '#E50914';
-const CONTROL_TIMEOUT = 2000; // 2 seconds - faster auto-hide
+const CONTROL_TIMEOUT = 3000; // 3 seconds - Netflix-like timing
 const SEEK_AMOUNT = 10; // seconds
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -43,13 +43,15 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
   const [isBuffering, setIsBuffering] = useState(false);
 
   // UI State
-  const [showControls, setShowControls] = useState(false);
+  const [showControls, setShowControls] = useState(true); // Show controls on mount
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [wasPlayingBeforeScrub, setWasPlayingBeforeScrub] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showSubtitles, setShowSubtitles] = useState(false);
 
   // Animation States
-  const controlsOpacity = useRef(new Animated.Value(0)).current;
+  const controlsOpacity = useRef(new Animated.Value(1)).current; // Start visible
   const seekAnimationLeft = useRef(new Animated.Value(0)).current;
   const seekAnimationRight = useRef(new Animated.Value(0)).current;
 
@@ -114,6 +116,18 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
     const newFullscreenState = !isFullscreen;
     console.log('Toggling fullscreen:', newFullscreenState);
     setIsFullscreen(newFullscreenState);
+    setShowControls(true);
+    resetControlsTimer();
+  };
+
+  const toggleMute = () => {
+    setIsMuted((prev) => !prev);
+    setShowControls(true);
+    resetControlsTimer();
+  };
+
+  const toggleSubtitles = () => {
+    setShowSubtitles((prev) => !prev);
     setShowControls(true);
     resetControlsTimer();
   };
@@ -243,6 +257,7 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
           style={styles.video}
           resizeMode="contain"
           paused={!isPlaying}
+          muted={isMuted}
           onLoad={onLoad}
           onProgress={onProgress}
           onBuffer={onBuffer}
@@ -275,7 +290,7 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
           ]}
         >
           <View style={styles.seekIconContainer}>
-            <Text style={styles.seekIconText}>⏪ 10s</Text>
+            <Text style={styles.seekIconText}>« 10s</Text>
           </View>
         </Animated.View>
 
@@ -289,27 +304,25 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
           ]}
         >
           <View style={styles.seekIconContainer}>
-            <Text style={styles.seekIconText}>10s ⏩</Text>
+            <Text style={styles.seekIconText}>10s »</Text>
           </View>
         </Animated.View>
       </View>
 
-      {/* Tap zones - HANYA untuk double-tap seek, tidak menutupi bottom controls */}
-      {!showControls && (
-        <View style={styles.tapZonesContainer}>
-          <TouchableWithoutFeedback onPress={() => handleSideTap('left')}>
-            <View style={styles.leftTapZone} />
-          </TouchableWithoutFeedback>
+      {/* Full Screen Tap Area - Always active for toggle controls and double-tap seek */}
+      <View style={styles.tapZonesContainer} pointerEvents="box-none">
+        <TouchableWithoutFeedback onPress={() => handleSideTap('left')}>
+          <View style={styles.leftTapZone} />
+        </TouchableWithoutFeedback>
 
-          <TouchableWithoutFeedback onPress={toggleControls}>
-            <View style={styles.centerTapZone} />
-          </TouchableWithoutFeedback>
+        <TouchableWithoutFeedback onPress={toggleControls}>
+          <View style={styles.centerTapZone} />
+        </TouchableWithoutFeedback>
 
-          <TouchableWithoutFeedback onPress={() => handleSideTap('right')}>
-            <View style={styles.rightTapZone} />
-          </TouchableWithoutFeedback>
-        </View>
-      )}
+        <TouchableWithoutFeedback onPress={() => handleSideTap('right')}>
+          <View style={styles.rightTapZone} />
+        </TouchableWithoutFeedback>
+      </View>
 
       {/* Controls Overlay - SELALU DI ATAS */}
       {showControls && (
@@ -318,7 +331,7 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
         >
           {/* Top Gradient Overlay with Back Button */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.4)', 'transparent']}
+            colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.2)', 'transparent']}
             style={styles.topGradient}
           >
             <View style={styles.topBar}>
@@ -327,7 +340,7 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
                 onPress={onBack}
                 activeOpacity={0.7}
               >
-                <Text style={styles.backIcon}>←</Text>
+                <Text style={styles.backIcon}>‹</Text>
               </TouchableOpacity>
               <Text style={styles.videoTitle} numberOfLines={1}>
                 {title}
@@ -343,13 +356,13 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
               onPress={togglePlayPause}
               activeOpacity={0.8}
             >
-              <Text style={styles.playIcon}>{isPlaying ? '❚❚' : '▶'}</Text>
+              <Text style={styles.playIcon}>{isPlaying ? '║║' : '▶'}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Bottom Gradient Overlay */}
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.8)']}
+            colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.85)']}
             style={styles.bottomGradient}
           >
             {/* Progress Bar */}
@@ -378,42 +391,37 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
             <View style={styles.bottomControls}>
               <View style={styles.leftControls}>
                 <TouchableOpacity style={styles.controlBtn} onPress={togglePlayPause}>
-                  <Text style={styles.controlIcon}>{isPlaying ? '❚❚' : '▶'}</Text>
+                  <Text style={styles.controlIcon}>{isPlaying ? '║' : '▶'}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.controlBtn} onPress={() => handleSeek('left')}>
-                  <Text style={styles.controlIcon}>⏪</Text>
+                  <Text style={styles.controlIcon}>«</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.controlBtn} onPress={() => handleSeek('right')}>
-                  <Text style={styles.controlIcon}>⏩</Text>
+                  <Text style={styles.controlIcon}>»</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.controlBtn}>
-                  <Text style={styles.controlIcon}>🔊</Text>
+                <TouchableOpacity style={styles.controlBtn} onPress={toggleMute}>
+                  <Text style={[styles.controlIcon, isMuted && styles.controlIconActive]}>
+                    {isMuted ? '🔇' : '🔊'}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.rightControls}>
-                <TouchableOpacity style={styles.controlBtn}>
-                  <Text style={styles.controlIcon}>CC</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.controlBtn}>
-                  <Text style={styles.controlIcon}>⚙</Text>
+                <TouchableOpacity style={styles.controlBtn} onPress={toggleSubtitles}>
+                  <Text style={[styles.controlIcon, showSubtitles && styles.controlIconActive]}>
+                    CC
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.controlBtn} onPress={toggleFullscreen}>
-                  <Text style={styles.controlIcon}>{isFullscreen ? '⊡' : '⛶'}</Text>
+                  <Text style={styles.controlIcon}>{isFullscreen ? '[ ]' : '⛶'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </LinearGradient>
-
-          {/* Transparent tap area untuk hide controls - tidak menutupi bottom controls */}
-          <TouchableWithoutFeedback onPress={toggleControls}>
-            <View style={styles.hideTapArea} />
-          </TouchableWithoutFeedback>
         </Animated.View>
       )}
     </View>
@@ -466,14 +474,14 @@ const styles = StyleSheet.create({
   tapZonesContainer: {
     ...StyleSheet.absoluteFillObject,
     flexDirection: 'row',
-    zIndex: 8,
+    zIndex: 5, // Below controls (zIndex 10) so buttons remain clickable
   },
   leftTapZone: {
     width: '35%',
     height: '100%',
   },
   centerTapZone: {
-    width: '30%',
+    flex: 1, // Take remaining space
     height: '100%',
   },
   rightTapZone: {
@@ -481,15 +489,16 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   seekIconContainer: {
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 10,
-    paddingHorizontal: 25,
-    paddingVertical: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
   },
   seekIconText: {
-    fontSize: 24,
+    fontSize: 18,
     color: 'white',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   controlsContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -500,8 +509,8 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: 15,
-    paddingBottom: 40,
+    paddingTop: 12,
+    paddingBottom: 35,
     zIndex: 13,
   },
   topBar: {
@@ -510,27 +519,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   backIcon: {
-    fontSize: 28,
+    fontSize: 32,
     color: 'white',
-    fontWeight: 'bold',
+    fontWeight: '300',
   },
   videoTitle: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
     color: 'white',
+    letterSpacing: 0.3,
   },
   spacer: {
-    width: 44,
+    width: 36,
   },
   centerControls: {
     ...StyleSheet.absoluteFillObject,
@@ -539,17 +549,17 @@ const styles = StyleSheet.create({
     zIndex: 11,
   },
   centerPlayButton: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.8)',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
   },
   playIcon: {
-    fontSize: 40,
+    fontSize: 32,
     color: 'white',
   },
   bottomGradient: {
@@ -557,13 +567,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 50,
+    paddingBottom: 15,
     zIndex: 12,
   },
   progressSection: {
-    paddingHorizontal: 20,
-    marginBottom: 10,
+    paddingHorizontal: 18,
+    marginBottom: 8,
     zIndex: 999,
   },
   timeRow: {
@@ -573,21 +583,22 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   timeText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 12,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
   slider: {
     width: '100%',
-    height: 40,
+    height: 30,
     zIndex: 999,
   },
   bottomControls: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
     zIndex: 100,
   },
   leftControls: {
@@ -599,21 +610,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   controlBtn: {
-    padding: 10,
-    marginHorizontal: 8,
+    padding: 8,
+    marginHorizontal: 5,
     zIndex: 100,
   },
   controlIcon: {
-    fontSize: 28,
+    fontSize: 20,
     color: 'white',
+    fontWeight: '400',
   },
-  hideTapArea: {
-    position: 'absolute',
-    top: '25%',
-    left: '30%',
-    right: 0,
-    bottom: 180,
-    zIndex: 1,
+  controlIconActive: {
+    color: NETFLIX_RED,
   },
 });
 

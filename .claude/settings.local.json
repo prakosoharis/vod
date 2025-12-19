@@ -139,7 +139,11 @@
       "Bash(lsof:*)",
       "Bash(xargs kill -9)",
       "Bash(timeout 2 bash:*)",
-      "Bash(timeout 3 bash:*)"
+      "Bash(timeout 3 bash:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm start -- --reset-cache)",
+      "Bash(npm start:fix)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
