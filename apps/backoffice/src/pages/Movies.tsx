@@ -22,6 +22,7 @@ export default function Movies() {
     thumbnail_url: '',
     backdrop_url: '',
     video_url: '',
+    hls_url: '',
     trailer_url: '',
     cast: '',
     type: 'MOVIE',
@@ -66,6 +67,7 @@ export default function Movies() {
         thumbnail_url: formData.thumbnail_url,
         backdrop_url: formData.backdrop_url,
         video_url: formData.video_url,
+        hls_url: formData.hls_url,
         trailer_url: formData.trailer_url,
         cast: formData.cast.split(',').map(c => {
           const [name, role] = c.trim().split(' as ')
@@ -99,6 +101,7 @@ export default function Movies() {
         thumbnail_url: formData.thumbnail_url,
         backdrop_url: formData.backdrop_url,
         video_url: formData.video_url,
+        hls_url: formData.hls_url,
         trailer_url: formData.trailer_url,
         cast: formData.cast.split(',').map(c => {
           const [name, role] = c.trim().split(' as ')
@@ -131,6 +134,7 @@ export default function Movies() {
       thumbnail_url: movie.thumbnail_url || '',
       backdrop_url: movie.backdrop_url || '',
       video_url: movie.video_url || '',
+      hls_url: movie.hls_url || '',
       trailer_url: movie.trailer_url || '',
       cast: movie.cast.map(c => `${c.name} as ${c.role}`).join(', '),
       type: movie.type,
@@ -150,6 +154,7 @@ export default function Movies() {
       thumbnail_url: '',
       backdrop_url: '',
       video_url: '',
+      hls_url: '',
       trailer_url: '',
       cast: '',
       type: 'MOVIE',
@@ -276,6 +281,19 @@ export default function Movies() {
 
                 {/* Links */}
                 <div className="pt-2 border-t border-gray-100 space-y-1">
+                  {movie.hls_url && (
+                    <div className="text-xs">
+                      <span className="font-medium text-green-700">HLS:</span>
+                      <a
+                        href={movie.hls_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-1 text-green-600 hover:text-green-700 truncate block"
+                      >
+                        {movie.hls_url}
+                      </a>
+                    </div>
+                  )}
                   {movie.video_url && (
                     <div className="text-xs">
                       <span className="font-medium text-gray-700">Video:</span>
@@ -437,6 +455,20 @@ export default function Movies() {
                     onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
                     placeholder="https://example.com/video.mp4"
                   />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">HLS URL (Opsional - Adaptive Streaming)</label>
+                  <input
+                    type="url"
+                    className="input-field"
+                    value={formData.hls_url}
+                    onChange={(e) => setFormData({ ...formData, hls_url: e.target.value })}
+                    placeholder="http://localhost:8080/videos/abc-123/playlist.m3u8"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    💡 Kosongkan jika tidak menggunakan HLS. Player akan prioritaskan HLS jika diisi.
+                  </p>
                 </div>
 
                 <div className="mb-4">
@@ -621,6 +653,20 @@ export default function Movies() {
                     onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
                     placeholder="https://example.com/video.mp4"
                   />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">HLS URL (Opsional - Adaptive Streaming)</label>
+                  <input
+                    type="url"
+                    className="input-field"
+                    value={formData.hls_url}
+                    onChange={(e) => setFormData({ ...formData, hls_url: e.target.value })}
+                    placeholder="http://localhost:8080/videos/abc-123/playlist.m3u8"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    💡 Kosongkan jika tidak menggunakan HLS. Player akan prioritaskan HLS jika diisi.
+                  </p>
                 </div>
 
                 <div className="mb-4">

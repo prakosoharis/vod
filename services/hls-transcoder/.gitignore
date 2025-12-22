@@ -1,0 +1,28 @@
+# Node modules
+backend/node_modules/
+backend/package-lock.json
+
+# Upload directory
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Environment variables
+.env
+
+# Logs
+backend/*.log
+backend/logs/
+*.log
+
+# Docker volumes
+volumes/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

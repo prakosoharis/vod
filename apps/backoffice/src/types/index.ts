@@ -23,6 +23,7 @@ export interface Movie {
   thumbnail_url?: string
   backdrop_url?: string
   video_url?: string
+  hls_url?: string
   trailer_url?: string
   cast: CastMember[]
   type: 'MOVIE' | 'SERIES'

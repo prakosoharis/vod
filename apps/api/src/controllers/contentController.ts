@@ -192,6 +192,7 @@ export async function createContent(
       thumbnail_url?: string;
       backdrop_url?: string;
       video_url?: string;
+      hls_url?: string;
       trailer_url?: string;
       cast?: Array<{ name: string; role: string }>;
       type?: string;
@@ -214,6 +215,7 @@ export async function createContent(
         thumbnail_url: body.thumbnail_url,
         backdrop_url: body.backdrop_url || undefined,
         video_url: body.video_url || undefined,
+        hls_url: body.hls_url || undefined,
         trailer_url: body.trailer_url || undefined,
         cast: body.cast || [],
         type: body.type as ContentType,
@@ -244,6 +246,7 @@ export async function updateContent(
       thumbnail_url?: string;
       backdrop_url?: string;
       video_url?: string;
+      hls_url?: string;
       trailer_url?: string;
       cast?: Array<{ name: string; role: string }>;
       type?: string;
@@ -266,6 +269,7 @@ export async function updateContent(
     if (body.thumbnail_url !== undefined) updateData.thumbnail_url = body.thumbnail_url;
     if (body.backdrop_url !== undefined) updateData.backdrop_url = body.backdrop_url;
     if (body.video_url !== undefined) updateData.video_url = body.video_url;
+    if (body.hls_url !== undefined) updateData.hls_url = body.hls_url;
     if (body.trailer_url !== undefined) updateData.trailer_url = body.trailer_url;
     if (body.cast !== undefined) updateData.cast = body.cast;
     if (body.type !== undefined) updateData.type = body.type as ContentType;

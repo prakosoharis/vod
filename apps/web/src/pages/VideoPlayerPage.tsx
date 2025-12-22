@@ -23,6 +23,7 @@ import { useContentModal } from '@/hooks/useModal'
 import ContentRow from '@/components/home/ContentRow'
 import ContentDetailModal from '@/components/content/ContentDetailModal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { HLSPlayer } from '@/components/video/HLSPlayer'
 
 const VideoPlayerPage = () => {
   const { id } = useParams()
@@ -222,30 +223,42 @@ const VideoPlayerPage = () => {
 
         {/* Video Container */}
         <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()}>
-          <video
-            ref={videoRef}
-            className="w-full h-full object-contain"
-            style={{
-              WebkitUserSelect: 'none',
-              KhtmlUserSelect: 'none',
-              MozUserSelect: 'none',
-              msUserSelect: 'none',
-              userSelect: 'none',
-              WebkitTouchCallout: 'none'
-            }}
-            src={content.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
-            onClick={videoActions.togglePlay}
-            onContextMenu={(e) => e.preventDefault()}
-            onDragStart={(e) => e.preventDefault()}
-            draggable={false}
-            controlsList="nodownload"
-            disablePictureInPicture
-            controls={false}
-            preload="metadata"
-          />
+          {/* Use HLS Player if HLS URL exists, otherwise fallback to regular video */}
+          {content.hls_url ? (
+            <HLSPlayer
+              hlsUrl={content.hls_url}
+              poster={content.backdrop_url || content.thumbnail_url}
+              autoPlay={false}
+              controls={true}
+              className="w-full h-full"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              className="w-full h-full object-contain"
+              style={{
+                WebkitUserSelect: 'none',
+                KhtmlUserSelect: 'none',
+                MozUserSelect: 'none',
+                msUserSelect: 'none',
+                userSelect: 'none',
+                WebkitTouchCallout: 'none'
+              }}
+              src={content.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
+              onClick={videoActions.togglePlay}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              draggable={false}
+              controlsList="nodownload"
+              disablePictureInPicture
+              controls={false}
+              preload="metadata"
+            />
+          )}
         </div>
 
-        {/* Controls Overlay */}
+        {/* Controls Overlay (Hidden for HLS videos) */}
+        {!content.hls_url && (
         <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent transition-opacity duration-300 ${videoState.showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="p-3 md:p-4">
             {/* Progress Bar */}
@@ -362,9 +375,10 @@ const VideoPlayerPage = () => {
             </div>
           </div>
         </div>
+        )}
 
-        {/* Center Play Button (when paused) */}
-        {!videoState.isPlaying && (
+        {/* Center Play Button (when paused) - Hidden for HLS */}
+        {!content.hls_url && !videoState.isPlaying && (
           <button
             onClick={videoActions.togglePlay}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-16 md:h-16 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300"

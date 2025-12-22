@@ -1,0 +1,24 @@
+# Ignore large video files in uploads
+uploads/
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.ts
+*.m3u8
+
+# Ignore logs
+*.log
+error.log
+combined.log
+
+# Ignore node_modules (will be installed in container)
+node_modules/
+
+# Ignore temp files
+*.tmp
+.DS_Store
+Thumbs.db

@@ -2,7 +2,7 @@
   "name": "alkamus-web",
   "private": true,
   "version": "0.0.0",
-    "scripts": {
+  "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -22,7 +22,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "express": "^4.21.2",
-    "hls.js": "^1.6.14",
+    "hls.js": "^1.6.15",
     "http-proxy-middleware": "^3.0.3",
     "lucide-react": "^0.552.0",
     "react": "^19.1.1",

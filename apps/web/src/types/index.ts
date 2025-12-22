@@ -22,6 +22,13 @@ export interface Content {
   type: 'MOVIE' | 'SERIES';
   featured: boolean;
   created_at: string;
+
+  // HLS Transcoding Fields
+  hls_video_id?: string | null;
+  hls_url?: string | null;
+  hls_cdn_url?: string | null;
+  transcoding_status?: string | null;
+  transcoded_at?: string | null;
 }
 
 export interface LiveEvent {

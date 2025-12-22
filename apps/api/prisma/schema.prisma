@@ -60,6 +60,14 @@ model Content {
   type         ContentType
   featured     Boolean        @default(false)
   created_at   DateTime       @default(now())
+
+  // HLS Transcoding Fields
+  hls_video_id        String?          @db.Uuid
+  hls_url             String?
+  hls_cdn_url         String?
+  transcoding_status  String?          @default("pending")
+  transcoded_at       DateTime?
+
   watchlist    Watchlist[]
   watch_progress WatchProgress[]
   rental_price RentalPrice?
@@ -67,6 +75,8 @@ model Content {
 
   @@index([featured])
   @@index([type])
+  @@index([hls_video_id])
+  @@index([transcoding_status])
   @@map("contents")
 }
 
