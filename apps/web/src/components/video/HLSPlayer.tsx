@@ -29,7 +29,10 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   onQualityChange
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const qualityButtonRef = useRef<HTMLButtonElement>(null);
+  const moreOptionsButtonRef = useRef<HTMLButtonElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuality, setCurrentQuality] = useState<string>('Auto');
   const [availableQualities, setAvailableQualities] = useState<string[]>([]);
@@ -44,6 +47,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update time and duration
@@ -247,14 +251,26 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   };
 
   const toggleFullscreen = () => {
-    if (videoRef.current) {
+    if (containerRef.current) {
       if (!document.fullscreenElement) {
-        videoRef.current.requestFullscreen();
+        containerRef.current.requestFullscreen();
       } else {
         document.exitFullscreen();
       }
     }
   };
+
+  // Detect fullscreen change
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!videoRef.current) return;
@@ -313,9 +329,10 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   }, []);
 
   return (
-    <div className={`hls-player-wrapper ${className} relative`}>
+    <div className={`hls-player-wrapper ${className} relative overflow-visible`}>
       <div
-        className="relative bg-black"
+        ref={containerRef}
+        className="relative bg-black overflow-visible"
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => {
@@ -373,16 +390,19 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
         {/* Custom Controls Overlay - Netflix Style */}
         {!isLoading && !error && (
           <div
-            className={`absolute inset-0 z-10 transition-opacity duration-300 ${
+            className={`absolute inset-0 transition-opacity duration-300 ${
               showControls ? 'opacity-100' : 'opacity-0'
             }`}
-            style={{ pointerEvents: showControls ? 'auto' : 'none' }}
+            style={{
+              pointerEvents: 'none',
+              zIndex: 9999
+            }}
           >
             {/* Top Gradient */}
-            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/70 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/70 to-transparent" style={{ pointerEvents: 'none' }} />
 
             {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent px-6 pb-4 pt-2">
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent px-6 pb-4 pt-2 overflow-visible" style={{ pointerEvents: 'auto' }}>
               {/* Progress Bar */}
               <div className="mb-3">
                 <div
@@ -398,11 +418,12 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4" style={{ pointerEvents: 'auto' }}>
                 {/* Play/Pause Button */}
                 <button
                   onClick={togglePlay}
                   className="text-white hover:text-red-500 transition-colors"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   {isPlaying ? (
                     <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
@@ -419,6 +440,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                 <button
                   onClick={toggleMute}
                   className="text-white hover:text-red-500 transition-colors"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   {isMuted || volume === 0 ? (
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -439,15 +461,21 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                 {/* Spacer */}
                 <div className="flex-1" />
 
-                {/* Quality Selector - Always show if qualities are loaded */}
+                {/* Quality Selector */}
                 {availableQualities.length > 0 && (
-                  <div className="relative">
+                  <div className="relative" style={{ zIndex: 9999 }}>
                     <button
+                      ref={qualityButtonRef}
                       onClick={() => {
                         setShowQualityMenu(!showQualityMenu);
                         setShowMoreOptions(false);
                       }}
                       className="flex items-center gap-2 px-3 py-2 bg-black/50 hover:bg-black/70 rounded text-white text-sm font-medium transition-colors border border-white/20"
+                      style={{
+                        position: 'relative',
+                        zIndex: 9999,
+                        pointerEvents: 'auto'
+                      }}
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -457,7 +485,16 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
 
                     {/* Quality Dropdown Menu */}
                     {showQualityMenu && (
-                      <div className="absolute bottom-full right-0 mb-2 bg-black/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 min-w-[140px]">
+                      <div
+                        className="absolute bg-black/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 min-w-[140px]"
+                        style={{
+                          bottom: '100%',
+                          right: 0,
+                          marginBottom: '8px',
+                          zIndex: 2147483647,
+                          pointerEvents: 'auto'
+                        }}
+                      >
                         {availableQualities.map(quality => (
                           <button
                             key={quality}
@@ -468,6 +505,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                             className={`w-full text-left px-4 py-3 hover:bg-red-600 transition-colors text-sm font-medium ${
                               currentQuality === quality ? 'bg-red-700 text-white' : 'text-gray-300'
                             }`}
+                            style={{ pointerEvents: 'auto' }}
                           >
                             <div className="flex items-center justify-between">
                               <span>{quality}</span>
@@ -484,15 +522,36 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                   </div>
                 )}
 
+                {/* Fullscreen Button */}
+                <button
+                  onClick={toggleFullscreen}
+                  className="text-white hover:text-red-500 transition-colors"
+                  style={{
+                    position: 'relative',
+                    zIndex: 9999,
+                    pointerEvents: 'auto'
+                  }}
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                  </svg>
+                </button>
+
                 {/* More Options Button */}
-                <div className="relative">
+                <div className="relative" style={{ zIndex: 9999 }}>
                   <button
+                    ref={moreOptionsButtonRef}
                     onClick={() => {
                       setShowMoreOptions(!showMoreOptions);
                       setShowQualityMenu(false);
                     }}
                     className="flex items-center justify-center w-10 h-10 bg-black/50 hover:bg-black/70 rounded text-white transition-colors border border-white/20"
                     title="More Options"
+                    style={{
+                      position: 'relative',
+                      zIndex: 9999,
+                      pointerEvents: 'auto'
+                    }}
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -501,37 +560,72 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
 
                   {/* More Options Dropdown */}
                   {showMoreOptions && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 min-w-[200px]">
-                      {/* Playback Speed */}
-                      <div className="relative">
+                    <>
+                      {/* More Options Menu */}
+                      <div
+                        className="absolute bg-black/95 backdrop-blur-md rounded-lg shadow-xl border border-white/10 min-w-[200px]"
+                        style={{
+                          bottom: '100%',
+                          right: 0,
+                          marginBottom: '8px',
+                          zIndex: 2147483647,
+                          pointerEvents: 'auto'
+                        }}
+                      >
+                        {/* Playback Speed */}
                         <button
                           onClick={() => setShowPlaybackSpeedMenu(!showPlaybackSpeedMenu)}
                           className="w-full text-left px-4 py-3 hover:bg-red-600 transition-colors text-sm font-medium text-gray-300 flex items-center justify-between"
+                          style={{ pointerEvents: 'auto' }}
                         >
                           <span>Playback Speed</span>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-400">{playbackSpeed}x</span>
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
                             </svg>
                           </div>
                         </button>
 
-                        {/* Playback Speed Submenu */}
+                        {/* Picture in Picture */}
+                        <button
+                          onClick={togglePictureInPicture}
+                          className="w-full text-left px-4 py-3 hover:bg-red-600 transition-colors text-sm font-medium text-gray-300 flex items-center gap-3"
+                          style={{ pointerEvents: 'auto' }}
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z"/>
+                          </svg>
+                          <span>Picture in Picture</span>
+                        </button>
+
+                        {/* Playback Speed Submenu - Nested inside More Options */}
                         {showPlaybackSpeedMenu && (
-                          <div className="absolute right-full top-0 mr-2 bg-black/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 min-w-[120px]">
+                          <div
+                            className="absolute bg-black/95 backdrop-blur-md rounded-lg shadow-xl border border-white/10"
+                            style={{
+                              bottom: 0,
+                              right: '100%',
+                              marginRight: '8px',
+                              zIndex: 2147483648,
+                              minWidth: '100px',
+                              maxWidth: '120px',
+                              pointerEvents: 'auto'
+                            }}
+                          >
                             {playbackSpeeds.map(speed => (
                               <button
                                 key={speed}
                                 onClick={() => changePlaybackSpeed(speed)}
-                                className={`w-full text-left px-4 py-3 hover:bg-red-600 transition-colors text-sm font-medium ${
+                                className={`w-full text-left px-3 py-2 hover:bg-red-600 transition-colors text-sm font-medium ${
                                   playbackSpeed === speed ? 'bg-red-700 text-white' : 'text-gray-300'
                                 }`}
+                                style={{ pointerEvents: 'auto' }}
                               >
-                                <div className="flex items-center justify-between">
-                                  <span>{speed === 1 ? 'Normal' : `${speed}x`}</span>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="whitespace-nowrap">{speed === 1 ? 'Normal' : `${speed}x`}</span>
                                   {playbackSpeed === speed && (
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                     </svg>
                                   )}
@@ -541,30 +635,9 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                           </div>
                         )}
                       </div>
-
-                      {/* Picture in Picture */}
-                      <button
-                        onClick={togglePictureInPicture}
-                        className="w-full text-left px-4 py-3 hover:bg-red-600 transition-colors text-sm font-medium text-gray-300 flex items-center gap-3"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z"/>
-                        </svg>
-                        <span>Picture in Picture</span>
-                      </button>
-                    </div>
+                    </>
                   )}
                 </div>
-
-                {/* Fullscreen Button */}
-                <button
-                  onClick={toggleFullscreen}
-                  className="text-white hover:text-red-500 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-                  </svg>
-                </button>
               </div>
             </div>
 
