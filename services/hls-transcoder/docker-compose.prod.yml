@@ -1,0 +1,178 @@
+version: '3.8'
+
+# ================================================================
+# HLS TRANSCODER - PRODUCTION CONFIGURATION
+# ================================================================
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+#
+# Features:
+# - Ports bound to localhost only (127.0.0.1) for security
+# - Nginx host reverse proxy required (see deployment docs)
+# - Production-optimized settings
+# - Enhanced security & logging
+# - Resource limits configured
+#
+# Prerequisites:
+# - Setup Nginx reverse proxy on host (see nginx-configs/)
+# - Configure .env.production with secure credentials
+# - Ensure DNS records point to server IP
+# - Cloudflare SSL/DDoS protection enabled
+#
+# Domains:
+# - transcode.mostara.id -> localhost:8089 (via Nginx host)
+# - minio.mostara.id -> localhost:9001 (via Nginx host)
+# ================================================================
+
+services:
+  # MinIO - S3 Compatible Storage (Production)
+  minio:
+    image: minio/minio:latest
+    container_name: hls-minio-prod
+    ports:
+      # Bind ONLY to localhost - not accessible from internet
+      - "127.0.0.1:9000:9000"  # API - Internal only
+      - "127.0.0.1:9001:9001"  # Console - Admin access via minio.mostara.id
+    environment:
+      # Use strong credentials from .env.production
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      # Performance settings
+      MINIO_BROWSER: ${MINIO_BROWSER:-on}
+      MINIO_PROMETHEUS_AUTH_TYPE: ${MINIO_PROMETHEUS_AUTH_TYPE:-public}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data_prod:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 60s
+    networks:
+      - hls-network-prod
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Resource limits (adjust based on server capacity)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Backend - Node.js + FFmpeg Transcoder (Production)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production  # Use production stage if multi-stage build exists
+    container_name: hls-backend-prod
+    # NO direct port exposure - only accessible via nginx container
+    expose:
+      - "5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT:-5000}
+      # MinIO connection (internal)
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio}
+      - MINIO_PORT=${MINIO_PORT:-9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
+      # Bucket configuration
+      - TEMP_BUCKET=${TEMP_BUCKET:-temp-raw-aws}
+      - PERM_BUCKET=${PERM_BUCKET:-perm-storage-wasabi}
+      # Public URLs (for response generation)
+      - CDN_BASE_URL=${CDN_BASE_URL:-https://transcode.mostara.id}
+      # Production optimizations
+      - NODE_OPTIONS=--max-old-space-size=2048
+    volumes:
+      - ./backend/uploads:/app/uploads  # Persistent temp folder
+      - ./logs/backend:/app/logs  # Application logs
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - hls-network-prod
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    # Resource limits for FFmpeg transcoding
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx - CDN Simulator & Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: hls-nginx-prod
+    ports:
+      # Bind ONLY to localhost - accessed via Nginx host reverse proxy
+      - "127.0.0.1:8089:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend-test:/usr/share/nginx/html:ro
+      - ./logs/nginx:/var/log/nginx  # Nginx logs
+    depends_on:
+      minio:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - hls-network-prod
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  hls-network-prod:
+    driver: bridge
+    name: hls-network-prod
+    # Enable IPv6 if needed
+    # enable_ipv6: true
+
+volumes:
+  minio_data_prod:
+    driver: local
+    name: hls-minio-data-prod
+    # For production, consider using named volume with backup strategy
+    # driver_opts:
+    #   type: none
+    #   device: /mnt/storage/minio-data
+    #   o: bind

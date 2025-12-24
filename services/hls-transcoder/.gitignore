@@ -8,10 +8,13 @@ backend/uploads/*
 
 # Environment variables
 .env
+.env.production
+.env.local
 
 # Logs
 backend/*.log
 backend/logs/
+logs/
 *.log
 
 # Docker volumes
