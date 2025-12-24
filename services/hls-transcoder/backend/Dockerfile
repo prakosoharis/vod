@@ -13,10 +13,16 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Use npm ci for faster, reproducible builds
+# Falls back to npm install if package-lock.json is missing
+RUN if [ -f package-lock.json ]; then \
+        npm ci --omit=dev && npm cache clean --force; \
+    else \
+        npm install --omit=dev && npm cache clean --force; \
+    fi
 
 # Copy application code
 COPY . .

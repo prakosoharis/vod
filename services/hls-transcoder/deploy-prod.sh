@@ -150,7 +150,24 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Step 3: Building and starting containers..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d --build 2>&1 | grep -v "WARNING: The following deploy"
+
+# Build and start, capture output
+if ! docker-compose -f docker-compose.prod.yml --env-file .env.production up -d --build 2>&1 | grep -v "WARNING: The following deploy"; then
+    echo ""
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ Build/Start Failed!"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "Common issues:"
+    echo "  • Missing package-lock.json in backend/"
+    echo "  • Docker build context errors"
+    echo "  • Network connectivity issues"
+    echo ""
+    echo "View detailed logs:"
+    echo "  docker-compose -f docker-compose.prod.yml --env-file .env.production logs"
+    echo ""
+    exit 1
+fi
 
 # Wait for services to be healthy
 echo ""
@@ -179,7 +196,25 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Container Status:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-docker-compose -f docker-compose.prod.yml --env-file .env.production ps
+CONTAINER_STATUS=$(docker-compose -f docker-compose.prod.yml --env-file .env.production ps)
+echo "$CONTAINER_STATUS"
+
+# Verify all containers are running
+RUNNING_COUNT=$(echo "$CONTAINER_STATUS" | grep -c "Up" || true)
+if [ "$RUNNING_COUNT" -lt 3 ]; then
+    echo ""
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "⚠ Warning: Not all containers are running!"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "Expected: 3 containers (minio, backend, nginx)"
+    echo "Running: $RUNNING_COUNT containers"
+    echo ""
+    echo "Check logs for errors:"
+    echo "  docker-compose -f docker-compose.prod.yml --env-file .env.production logs"
+    echo ""
+    exit 1
+fi
 
 # ================================================================
 # DEPLOYMENT SUCCESS
