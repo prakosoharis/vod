@@ -464,7 +464,7 @@ export default function Movies() {
                     className="input-field"
                     value={formData.hls_url}
                     onChange={(e) => setFormData({ ...formData, hls_url: e.target.value })}
-                    placeholder="http://localhost:8080/videos/abc-123/playlist.m3u8"
+                    placeholder="http://localhost:8089/videos/abc-123/playlist.m3u8"
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     💡 Kosongkan jika tidak menggunakan HLS. Player akan prioritaskan HLS jika diisi.
@@ -662,7 +662,7 @@ export default function Movies() {
                     className="input-field"
                     value={formData.hls_url}
                     onChange={(e) => setFormData({ ...formData, hls_url: e.target.value })}
-                    placeholder="http://localhost:8080/videos/abc-123/playlist.m3u8"
+                    placeholder="http://localhost:8089/videos/abc-123/playlist.m3u8"
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     💡 Kosongkan jika tidak menggunakan HLS. Player akan prioritaskan HLS jika diisi.

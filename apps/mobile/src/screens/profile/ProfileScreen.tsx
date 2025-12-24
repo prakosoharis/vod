@@ -6,10 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  StatusBar,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { SafeIcon } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
-import { COLORS } from '../../constants';
+import { COLORS, THEME } from '../../constants';
 import Button from '../../components/ui/Button';
 
 const ProfileScreen: React.FC = () => {
@@ -74,58 +75,63 @@ const ProfileScreen: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <View style={styles.container}>
-        <View style={styles.notAuthenticated}>
-          <Icon name="account-circle" size={64} color={COLORS.textSecondary} />
-          <Text style={styles.notAuthTitle}>Belum Login</Text>
-          <Text style={styles.notAuthSubtitle}>Login untuk mengakses profil Anda</Text>
-          <Button
-            title="Login"
-            onPress={() => console.log('Navigate to Login')}
-            style={styles.loginButton}
-          />
+      <>
+        <StatusBar barStyle="light-content" backgroundColor={COLORS.warmCharcoal[100]} />
+        <View style={styles.container}>
+          <View style={styles.notAuthenticated}>
+            <SafeIcon name="account-circle" size={64} color={COLORS.cream[200]} />
+            <Text style={styles.notAuthTitle}>Belum Login</Text>
+            <Text style={styles.notAuthSubtitle}>Login untuk mengakses profil Anda</Text>
+            <Button
+              title="Login"
+              onPress={() => console.log('Navigate to Login')}
+              style={styles.loginButton}
+            />
+          </View>
         </View>
-      </View>
+      </>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Profile Header */}
-      <View style={styles.header}>
-        <View style={styles.profileInfo}>
-          <View style={styles.avatarContainer}>
-            <Icon name="account-circle" size={80} color={COLORS.textSecondary} />
-          </View>
-          <Text style={styles.userName}>{user?.full_name || 'User'}</Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
-        </View>
-      </View>
-
-      {/* Menu Items */}
-      <View style={styles.menuContainer}>
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.menuItem}
-            onPress={item.onPress}
-          >
-            <View style={styles.menuItemLeft}>
-              <Icon
-                name={item.icon}
-                size={24}
-                color={COLORS.textSecondary}
-                style={styles.menuIcon}
-              />
-              <View>
-                <Text style={styles.menuTitle}>{item.title}</Text>
-                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-              </View>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.warmCharcoal[100]} />
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Profile Header */}
+        <View style={styles.header}>
+          <View style={styles.profileInfo}>
+            <View style={styles.avatarContainer}>
+              <SafeIcon name="account-circle" size={80} color={COLORS.accent[500]} />
             </View>
-            <Icon name="chevron-right" size={24} color={COLORS.textSecondary} />
-          </TouchableOpacity>
-        ))}
-      </View>
+            <Text style={styles.userName}>{user?.full_name || 'User'}</Text>
+            <Text style={styles.userEmail}>{user?.email}</Text>
+          </View>
+        </View>
+
+        {/* Menu Items */}
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.menuItem}
+              onPress={item.onPress}
+            >
+              <View style={styles.menuItemLeft}>
+                <SafeIcon
+                  name={item.icon}
+                  size={24}
+                  color={COLORS.cream[200]}
+                  style={styles.menuIcon}
+                />
+                <View>
+                  <Text style={styles.menuTitle}>{item.title}</Text>
+                  <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                </View>
+              </View>
+              <SafeIcon name="chevron-right" size={24} color={COLORS.cream[200]} />
+            </TouchableOpacity>
+          ))}
+        </View>
 
       {/* Logout Button */}
       <View style={styles.logoutContainer}>
@@ -137,74 +143,77 @@ const ProfileScreen: React.FC = () => {
         />
       </View>
 
-      {/* App Version */}
-      <View style={styles.versionContainer}>
-        <Text style={styles.versionText}>Version 1.0.0</Text>
-      </View>
-    </ScrollView>
+        {/* App Version */}
+        <View style={styles.versionContainer}>
+          <Text style={styles.versionText}>Version 1.0.0</Text>
+        </View>
+      </ScrollView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.warmCharcoal[100],
   },
   notAuthenticated: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: THEME.spacing.xxl,
   },
   notAuthTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: THEME.typography.fontSize.xxl,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.cream[50],
+    marginTop: THEME.spacing.lg,
+    marginBottom: THEME.spacing.sm,
   },
   notAuthSubtitle: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
+    fontSize: THEME.typography.fontSize.md,
+    color: COLORS.cream[200],
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: THEME.spacing.xxl,
   },
   loginButton: {
-    paddingHorizontal: 32,
+    paddingHorizontal: THEME.spacing.xxl,
   },
   header: {
-    backgroundColor: COLORS.surface,
-    padding: 24,
+    backgroundColor: COLORS.warmCharcoal[50],
+    padding: THEME.spacing.xl,
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: `${COLORS.warmCharcoal[50]}80`,
   },
   profileInfo: {
     alignItems: 'center',
   },
   avatarContainer: {
-    marginBottom: 16,
+    marginBottom: THEME.spacing.lg,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 4,
+    fontSize: THEME.typography.fontSize.xxl,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.cream[50],
+    marginBottom: THEME.spacing.xs,
   },
   userEmail: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
+    fontSize: THEME.typography.fontSize.md,
+    color: COLORS.cream[200],
   },
   menuContainer: {
-    marginTop: 24,
+    marginTop: THEME.spacing.xl,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.surface,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    backgroundColor: COLORS.warmCharcoal[50],
+    paddingVertical: THEME.spacing.lg,
+    paddingHorizontal: THEME.spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.background,
+    borderBottomColor: COLORS.warmCharcoal[100],
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -212,31 +221,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuIcon: {
-    marginRight: 16,
+    marginRight: THEME.spacing.lg,
   },
   menuTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: COLORS.text,
+    fontSize: THEME.typography.fontSize.md,
+    fontWeight: THEME.typography.fontWeight.medium,
+    color: COLORS.cream[50],
     marginBottom: 2,
   },
   menuSubtitle: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[200],
   },
   logoutContainer: {
-    padding: 24,
+    padding: THEME.spacing.xl,
   },
   logoutButton: {
-    borderColor: COLORS.error,
+    borderColor: COLORS.accent[600],
   },
   versionContainer: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: THEME.spacing.xl,
   },
   versionText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[200],
   },
 });
 

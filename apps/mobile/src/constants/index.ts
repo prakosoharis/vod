@@ -1,29 +1,31 @@
-export const API_BASE_URL = 'https://api.mostara.id/api';
+/**
+ * Application Constants
+ *
+ * Import and re-export design system and configuration
+ */
 
+// Import new design system
+import { COLORS, NETFLIX_RED } from './colors';
+import THEME from './theme';
+
+// API Configuration
+export const API_BASE_URL = 'https://api.mostara.id/api';
 export const SOCKET_URL = 'https://api.mostara.id';
 
-export const COLORS = {
-  primary: '#E50914',
-  secondary: '#141414',
-  background: '#000000',
-  surface: '#1A1A1A',
-  text: '#FFFFFF',
-  textSecondary: '#B3B3B3',
-  error: '#FF4444',
-  success: '#4CAF50',
-  warning: '#FF9800',
-  transparent: 'transparent',
-};
+// Re-export design system
+export { COLORS, NETFLIX_RED, THEME };
 
+// Legacy SIZES (for backward compatibility - gradually migrate to THEME)
 export const SIZES = {
-  base: 8,
-  font: 14,
-  padding: 16,
-  radius: 8,
+  base: THEME.spacing.sm,        // 8
+  font: THEME.typography.fontSize.sm, // 14
+  padding: THEME.spacing.md,     // 16
+  radius: THEME.borderRadius.md, // 8
   height: 44,
   width: 375,
 };
 
+// FONTS (System fonts)
 export const FONTS = {
   regular: 'System',
   medium: 'System',
@@ -31,30 +33,23 @@ export const FONTS = {
   light: 'System',
 };
 
+// ASPECT RATIOS
 export const ASPECT_RATIO = {
-  poster: '3/4',
-  landscape: '16/9',
-  square: '1/1',
+  poster: '2/3',      // Portrait poster (120x180)
+  landscape: '16/9',  // Landscape video
+  square: '1/1',      // Square
 };
 
-export const DIMENSIONS = {
-  poster: {
-    width: 120,
-    height: 180,
-  },
-  posterSmall: {
-    width: 90,
-    height: 135,
-  },
-  landscape: {
-    width: 320,
-    height: 180,
-  },
-};
+// DIMENSIONS (Content card sizes - from THEME)
+export const DIMENSIONS = THEME.dimensions;
 
+// UI Configuration
 export const LOADING_SKELETON_COUNT = 6;
+export const CAROUSEL_AUTO_PLAY_INTERVAL = 5000; // 5 seconds
 
-export const CAROUSEL_AUTO_PLAY_INTERVAL = 5000;
-
+// Video Player Configuration
 export const VIDEO_QUALITY_OPTIONS = ['Auto', '360p', '480p', '720p', '1080p'];
-export const VIDEO_PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+export const VIDEO_PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]; // Extended range
+
+// Export spacing, typography, etc. for convenience
+export const { spacing, borderRadius, typography, shadows } = THEME;

@@ -372,7 +372,7 @@ async function processVideoInBackground(videoId, localRawPath, originalFilename,
     await cleanupLocalFiles(localRawPath, downloadedPath, localHLSDir);
 
     // Success
-    const hlsUrl = `http://localhost:8080/videos/${videoId}/playlist.m3u8`;
+    const hlsUrl = `http://localhost:8089/videos/${videoId}/playlist.m3u8`;
     logger.info(`[${videoId}] ✅ Processing completed successfully`);
 
     updateJobStatus(videoId, 'completed', 100, null, {
@@ -380,7 +380,7 @@ async function processVideoInBackground(videoId, localRawPath, originalFilename,
       playlistUrl: hlsUrl,
       originalFilename,
       permanentStorage: PERM_BUCKET,
-      cdnUrl: `http://localhost:8080/videos/${videoId}/`
+      cdnUrl: `http://localhost:8089/videos/${videoId}/`
     });
 
   } catch (error) {
@@ -529,7 +529,7 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
       data: {
         videoId,
         status: 'processing',
-        statusUrl: `http://localhost:8080/api/status/${videoId}`,
+        statusUrl: `http://localhost:8089/api/status/${videoId}`,
         originalFilename
       }
     });
@@ -571,7 +571,7 @@ app.get('/api/video/:videoId', async (req, res) => {
   const { videoId } = req.params;
 
   try {
-    const hlsUrl = `http://localhost:8080/videos/${videoId}/playlist.m3u8`;
+    const hlsUrl = `http://localhost:8089/videos/${videoId}/playlist.m3u8`;
 
     res.status(200).json({
       success: true,
@@ -613,7 +613,7 @@ async function startServer() {
       logger.info(`  POST http://localhost:${PORT}/api/upload`);
       logger.info(`  GET  http://localhost:${PORT}/health`);
       logger.info(`========================================`);
-      logger.info(`Frontend: http://localhost:8080`);
+      logger.info(`Frontend: http://localhost:8089`);
       logger.info(`MinIO Console: http://localhost:9001`);
       logger.info(`========================================`);
     });

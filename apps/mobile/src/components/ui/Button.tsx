@@ -6,8 +6,10 @@ import {
   ViewStyle,
   TextStyle,
   ActivityIndicator,
+  View,
 } from 'react-native';
-import { COLORS, SIZES } from '../../constants';
+import LinearGradient from 'react-native-linear-gradient';
+import { COLORS, THEME } from '../../constants';
 
 interface ButtonProps {
   title: string;
@@ -32,43 +34,46 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
-      borderRadius: SIZES.radius,
+      borderRadius: THEME.borderRadius.full, // Pill-shaped like web
       alignItems: 'center',
       justifyContent: 'center',
       flexDirection: 'row',
+      overflow: 'hidden', // For gradient clipping
     };
 
-    // Size styles
+    // Size styles using THEME
     const sizeStyles = {
       small: {
-        paddingHorizontal: SIZES.padding,
-        paddingVertical: 8,
+        paddingHorizontal: THEME.spacing.md,
+        paddingVertical: THEME.spacing.sm,
         minHeight: 36,
       },
       medium: {
-        paddingHorizontal: SIZES.padding * 2,
-        paddingVertical: 12,
+        paddingHorizontal: THEME.spacing.lg,
+        paddingVertical: THEME.spacing.md - 4,
         minHeight: 44,
       },
       large: {
-        paddingHorizontal: SIZES.padding * 2.5,
-        paddingVertical: 16,
+        paddingHorizontal: THEME.spacing.xl,
+        paddingVertical: THEME.spacing.md,
         minHeight: 52,
       },
     };
 
-    // Variant styles
+    // Variant styles with new color palette
     const variantStyles = {
       primary: {
-        backgroundColor: disabled ? COLORS.surface : COLORS.primary,
+        // Gradient handled by LinearGradient, no backgroundColor here
+        backgroundColor: disabled ? COLORS.warmCharcoal[50] : undefined,
       },
       secondary: {
-        backgroundColor: disabled ? COLORS.surface : COLORS.surface,
+        backgroundColor: disabled ? COLORS.warmCharcoal[300] : COLORS.warmCharcoal[50],
+        ...THEME.shadows.small,
       },
       outline: {
         backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: disabled ? COLORS.surface : COLORS.primary,
+        borderWidth: 2,
+        borderColor: disabled ? COLORS.cream[300] : COLORS.accent[500],
       },
     };
 
@@ -82,31 +87,31 @@ const Button: React.FC<ButtonProps> = ({
 
   const getTextStyle = (): TextStyle => {
     const baseStyle: TextStyle = {
-      fontWeight: '600',
+      fontWeight: THEME.typography.fontWeight.semibold,
       textAlign: 'center',
     };
 
     const sizeStyles = {
       small: {
-        fontSize: SIZES.font - 2,
+        fontSize: THEME.typography.fontSize.sm - 2,
       },
       medium: {
-        fontSize: SIZES.font,
+        fontSize: THEME.typography.fontSize.md,
       },
       large: {
-        fontSize: SIZES.font + 2,
+        fontSize: THEME.typography.fontSize.lg,
       },
     };
 
     const variantStyles = {
       primary: {
-        color: disabled ? COLORS.textSecondary : COLORS.text,
+        color: disabled ? COLORS.cream[300] : COLORS.cream[50],
       },
       secondary: {
-        color: disabled ? COLORS.textSecondary : COLORS.text,
+        color: disabled ? COLORS.cream[300] : COLORS.cream[50],
       },
       outline: {
-        color: disabled ? COLORS.textSecondary : COLORS.primary,
+        color: disabled ? COLORS.cream[300] : COLORS.accent[500],
       },
     };
 
@@ -118,6 +123,42 @@ const Button: React.FC<ButtonProps> = ({
     };
   };
 
+  // Content component (with loading indicator and text)
+  const ButtonContent = () => (
+    <>
+      {loading && (
+        <ActivityIndicator
+          size="small"
+          color={variant === 'outline' ? COLORS.accent[500] : COLORS.cream[50]}
+          style={{ marginRight: 8 }}
+        />
+      )}
+      <Text style={getTextStyle()}>{title}</Text>
+    </>
+  );
+
+  // Primary variant uses gradient, others use regular TouchableOpacity
+  if (variant === 'primary' && !disabled) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled || loading}
+        activeOpacity={0.8}
+        style={style}
+      >
+        <LinearGradient
+          colors={[COLORS.accent[500], COLORS.accent[600]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[getButtonStyle(), THEME.shadows.medium]}
+        >
+          <ButtonContent />
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  // Secondary and Outline variants
   return (
     <TouchableOpacity
       style={getButtonStyle()}
@@ -125,14 +166,7 @@ const Button: React.FC<ButtonProps> = ({
       disabled={disabled || loading}
       activeOpacity={0.8}
     >
-      {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'outline' ? COLORS.primary : COLORS.text}
-          style={{ marginRight: 8 }}
-        />
-      ) : null}
-      <Text style={getTextStyle()}>{title}</Text>
+      <ButtonContent />
     </TouchableOpacity>
   );
 };

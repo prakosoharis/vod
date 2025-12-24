@@ -18,6 +18,8 @@ export interface Content {
   backdrop_url: string | null;
   video_url: string | null;
   trailer_url: string | null;
+  hls_url: string | null;
+  hls_cdn_url: string | null;
   cast: Array<{ name: string; role: string }>;
   type: 'MOVIE' | 'SERIES';
   featured: boolean;

@@ -144,7 +144,8 @@
       "Bash(npm start -- --reset-cache)",
       "Bash(npm start:fix)",
       "Bash(ls:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

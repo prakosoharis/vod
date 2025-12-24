@@ -7,6 +7,7 @@ import {
   FlatList,
   RefreshControl,
   Dimensions,
+  StatusBar,
 } from 'react-native';
 import { SafeIcon } from '../../components/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -15,9 +16,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuthStore } from '../../store/authStore';
 import { contentService } from '../../services';
 import { Content, RootStackParamList } from '../../types';
-import { COLORS, COLORS as COLORS_CONST } from '../../constants';
+import { COLORS, THEME } from '../../constants';
 import ContentCard from '../../components/ui/ContentCard';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import FeaturedCarousel from '../../components/home/FeaturedCarousel';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -145,36 +147,29 @@ const HomeScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS_CONST.primary} />
-      }
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Featured Content */}
-      {featured && featured.length > 0 && (
-        <View style={styles.featuredSection}>
-          <FlatList
-            data={featured.slice(0, 5)}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-            keyExtractor={(item) => `featured-${item.id}`}
-            renderItem={({ item }) => (
-              <ContentCard
-                content={item}
-                onPress={handleContentPress}
-                onInfoPress={handleInfoPress}
-                size="large"
-                showLock={!isAuthenticated}
-              />
-            )}
-            contentContainerStyle={styles.featuredList}
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.warmCharcoal[100]} />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.accent[500]}
+            colors={[COLORS.accent[500]]}
           />
-        </View>
-      )}
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Featured Carousel */}
+        {featured && featured.length > 0 && (
+          <FeaturedCarousel
+            contents={featured.slice(0, 5)}
+            onPlayPress={handleContentPress}
+            onInfoPress={handleInfoPress}
+          />
+        )}
 
       
       {/* Made in Indonesia */}
@@ -233,65 +228,64 @@ const HomeScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Bottom padding */}
-      <View style={styles.bottomPadding} />
-    </ScrollView>
+        {/* Bottom padding */}
+        <View style={styles.bottomPadding} />
+      </ScrollView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS_CONST.background,
+    backgroundColor: COLORS.warmCharcoal[100],
   },
   contentContainer: {
     flexGrow: 1,
   },
-  featuredSection: {
-    marginBottom: 24,
-  },
-  featuredList: {
-    paddingHorizontal: 16,
-  },
   section: {
-    marginBottom: 24,
+    marginBottom: THEME.spacing.xl,
   },
   sectionHeader: {
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingHorizontal: THEME.spacing.lg,
+    marginBottom: THEME.spacing.md,
+    marginTop: THEME.spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS_CONST.text,
+    fontSize: THEME.typography.fontSize.xl,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.cream[50],
+    letterSpacing: 0.5,
   },
   contentList: {
-    paddingHorizontal: 12,
+    paddingHorizontal: THEME.spacing.md,
   },
   loadingSection: {
-    marginBottom: 24,
+    marginBottom: THEME.spacing.xl,
   },
   skeletonHeader: {
-    width: 120,
-    height: 20,
-    backgroundColor: COLORS_CONST.surface,
-    borderRadius: 4,
-    marginHorizontal: 16,
-    marginBottom: 12,
+    width: 140,
+    height: 24,
+    backgroundColor: COLORS.warmCharcoal[50],
+    borderRadius: THEME.borderRadius.md,
+    marginHorizontal: THEME.spacing.lg,
+    marginBottom: THEME.spacing.md,
+    opacity: 0.3,
   },
   skeletonList: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
+    paddingHorizontal: THEME.spacing.md,
   },
   skeletonCard: {
     width: 90,
     height: 135,
-    backgroundColor: COLORS_CONST.surface,
-    borderRadius: 8,
-    marginHorizontal: 4,
+    backgroundColor: COLORS.warmCharcoal[50],
+    borderRadius: THEME.borderRadius.md,
+    marginHorizontal: THEME.spacing.xs,
+    opacity: 0.3,
   },
   bottomPadding: {
     height: 100, // Extra padding for bottom tab bar

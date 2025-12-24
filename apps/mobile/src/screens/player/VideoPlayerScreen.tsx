@@ -4,8 +4,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import { contentService } from '../../services';
 import { RootStackParamList } from '../../types';
-import { COLORS } from '../../constants';
-import NetflixPlayer from '../../components/video/NetflixPlayer';
+import { COLORS, THEME } from '../../constants';
+import HLSPlayer from '../../components/video/HLSPlayer';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VideoPlayer'>;
 
@@ -15,7 +15,17 @@ const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
   // Fetch content data
   const { data: content, isLoading, error } = useQuery({
     queryKey: ['content', contentId],
-    queryFn: () => contentService.getContentById(contentId),
+    queryFn: async () => {
+      const data = await contentService.getContentById(contentId);
+      console.log('=== CONTENT DATA DEBUG ===');
+      console.log('Content ID:', contentId);
+      console.log('Full content object:', JSON.stringify(data, null, 2));
+      console.log('video_url:', data.video_url);
+      console.log('hls_url:', data.hls_url);
+      console.log('hls_cdn_url:', data.hls_cdn_url);
+      console.log('========================');
+      return data;
+    },
     enabled: !!contentId,
   });
 
@@ -23,7 +33,7 @@ const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={COLORS.accent[500]} />
         <Text style={styles.loadingText}>Loading video...</Text>
       </View>
     );
@@ -48,23 +58,42 @@ const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   }
 
+  // Determine video URL (prioritize HLS)
+  const videoUrl = content.hls_cdn_url || content.hls_url || content.video_url;
+
+  console.log('=== VIDEO URL SELECTION ===');
+  console.log('Selected videoUrl:', videoUrl);
+  console.log('Priority check:');
+  console.log('  1. hls_cdn_url:', content.hls_cdn_url);
+  console.log('  2. hls_url:', content.hls_url);
+  console.log('  3. video_url:', content.video_url);
+  console.log('===========================');
+
   // Video URL not available
-  if (!content.video_url) {
+  if (!videoUrl) {
+    console.log('ERROR: No video URL found!');
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Video not available</Text>
         <Text style={styles.title}>{content.title}</Text>
         <Text style={styles.description}>{content.description}</Text>
+        <Text style={styles.errorSubtext}>
+          No video URL (hls_cdn_url, hls_url, or video_url) found for this content.
+        </Text>
       </View>
     );
   }
 
-  // Render Netflix-style player
+  // Render HLS Player
   return (
-    <NetflixPlayer
-      source={content.video_url}
+    <HLSPlayer
+      source={videoUrl}
       onBack={() => navigation.goBack()}
       title={content.title}
+      onProgress={(progress) => {
+        // TODO: Sync watch progress to API
+        console.log('Watch progress:', progress);
+      }}
     />
   );
 };
@@ -74,45 +103,46 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.warmCharcoal[100],
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: COLORS.textSecondary,
+    marginTop: THEME.spacing.lg,
+    fontSize: THEME.typography.fontSize.md,
+    color: COLORS.cream[200],
+    fontWeight: THEME.typography.fontWeight.medium,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    padding: 20,
+    backgroundColor: COLORS.warmCharcoal[100],
+    padding: THEME.spacing.xl,
   },
   errorText: {
-    fontSize: 18,
-    color: COLORS.primary,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: THEME.typography.fontSize.xl,
+    color: COLORS.accent[500],
+    fontWeight: THEME.typography.fontWeight.bold,
+    marginBottom: THEME.spacing.sm,
     textAlign: 'center',
   },
   errorSubtext: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[200],
     textAlign: 'center',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginTop: 20,
-    marginBottom: 12,
+    fontSize: THEME.typography.fontSize.xxl,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.cream[50],
+    marginTop: THEME.spacing.xl,
+    marginBottom: THEME.spacing.md,
     textAlign: 'center',
   },
   description: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[200],
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: THEME.typography.lineHeight.relaxed * THEME.typography.fontSize.sm,
   },
 });
 

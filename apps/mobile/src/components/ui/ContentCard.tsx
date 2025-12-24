@@ -10,7 +10,7 @@ import {
 import { SafeIcon } from '.';
 import LinearGradient from 'react-native-linear-gradient';
 import { Content } from '../../types';
-import { COLORS, DIMENSIONS } from '../../constants';
+import { COLORS, DIMENSIONS, THEME } from '../../constants';
 
 interface ContentCardProps {
   content: Content;
@@ -61,7 +61,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
     return (
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.8)']}
+        colors={['transparent', COLORS.overlay.heavy]} // Warm charcoal gradient
         style={[
           styles.overlay,
           size === 'large' && styles.overlayLarge,
@@ -82,13 +82,13 @@ const ContentCard: React.FC<ContentCardProps> = ({
             style={[styles.actionButton, styles.playButton]}
             onPress={handlePress}
           >
-            <SafeIcon name="play-arrow" size={20} color={COLORS.text} />
+            <SafeIcon name="play-arrow" size={20} color={COLORS.cream[50]} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, styles.infoButton]}
             onPress={handleInfoPress}
           >
-            <SafeIcon name="info-outline" size={20} color={COLORS.text} />
+            <SafeIcon name="info-outline" size={20} color={COLORS.cream[50]} />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -121,10 +121,11 @@ const ContentCard: React.FC<ContentCardProps> = ({
         resizeMode="cover"
       />
 
-      {/* Lock overlay */}
+      {/* Lock overlay for unauthenticated users */}
       {showLock && (
         <View style={styles.lockOverlay}>
-          <SafeIcon name="lock" size={24} color={COLORS.textSecondary} />
+          <SafeIcon name="lock" size={32} color={COLORS.cream[100]} />
+          <Text style={styles.lockText}>Login untuk menonton</Text>
         </View>
       )}
 
@@ -135,65 +136,72 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 8,
+    borderRadius: THEME.borderRadius.md,
     overflow: 'hidden',
-    backgroundColor: COLORS.surface,
-    marginHorizontal: 4,
+    backgroundColor: COLORS.warmCharcoal[50],
+    marginHorizontal: THEME.spacing.xs,
+    ...THEME.shadows.small,
   },
   image: {
-    borderRadius: 8,
+    borderRadius: THEME.borderRadius.md,
   },
   lockOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: COLORS.overlay.medium,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: THEME.borderRadius.md,
+  },
+  lockText: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[100],
+    marginTop: THEME.spacing.sm,
+    fontWeight: THEME.typography.fontWeight.medium,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: THEME.borderRadius.md,
+    padding: THEME.spacing.md - 4,
     justifyContent: 'flex-end',
   },
   overlayLarge: {
-    padding: 16,
+    padding: THEME.spacing.md,
   },
   contentInfo: {
-    marginBottom: 8,
+    marginBottom: THEME.spacing.sm,
   },
   title: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 4,
+    fontSize: THEME.typography.fontSize.sm,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.cream[50],
+    marginBottom: THEME.spacing.xs,
   },
   metadata: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   metadataText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
+    fontSize: THEME.typography.fontSize.xs,
+    color: COLORS.cream[100],
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
+    gap: THEME.spacing.sm,
   },
   actionButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: `${COLORS.cream[50]}20`, // 20 = ~12% opacity
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: `${COLORS.cream[50]}30`, // 30 = ~19% opacity
   },
   playButton: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: COLORS.accent[500], // Burnt sienna instead of Netflix red
+    borderColor: COLORS.accent[500],
   },
   infoButton: {
     backgroundColor: 'transparent',

@@ -6,14 +6,15 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { SafeIcon } from '../../components/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { contentService } from '../../services';
 import { Content, RootStackParamList } from '../../types';
-import { COLORS } from '../../constants';
+import { COLORS, THEME } from '../../constants';
 import ContentCard from '../../components/ui/ContentCard';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
@@ -111,27 +112,29 @@ const BrowseScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Icon name="search" size={24} color={COLORS.textSecondary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Cari film, serial, atau genre..."
-            placeholderTextColor={COLORS.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Icon name="close" size={24} color={COLORS.textSecondary} />
-            </TouchableOpacity>
-          )}
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.warmCharcoal[100]} />
+      <View style={styles.container}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <SafeIcon name="search" size={24} color={COLORS.cream[200]} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Cari film, serial, atau genre..."
+              placeholderTextColor={COLORS.cream[200]}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <SafeIcon name="close" size={24} color={COLORS.cream[200]} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
 
       {/* Genre Filter */}
       {!searchQuery && renderGenreFilter()}
@@ -147,70 +150,78 @@ const BrowseScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Icon name="movie" size={64} color={COLORS.textSecondary} />
+            <SafeIcon name="movie" size={64} color={COLORS.cream[200]} />
             <Text style={styles.emptyText}>
               {searchQuery ? 'Tidak ada hasil pencarian' : 'Tidak ada konten tersedia'}
             </Text>
           </View>
         )}
       />
-    </View>
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.warmCharcoal[100],
   },
   searchContainer: {
-    padding: 16,
-    backgroundColor: COLORS.surface,
+    padding: THEME.spacing.lg,
+    backgroundColor: COLORS.warmCharcoal[50],
+    borderBottomWidth: 1,
+    borderBottomColor: `${COLORS.warmCharcoal[50]}80`,
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: COLORS.warmCharcoal[100],
+    borderRadius: THEME.borderRadius.full,
+    paddingHorizontal: THEME.spacing.md,
+    paddingVertical: THEME.spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: `${COLORS.cream[200]}20`,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: COLORS.text,
+    marginLeft: THEME.spacing.md,
+    fontSize: THEME.typography.fontSize.md,
+    color: COLORS.cream[50],
   },
   genreContainer: {
-    backgroundColor: COLORS.surface,
-    paddingBottom: 16,
+    backgroundColor: COLORS.warmCharcoal[50],
+    paddingBottom: THEME.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: `${COLORS.warmCharcoal[50]}80`,
   },
   genreList: {
-    paddingHorizontal: 16,
+    paddingHorizontal: THEME.spacing.lg,
   },
   genreChip: {
-    backgroundColor: COLORS.background,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
+    backgroundColor: COLORS.warmCharcoal[100],
+    paddingHorizontal: THEME.spacing.lg,
+    paddingVertical: THEME.spacing.sm,
+    borderRadius: THEME.borderRadius.full,
+    marginRight: THEME.spacing.sm,
     borderWidth: 1,
-    borderColor: COLORS.textSecondary,
+    borderColor: `${COLORS.cream[200]}40`,
   },
   genreChipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: COLORS.accent[500],
+    borderColor: COLORS.accent[500],
   },
   genreText: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
-    fontWeight: '500',
+    color: COLORS.cream[200],
+    fontSize: THEME.typography.fontSize.sm,
+    fontWeight: THEME.typography.fontWeight.medium,
   },
   genreTextActive: {
-    color: COLORS.text,
+    color: COLORS.cream[50],
+    fontWeight: THEME.typography.fontWeight.bold,
   },
   contentList: {
-    padding: 8,
+    padding: THEME.spacing.sm,
   },
   contentRow: {
     justifyContent: 'space-between',
@@ -222,9 +233,9 @@ const styles = StyleSheet.create({
     paddingVertical: 64,
   },
   emptyText: {
-    color: COLORS.textSecondary,
-    fontSize: 16,
-    marginTop: 16,
+    color: COLORS.cream[200],
+    fontSize: THEME.typography.fontSize.md,
+    marginTop: THEME.spacing.lg,
     textAlign: 'center',
   },
 });

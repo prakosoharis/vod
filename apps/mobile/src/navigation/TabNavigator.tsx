@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeIcon } from '../components/ui';
-import { COLORS } from '../constants';
+import { COLORS, THEME } from '../constants';
 import HomeScreen from '../screens/home/HomeScreen';
 import BrowseScreen from '../screens/browse/BrowseScreen';
 import LiveScreen from '../screens/live/LiveScreen';
@@ -21,53 +21,59 @@ const TabNavigator = () => {
 
           switch (route.name) {
             case 'Home':
-              iconName = 'home';
+              iconName = focused ? 'home' : 'home-outline';
               break;
             case 'Browse':
-              iconName = 'search';
+              iconName = focused ? 'search' : 'search';
               break;
             case 'Live':
-              iconName = 'live-tv';
+              iconName = focused ? 'live-tv' : 'live-tv';
               break;
             case 'Profile':
-              iconName = 'person';
+              iconName = focused ? 'person' : 'person-outline';
               break;
             default:
               iconName = 'home';
           }
 
-          return <SafeIcon name={iconName} size={20} color={color} />;
+          return <SafeIcon name={iconName} size={24} color={color} />;
         },
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarActiveTintColor: COLORS.accent[500],
+        tabBarInactiveTintColor: COLORS.cream[200],
         tabBarStyle: {
-          backgroundColor: COLORS.secondary,
-          borderTopColor: COLORS.surface,
+          backgroundColor: COLORS.warmCharcoal[100],
+          borderTopColor: `${COLORS.warmCharcoal[50]}80`,
           borderTopWidth: 1,
           height: 60,
-          paddingBottom: 4,
-          paddingTop: 10,
+          paddingBottom: 6,
+          paddingTop: 8,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          marginTop: 0,
-          marginBottom: 3,
+          fontSize: THEME.typography.fontSize.xs,
+          fontWeight: THEME.typography.fontWeight.medium,
+          marginTop: 2,
+          marginBottom: 4,
+          letterSpacing: 0.3,
         },
         tabBarItemStyle: {
-          paddingVertical: 0,
+          paddingVertical: 4,
         },
         tabBarIconStyle: {
-          marginTop: 5,
+          marginTop: 4,
         },
         headerStyle: {
-          backgroundColor: COLORS.secondary,
-          borderBottomColor: COLORS.surface,
+          backgroundColor: COLORS.warmCharcoal[100],
+          borderBottomColor: COLORS.warmCharcoal[50],
           borderBottomWidth: 1,
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        headerTintColor: COLORS.text,
+        headerTintColor: COLORS.cream[50],
         headerTitleStyle: {
-          fontSize: 18,
-          fontWeight: 'bold',
+          fontSize: THEME.typography.fontSize.xl,
+          fontWeight: THEME.typography.fontWeight.bold,
         },
       })}
     >
