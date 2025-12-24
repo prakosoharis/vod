@@ -1,6 +1,6 @@
 # Node modules
 backend/node_modules/
-backend/package-lock.json
+# backend/package-lock.json  # Allow package-lock.json for reproducible builds
 
 # Upload directory
 backend/uploads/*

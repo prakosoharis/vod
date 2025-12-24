@@ -13,14 +13,17 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json ./
+# Use wildcard for package-lock.json to make it optional
+COPY package*.json ./
 
 # Install dependencies
-# Use npm ci for faster, reproducible builds
+# Use npm ci for faster, reproducible builds (if package-lock.json exists)
 # Falls back to npm install if package-lock.json is missing
 RUN if [ -f package-lock.json ]; then \
+        echo "Using npm ci (lockfile found)..." && \
         npm ci --omit=dev && npm cache clean --force; \
     else \
+        echo "Using npm install (no lockfile)..." && \
         npm install --omit=dev && npm cache clean --force; \
     fi
 
