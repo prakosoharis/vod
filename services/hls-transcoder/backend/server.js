@@ -16,6 +16,7 @@ const { Readable } = require('stream');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const CDN_BASE_URL = process.env.CDN_BASE_URL || 'http://localhost:8089';
 
 // Logger configuration
 const logger = winston.createLogger({
@@ -372,7 +373,7 @@ async function processVideoInBackground(videoId, localRawPath, originalFilename,
     await cleanupLocalFiles(localRawPath, downloadedPath, localHLSDir);
 
     // Success
-    const hlsUrl = `http://localhost:8089/videos/${videoId}/playlist.m3u8`;
+    const hlsUrl = `${CDN_BASE_URL}/videos/${videoId}/playlist.m3u8`;
     logger.info(`[${videoId}] ✅ Processing completed successfully`);
 
     updateJobStatus(videoId, 'completed', 100, null, {
@@ -380,7 +381,7 @@ async function processVideoInBackground(videoId, localRawPath, originalFilename,
       playlistUrl: hlsUrl,
       originalFilename,
       permanentStorage: PERM_BUCKET,
-      cdnUrl: `http://localhost:8089/videos/${videoId}/`
+      cdnUrl: `${CDN_BASE_URL}/videos/${videoId}/`
     });
 
   } catch (error) {
@@ -529,7 +530,7 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
       data: {
         videoId,
         status: 'processing',
-        statusUrl: `http://localhost:8089/api/status/${videoId}`,
+        statusUrl: `${CDN_BASE_URL}/api/status/${videoId}`,
         originalFilename
       }
     });
@@ -571,7 +572,7 @@ app.get('/api/video/:videoId', async (req, res) => {
   const { videoId } = req.params;
 
   try {
-    const hlsUrl = `http://localhost:8089/videos/${videoId}/playlist.m3u8`;
+    const hlsUrl = `${CDN_BASE_URL}/videos/${videoId}/playlist.m3u8`;
 
     res.status(200).json({
       success: true,
