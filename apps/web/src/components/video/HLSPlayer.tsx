@@ -23,7 +23,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   hlsUrl,
   poster,
   autoPlay = false,
-  controls = true,
+  controls: _controls = true, // Prefix with _ to indicate intentionally unused
   className = '',
   onError,
   onQualityChange
@@ -47,8 +47,8 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [_isFullscreen, setIsFullscreen] = useState(false); // Prefix with _ since state is set but value not read
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update time and duration
   useEffect(() => {

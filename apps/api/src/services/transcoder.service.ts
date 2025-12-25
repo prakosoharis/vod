@@ -3,7 +3,7 @@
  * Handles communication with HLS Transcoder microservice
  */
 
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import FormData from 'form-data';
 import fs from 'fs';
 import path from 'path';

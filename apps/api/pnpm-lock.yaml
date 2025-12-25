@@ -23,6 +23,9 @@ importers:
       '@prisma/client':
         specifier: ^5.7.1
         version: 5.22.0(prisma@5.22.0)
+      axios:
+        specifier: ^1.6.2
+        version: 1.13.2
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -32,6 +35,9 @@ importers:
       fastify:
         specifier: ^4.24.3
         version: 4.29.1
+      form-data:
+        specifier: ^4.0.0
+        version: 4.0.5
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
