@@ -454,12 +454,25 @@
                 });
 
                 xhr.addEventListener('load', () => {
+                    console.log('[UPLOAD] XHR load - Status:', xhr.status, 'Response type:', xhr.getResponseHeader('Content-Type'));
+                    console.log('[UPLOAD] Response (first 500 chars):', xhr.responseText.substring(0, 500));
+
                     if (xhr.status === 200 || xhr.status === 202) {
-                        const response = JSON.parse(xhr.responseText);
-                        handleUploadSuccess(response);
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            handleUploadSuccess(response);
+                        } catch (parseError) {
+                            console.error('[UPLOAD] JSON parse error:', parseError);
+                            console.error('[UPLOAD] Full response:', xhr.responseText);
+                            handleError('Upload', 'Server returned invalid response: ' + xhr.responseText.substring(0, 200), selectedVideoFile.name);
+                        }
                     } else {
-                        const error = JSON.parse(xhr.responseText);
-                        handleError('Upload', error.message || 'Upload gagal', selectedVideoFile.name);
+                        try {
+                            const error = JSON.parse(xhr.responseText);
+                            handleError('Upload', error.message || error.error || 'Upload gagal', selectedVideoFile.name);
+                        } catch (e) {
+                            handleError('Upload', `Server error (${xhr.status}): ` + xhr.responseText.substring(0, 200), selectedVideoFile.name);
+                        }
                     }
                 });
 

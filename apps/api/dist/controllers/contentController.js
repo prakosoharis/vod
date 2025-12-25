@@ -145,6 +145,7 @@ export async function createContent(request, reply) {
                 thumbnail_url: body.thumbnail_url,
                 backdrop_url: body.backdrop_url || undefined,
                 video_url: body.video_url || undefined,
+                hls_url: body.hls_url || undefined,
                 trailer_url: body.trailer_url || undefined,
                 cast: body.cast || [],
                 type: body.type,
@@ -185,6 +186,8 @@ export async function updateContent(request, reply) {
             updateData.backdrop_url = body.backdrop_url;
         if (body.video_url !== undefined)
             updateData.video_url = body.video_url;
+        if (body.hls_url !== undefined)
+            updateData.hls_url = body.hls_url;
         if (body.trailer_url !== undefined)
             updateData.trailer_url = body.trailer_url;
         if (body.cast !== undefined)

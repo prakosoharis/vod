@@ -28,4 +28,5 @@ export async function authenticateRequest(request, reply) {
 }
 // Backwards-compatible export name used in routes
 export const authenticate = authenticateRequest;
+export const authMiddleware = authenticateRequest;
 //# sourceMappingURL=auth.js.map
