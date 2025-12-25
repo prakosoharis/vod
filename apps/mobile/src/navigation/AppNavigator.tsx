@@ -58,14 +58,9 @@ const AppNavigator = () => {
             name="ContentDetail"
             component={ContentDetailScreen}
             options={{
-              headerShown: true,
-              title: '',
-              headerStyle: {
-                backgroundColor: '#000000',
-                borderBottomWidth: 0,
-              },
-              headerTintColor: '#FFFFFF',
+              headerShown: false,
               presentation: 'modal',
+              animation: 'slide_from_bottom',
             }}
           />
         </>

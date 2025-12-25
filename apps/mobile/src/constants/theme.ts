@@ -108,16 +108,16 @@ export const THEME = {
   // DIMENSIONS (Content card sizes)
   dimensions: {
     poster: {
-      width: 120,
-      height: 180,
+      width: 140,
+      height: 210,
     },
     posterSmall: {
-      width: 90,
-      height: 135,
+      width: 130,
+      height: 195,
     },
     posterLarge: {
-      width: 160,
-      height: 240,
+      width: 180,
+      height: 270,
     },
     landscape: {
       width: 320,

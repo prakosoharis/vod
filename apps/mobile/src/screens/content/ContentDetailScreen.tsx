@@ -1,210 +1,377 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  StatusBar,
+  Dimensions,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import LinearGradient from 'react-native-linear-gradient';
+import { SafeIcon } from '../../components/ui';
 import { RootStackParamList } from '../../types';
-import { COLORS, DIMENSIONS } from '../../constants';
-import ContentCard from '../../components/ui/ContentCard';
+import { COLORS, THEME } from '../../constants';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ContentDetail'>;
 
-const ContentDetailScreen: React.FC<Props> = ({ route }) => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { content } = route.params;
-  const { width } = Dimensions.get('window');
 
   const handlePlayPress = () => {
     navigation.navigate('VideoPlayer', { contentId: content.id });
   };
 
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Backdrop/Poster */}
-      <View style={styles.backdropContainer}>
-        <ContentCard
-          content={content}
-          onPress={handlePlayPress}
-          size="large"
-        />
-      </View>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.warmCharcoal[100]} />
+      <View style={styles.container}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Backdrop Image with Gradient */}
+          <View style={styles.backdropContainer}>
+            <Image
+              source={{ uri: content.backdrop_url || content.thumbnail_url }}
+              style={styles.backdropImage}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={[
+                'transparent',
+                `${COLORS.warmCharcoal[100]}40`,
+                `${COLORS.warmCharcoal[100]}DD`,
+                COLORS.warmCharcoal[100],
+              ]}
+              style={styles.backdropGradient}
+            />
 
-      {/* Content Info */}
-      <View style={styles.contentInfo}>
-        <Text style={styles.title}>{content.title}</Text>
-
-        <View style={styles.metadata}>
-          <Text style={styles.metadataText}>
-            {content.year} • {content.genre.join(' • ')} • {content.duration}
-          </Text>
-          {content.rating && (
-            <View style={styles.ratingContainer}>
-              <Icon name="star" size={16} color={COLORS.primary} />
-              <Text style={styles.rating}>{content.rating}/10</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.playButton} onPress={handlePlayPress}>
-            <Icon name="play-arrow" size={24} color={COLORS.text} />
-            <Text style={styles.playButtonText}>Play</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.infoButton}>
-            <Icon name="info-outline" size={24} color={COLORS.text} />
-            <Text style={styles.infoButtonText}>More Info</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Description */}
-        <View style={styles.descriptionSection}>
-          <Text style={styles.sectionTitle}>Synopsis</Text>
-          <Text style={styles.description}>{content.description || 'No description available'}</Text>
-        </View>
-
-        {/* Cast */}
-        {content.cast && content.cast.length > 0 && (
-          <View style={styles.castSection}>
-            <Text style={styles.sectionTitle}>Cast</Text>
-            {content.cast.map((actor, index) => (
-              <Text key={index} style={styles.castText}>
-                {actor.name} as {actor.role}
-              </Text>
-            ))}
+            {/* Back Button */}
+            <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+              <SafeIcon name="arrow-back" size={24} color={COLORS.cream[50]} />
+            </TouchableOpacity>
           </View>
-        )}
 
-        {/* Video Info */}
-        <View style={styles.videoInfoSection}>
-          <Text style={styles.sectionTitle}>Video Information</Text>
-          {content.video_url ? (
-            <Text style={styles.videoAvailableText}>✓ Video available</Text>
-          ) : (
-            <Text style={styles.videoNotAvailableText}>✗ Video not available</Text>
-          )}
-          {content.trailer_url && (
-            <Text style={styles.trailerText}>✓ Trailer available</Text>
-          )}
-        </View>
+          {/* Content Details */}
+          <View style={styles.contentSection}>
+            {/* Title */}
+            <Text style={styles.title}>{content.title}</Text>
+
+            {/* Metadata Row */}
+            <View style={styles.metadataRow}>
+              {content.year && (
+                <Text style={styles.metadataText}>{content.year}</Text>
+              )}
+              {content.year && content.rating && (
+                <Text style={styles.metadataDot}>•</Text>
+              )}
+              {content.rating && (
+                <View style={styles.ratingContainer}>
+                  <SafeIcon name="star" size={16} color={COLORS.accent[500]} />
+                  <Text style={styles.ratingText}>{content.rating}</Text>
+                </View>
+              )}
+              {content.duration && (
+                <>
+                  <Text style={styles.metadataDot}>•</Text>
+                  <Text style={styles.metadataText}>{content.duration}</Text>
+                </>
+              )}
+            </View>
+
+            {/* Genre Tags */}
+            {content.genre && content.genre.length > 0 && (
+              <View style={styles.genreContainer}>
+                {content.genre.map((genre, index) => (
+                  <View key={index} style={styles.genreTag}>
+                    <Text style={styles.genreText}>{genre}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Action Buttons */}
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity
+                style={styles.playButton}
+                onPress={handlePlayPress}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[COLORS.accent[500], COLORS.accent[600]]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.playButtonGradient}
+                >
+                  <SafeIcon name="play-arrow" size={28} color={COLORS.cream[50]} />
+                  <Text style={styles.playButtonText}>Tonton Sekarang</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <View style={styles.secondaryActions}>
+                <TouchableOpacity style={styles.iconButton}>
+                  <SafeIcon name="add" size={28} color={COLORS.cream[50]} />
+                  <Text style={styles.iconButtonLabel}>Daftar Saya</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.iconButton}>
+                  <SafeIcon name="share" size={28} color={COLORS.cream[50]} />
+                  <Text style={styles.iconButtonLabel}>Bagikan</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.iconButton}>
+                  <SafeIcon name="download" size={28} color={COLORS.cream[50]} />
+                  <Text style={styles.iconButtonLabel}>Unduh</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Description */}
+            {content.description && (
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.sectionTitle}>Sinopsis</Text>
+                <Text style={styles.description}>{content.description}</Text>
+              </View>
+            )}
+
+            {/* Cast */}
+            {content.cast && content.cast.length > 0 && (
+              <View style={styles.castContainer}>
+                <Text style={styles.sectionTitle}>Pemain</Text>
+                <View style={styles.castList}>
+                  {content.cast.map((member, index) => (
+                    <View key={index} style={styles.castItem}>
+                      <SafeIcon name="person" size={20} color={COLORS.cream[200]} />
+                      <View style={styles.castInfo}>
+                        <Text style={styles.castName}>{member.name}</Text>
+                        <Text style={styles.castRole}>{member.role}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Content Type Badge */}
+            <View style={styles.typeBadgeContainer}>
+              <View style={styles.typeBadge}>
+                <SafeIcon
+                  name={content.type === 'MOVIE' ? 'movie' : 'tv'}
+                  size={18}
+                  color={COLORS.accent[500]}
+                />
+                <Text style={styles.typeBadgeText}>
+                  {content.type === 'MOVIE' ? 'Film' : 'Serial'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
       </View>
-    </ScrollView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.warmCharcoal[100],
+  },
+  scrollContent: {
+    paddingBottom: THEME.spacing.xxl,
   },
   backdropContainer: {
-    marginBottom: 24,
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH * 0.6,
+    position: 'relative',
   },
-  contentInfo: {
-    paddingHorizontal: 16,
+  backdropImage: {
+    width: '100%',
+    height: '100%',
+  },
+  backdropGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '70%',
+  },
+  backButton: {
+    position: 'absolute',
+    top: THEME.spacing.lg,
+    left: THEME.spacing.lg,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: `${COLORS.warmCharcoal[50]}CC`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...THEME.shadows.medium,
+  },
+  contentSection: {
+    paddingHorizontal: THEME.spacing.lg,
+    marginTop: -THEME.spacing.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 12,
+    fontSize: 32,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.cream[50],
+    marginBottom: THEME.spacing.md,
+    letterSpacing: 0.5,
   },
-  metadata: {
-    marginBottom: 24,
+  metadataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: THEME.spacing.md,
+    gap: THEME.spacing.sm,
   },
   metadataText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    marginBottom: 8,
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[200],
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+  metadataDot: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[200],
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    gap: 4,
   },
-  rating: {
-    fontSize: 16,
-    color: COLORS.text,
-    marginLeft: 4,
+  ratingText: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[100],
+    fontWeight: THEME.typography.fontWeight.semibold,
   },
-  actionButtons: {
+  genreContainer: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 32,
+    flexWrap: 'wrap',
+    gap: THEME.spacing.sm,
+    marginBottom: THEME.spacing.xl,
+  },
+  genreTag: {
+    backgroundColor: `${COLORS.accent[500]}30`,
+    paddingHorizontal: THEME.spacing.md,
+    paddingVertical: THEME.spacing.xs,
+    borderRadius: THEME.borderRadius.full,
+    borderWidth: 1,
+    borderColor: `${COLORS.accent[400]}50`,
+  },
+  genreText: {
+    fontSize: THEME.typography.fontSize.xs,
+    color: COLORS.accent[300],
+    fontWeight: THEME.typography.fontWeight.semibold,
+    letterSpacing: 0.5,
+  },
+  actionsContainer: {
+    marginBottom: THEME.spacing.xl,
   },
   playButton: {
-    flex: 1,
+    borderRadius: THEME.borderRadius.full,
+    overflow: 'hidden',
+    marginBottom: THEME.spacing.lg,
+    ...THEME.shadows.large,
+  },
+  playButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    paddingVertical: THEME.spacing.lg,
+    paddingHorizontal: THEME.spacing.xl,
+    gap: THEME.spacing.sm,
   },
   playButtonText: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
+    fontSize: THEME.typography.fontSize.lg,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.cream[50],
+    letterSpacing: 0.5,
   },
-  infoButton: {
-    flex: 1,
+  secondaryActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'space-around',
+    paddingHorizontal: THEME.spacing.md,
   },
-  infoButtonText: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
+  iconButton: {
+    alignItems: 'center',
+    gap: THEME.spacing.xs,
+  },
+  iconButtonLabel: {
+    fontSize: THEME.typography.fontSize.xs,
+    color: COLORS.cream[200],
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+  descriptionContainer: {
+    marginBottom: THEME.spacing.xl,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 12,
-  },
-  descriptionSection: {
-    marginBottom: 32,
+    fontSize: THEME.typography.fontSize.lg,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.cream[50],
+    marginBottom: THEME.spacing.md,
+    letterSpacing: 0.3,
   },
   description: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    lineHeight: 24,
+    fontSize: THEME.typography.fontSize.md,
+    color: COLORS.cream[100],
+    lineHeight: THEME.typography.lineHeight.relaxed * THEME.typography.fontSize.md,
+    opacity: 0.95,
   },
-  castSection: {
-    marginBottom: 32,
+  castContainer: {
+    marginBottom: THEME.spacing.xl,
   },
-  castText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    marginBottom: 4,
+  castList: {
+    gap: THEME.spacing.md,
   },
-  videoInfoSection: {
-    marginBottom: 32,
+  castItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: THEME.spacing.md,
+    backgroundColor: `${COLORS.warmCharcoal[50]}60`,
+    padding: THEME.spacing.md,
+    borderRadius: THEME.borderRadius.md,
   },
-  videoAvailableText: {
-    fontSize: 16,
-    color: '#4CAF50',
-    marginBottom: 4,
+  castInfo: {
+    flex: 1,
   },
-  videoNotAvailableText: {
-    fontSize: 16,
-    color: '#FF4444',
-    marginBottom: 4,
+  castName: {
+    fontSize: THEME.typography.fontSize.md,
+    color: COLORS.cream[50],
+    fontWeight: THEME.typography.fontWeight.semibold,
+    marginBottom: 2,
   },
-  trailerText: {
-    fontSize: 16,
-    color: COLORS.primary,
+  castRole: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[200],
+  },
+  typeBadgeContainer: {
+    alignItems: 'center',
+    marginTop: THEME.spacing.lg,
+  },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: THEME.spacing.xs,
+    backgroundColor: `${COLORS.warmCharcoal[50]}80`,
+    paddingHorizontal: THEME.spacing.lg,
+    paddingVertical: THEME.spacing.sm,
+    borderRadius: THEME.borderRadius.full,
+    borderWidth: 1,
+    borderColor: `${COLORS.accent[500]}40`,
+  },
+  typeBadgeText: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[100],
+    fontWeight: THEME.typography.fontWeight.medium,
   },
 });
 

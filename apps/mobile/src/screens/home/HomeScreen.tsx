@@ -88,13 +88,9 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleContentPress = (content: Content) => {
-    if (!isAuthenticated) {
-      // Show login modal or navigate to login
-      console.log('Need to login to watch content');
-      return;
-    }
-    // Navigate to video player
-    navigation.navigate('VideoPlayer', { contentId: content.id });
+    // Always navigate to ContentDetail first to show info
+    setSelectedContent(content);
+    navigation.navigate('ContentDetail', { content });
   };
 
   const handleInfoPress = (content: Content) => {

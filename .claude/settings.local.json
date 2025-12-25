@@ -145,7 +145,8 @@
       "Bash(npm start:fix)",
       "Bash(ls:*)",
       "Bash(echo:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx react-native-asset)"
     ],
     "deny": [],
     "ask": []

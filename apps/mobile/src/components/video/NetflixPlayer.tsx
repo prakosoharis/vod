@@ -14,6 +14,7 @@ import Video from 'react-native-video';
 import Slider from '@react-native-community/slider';
 import LinearGradient from 'react-native-linear-gradient';
 import Orientation from 'react-native-orientation-locker';
+import { SafeIcon } from '../ui';
 
 interface NetflixPlayerProps {
   source: string;
@@ -340,7 +341,7 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
                 onPress={onBack}
                 activeOpacity={0.7}
               >
-                <Text style={styles.backIcon}>‹</Text>
+                <SafeIcon name="arrow-back" size={28} color="#FFFFFF" />
               </TouchableOpacity>
               <Text style={styles.videoTitle} numberOfLines={1}>
                 {title}
@@ -356,7 +357,11 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
               onPress={togglePlayPause}
               activeOpacity={0.8}
             >
-              <Text style={styles.playIcon}>{isPlaying ? '║║' : '▶'}</Text>
+              <SafeIcon
+                name={isPlaying ? 'pause' : 'play-arrow'}
+                size={64}
+                color="#FFFFFF"
+              />
             </TouchableOpacity>
           </View>
 
@@ -391,33 +396,45 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
             <View style={styles.bottomControls}>
               <View style={styles.leftControls}>
                 <TouchableOpacity style={styles.controlBtn} onPress={togglePlayPause}>
-                  <Text style={styles.controlIcon}>{isPlaying ? '║' : '▶'}</Text>
+                  <SafeIcon
+                    name={isPlaying ? 'pause' : 'play-arrow'}
+                    size={26}
+                    color="#FFFFFF"
+                  />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.controlBtn} onPress={() => handleSeek('left')}>
-                  <Text style={styles.controlIcon}>«</Text>
+                  <SafeIcon name="replay-10" size={26} color="#FFFFFF" />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.controlBtn} onPress={() => handleSeek('right')}>
-                  <Text style={styles.controlIcon}>»</Text>
+                  <SafeIcon name="forward-10" size={26} color="#FFFFFF" />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.controlBtn} onPress={toggleMute}>
-                  <Text style={[styles.controlIcon, isMuted && styles.controlIconActive]}>
-                    {isMuted ? '🔇' : '🔊'}
-                  </Text>
+                  <SafeIcon
+                    name={isMuted ? 'volume-off' : 'volume-up'}
+                    size={26}
+                    color={isMuted ? NETFLIX_RED : '#FFFFFF'}
+                  />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.rightControls}>
                 <TouchableOpacity style={styles.controlBtn} onPress={toggleSubtitles}>
-                  <Text style={[styles.controlIcon, showSubtitles && styles.controlIconActive]}>
-                    CC
-                  </Text>
+                  <SafeIcon
+                    name="closed-caption"
+                    size={26}
+                    color={showSubtitles ? NETFLIX_RED : '#FFFFFF'}
+                  />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.controlBtn} onPress={toggleFullscreen}>
-                  <Text style={styles.controlIcon}>{isFullscreen ? '[ ]' : '⛶'}</Text>
+                  <SafeIcon
+                    name={isFullscreen ? 'fullscreen-exit' : 'fullscreen'}
+                    size={26}
+                    color="#FFFFFF"
+                  />
                 </TouchableOpacity>
               </View>
             </View>

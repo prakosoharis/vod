@@ -269,7 +269,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, onProgress
     <Modal
       visible={showQualityModal}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={() => setShowQualityModal(false)}
     >
       <TouchableWithoutFeedback onPress={() => setShowQualityModal(false)}>
@@ -283,7 +283,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, onProgress
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Video Quality</Text>
                   <TouchableOpacity onPress={() => setShowQualityModal(false)}>
-                    <SafeIcon name="close" size={24} color={COLORS.cream[50]} />
+                    <SafeIcon name="close" size={28} color={COLORS.cream[50]} />
                   </TouchableOpacity>
                 </View>
                 <ScrollView style={styles.modalScroll}>
@@ -317,7 +317,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, onProgress
     <Modal
       visible={showSpeedModal}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={() => setShowSpeedModal(false)}
     >
       <TouchableWithoutFeedback onPress={() => setShowSpeedModal(false)}>
@@ -374,7 +374,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, onProgress
     <Modal
       visible={showMoreModal}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={() => setShowMoreModal(false)}
     >
       <TouchableWithoutFeedback onPress={() => setShowMoreModal(false)}>

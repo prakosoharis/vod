@@ -21,22 +21,29 @@ const TabNavigator = () => {
 
           switch (route.name) {
             case 'Home':
-              iconName = focused ? 'home' : 'home-outline';
+              iconName = 'home';
               break;
             case 'Browse':
-              iconName = focused ? 'search' : 'search';
+              iconName = 'search';
               break;
             case 'Live':
-              iconName = focused ? 'live-tv' : 'live-tv';
+              iconName = 'live-tv';
               break;
             case 'Profile':
-              iconName = focused ? 'person' : 'person-outline';
+              iconName = 'person';
               break;
             default:
               iconName = 'home';
           }
 
-          return <SafeIcon name={iconName} size={24} color={color} />;
+          return (
+            <SafeIcon
+              name={iconName}
+              size={focused ? 28 : 24}
+              color={color}
+              style={{ marginBottom: -2 }}
+            />
+          );
         },
         tabBarActiveTintColor: COLORS.accent[500],
         tabBarInactiveTintColor: COLORS.cream[200],
@@ -44,24 +51,26 @@ const TabNavigator = () => {
           backgroundColor: COLORS.warmCharcoal[100],
           borderTopColor: `${COLORS.warmCharcoal[50]}80`,
           borderTopWidth: 1,
-          height: 60,
+          height: 65,
           paddingBottom: 6,
-          paddingTop: 8,
+          paddingTop: 6,
           elevation: 0,
           shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontSize: THEME.typography.fontSize.xs,
-          fontWeight: THEME.typography.fontWeight.medium,
+          fontWeight: THEME.typography.fontWeight.semibold,
           marginTop: 2,
-          marginBottom: 4,
-          letterSpacing: 0.3,
+          marginBottom: 2,
+          letterSpacing: 0.5,
         },
         tabBarItemStyle: {
           paddingVertical: 4,
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         tabBarIconStyle: {
-          marginTop: 4,
+          marginTop: 2,
         },
         headerStyle: {
           backgroundColor: COLORS.warmCharcoal[100],

@@ -36,7 +36,7 @@ const ProfileScreen: React.FC = () => {
 
   const menuItems = [
     {
-      icon: 'list',
+      icon: 'bookmark-border',
       title: 'Daftar Saya',
       subtitle: 'Lihat film dan serial yang ditandai',
       onPress: () => console.log('Navigate to My List'),
@@ -48,7 +48,7 @@ const ProfileScreen: React.FC = () => {
       onPress: () => console.log('Navigate to Watch History'),
     },
     {
-      icon: 'download',
+      icon: 'file-download',
       title: 'Unduhan',
       subtitle: 'Kelola konten yang diunduh',
       onPress: () => console.log('Navigate to Downloads'),
@@ -60,13 +60,13 @@ const ProfileScreen: React.FC = () => {
       onPress: () => console.log('Navigate to Settings'),
     },
     {
-      icon: 'help',
+      icon: 'help-outline',
       title: 'Bantuan',
       subtitle: 'Dapatkan bantuan dan dukungan',
       onPress: () => console.log('Navigate to Help'),
     },
     {
-      icon: 'info',
+      icon: 'info-outline',
       title: 'Tentang',
       subtitle: 'Informasi tentang aplikasi',
       onPress: () => console.log('Navigate to About'),
@@ -117,18 +117,19 @@ const ProfileScreen: React.FC = () => {
               onPress={item.onPress}
             >
               <View style={styles.menuItemLeft}>
-                <SafeIcon
-                  name={item.icon}
-                  size={24}
-                  color={COLORS.cream[200]}
-                  style={styles.menuIcon}
-                />
-                <View>
+                <View style={styles.iconContainer}>
+                  <SafeIcon
+                    name={item.icon}
+                    size={26}
+                    color={COLORS.accent[400]}
+                  />
+                </View>
+                <View style={styles.menuTextContainer}>
                   <Text style={styles.menuTitle}>{item.title}</Text>
                   <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
                 </View>
               </View>
-              <SafeIcon name="chevron-right" size={24} color={COLORS.cream[200]} />
+              <SafeIcon name="chevron-right" size={24} color={COLORS.cream[200]} opacity={0.6} />
             </TouchableOpacity>
           ))}
         </View>
@@ -220,8 +221,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  menuIcon: {
-    marginRight: THEME.spacing.lg,
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: `${COLORS.accent[500]}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: THEME.spacing.md,
+  },
+  menuTextContainer: {
+    flex: 1,
   },
   menuTitle: {
     fontSize: THEME.typography.fontSize.md,
