@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Play,
@@ -25,9 +25,14 @@ import ContentDetailModal from '@/components/content/ContentDetailModal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { HLSPlayer } from '@/components/video/HLSPlayer'
 
+// Import services
+import { userService } from '@/services/user.service'
+import { useAuthStore } from '@/stores/authStore'
+
 const VideoPlayerPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStore()
 
   // Use custom hooks
   const {
@@ -55,6 +60,71 @@ const VideoPlayerPage = () => {
     open: openModal,
     close: closeModal
   } = useContentModal()
+
+  // Watch progress tracking
+  const [lastSyncTime, setLastSyncTime] = useState(0)
+  const progressSyncInterval = useRef<NodeJS.Timeout>()
+
+  // Sync watch progress to backend
+  const syncWatchProgress = async (currentTime: number) => {
+    if (!isAuthenticated || !id) return
+    try {
+      await userService.updateWatchProgress(id, Math.floor(currentTime))
+      setLastSyncTime(currentTime)
+    } catch (error) {
+      console.error('Failed to sync watch progress:', error)
+    }
+  }
+
+  // Load initial watch progress
+  useEffect(() => {
+    if (!isAuthenticated || !id || !videoRef.current) return
+
+    const loadProgress = async () => {
+      try {
+        const progress = await userService.getWatchProgress(id)
+        if (progress && progress.progress_seconds > 0 && videoRef.current) {
+          videoRef.current.currentTime = progress.progress_seconds
+        }
+      } catch (error) {
+        // Progress not found - start from beginning
+        console.log('No previous watch progress found')
+      }
+    }
+
+    loadProgress()
+  }, [id, isAuthenticated, content])
+
+  // Auto-sync progress every 30 seconds while playing
+  useEffect(() => {
+    if (!isAuthenticated || !id) return
+
+    if (videoState.isPlaying && videoRef.current) {
+      progressSyncInterval.current = setInterval(() => {
+        if (videoRef.current) {
+          const currentTime = videoRef.current.currentTime
+          if (currentTime - lastSyncTime > 10) { // Only sync if 10+ seconds have passed
+            syncWatchProgress(currentTime)
+          }
+        }
+      }, 30000) // Every 30 seconds
+    }
+
+    return () => {
+      if (progressSyncInterval.current) {
+        clearInterval(progressSyncInterval.current)
+      }
+    }
+  }, [videoState.isPlaying, id, isAuthenticated, lastSyncTime])
+
+  // Sync progress when user leaves the page
+  useEffect(() => {
+    return () => {
+      if (videoRef.current && id && isAuthenticated) {
+        syncWatchProgress(videoRef.current.currentTime)
+      }
+    }
+  }, [id, isAuthenticated])
 
   // Prevent right-click and developer tools
   useEffect(() => {

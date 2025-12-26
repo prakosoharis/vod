@@ -15,11 +15,14 @@ import Slider from '@react-native-community/slider';
 import LinearGradient from 'react-native-linear-gradient';
 import Orientation from 'react-native-orientation-locker';
 import { SafeIcon } from '../ui';
+import { userService } from '../../services';
+import { useAuthStore } from '../../store/authStore';
 
 interface NetflixPlayerProps {
   source: string;
   onBack: () => void;
   title: string;
+  contentId: string;
 }
 
 const NETFLIX_RED = '#E50914';
@@ -28,13 +31,17 @@ const SEEK_AMOUNT = 10; // seconds
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) => {
+const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title, contentId }) => {
   const videoRef = useRef<Video>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapRef = useRef<{ time: number; side: 'left' | 'right' | null }>({
     time: 0,
     side: null,
   });
+  const progressSyncInterval = useRef<NodeJS.Timeout | null>(null);
+
+  // Auth state
+  const { isAuthenticated } = useAuthStore();
 
   // Playback State
   const [isPlaying, setIsPlaying] = useState(true);
@@ -51,10 +58,78 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title }) 
   const [isMuted, setIsMuted] = useState(false);
   const [showSubtitles, setShowSubtitles] = useState(false);
 
+  // Watch progress tracking
+  const [lastSyncTime, setLastSyncTime] = useState(0);
+  const [progressLoaded, setProgressLoaded] = useState(false);
+
   // Animation States
   const controlsOpacity = useRef(new Animated.Value(1)).current; // Start visible
   const seekAnimationLeft = useRef(new Animated.Value(0)).current;
   const seekAnimationRight = useRef(new Animated.Value(0)).current;
+
+  // Watch progress sync function
+  const syncWatchProgress = async (time: number) => {
+    if (!isAuthenticated || !contentId) return;
+    try {
+      await userService.updateWatchProgress(contentId, Math.floor(time));
+      setLastSyncTime(time);
+    } catch (error) {
+      console.error('Failed to sync watch progress:', error);
+    }
+  };
+
+  // Load initial watch progress
+  useEffect(() => {
+    if (!isAuthenticated || !contentId || progressLoaded) return;
+
+    const loadProgress = async () => {
+      try {
+        const progress = await userService.getWatchProgress(contentId);
+        if (progress && progress.progress_seconds > 0 && videoRef.current) {
+          videoRef.current.seek(progress.progress_seconds);
+          setCurrentTime(progress.progress_seconds);
+        }
+        setProgressLoaded(true);
+      } catch (error) {
+        // Progress not found - start from beginning
+        console.log('No previous watch progress found');
+        setProgressLoaded(true);
+      }
+    };
+
+    // Load progress after video is ready
+    if (duration > 0) {
+      loadProgress();
+    }
+  }, [contentId, isAuthenticated, duration, progressLoaded]);
+
+  // Auto-sync progress every 30 seconds while playing
+  useEffect(() => {
+    if (!isAuthenticated || !contentId) return;
+
+    if (isPlaying) {
+      progressSyncInterval.current = setInterval(() => {
+        if (currentTime - lastSyncTime > 10) { // Only sync if 10+ seconds have passed
+          syncWatchProgress(currentTime);
+        }
+      }, 30000); // Every 30 seconds
+    }
+
+    return () => {
+      if (progressSyncInterval.current) {
+        clearInterval(progressSyncInterval.current);
+      }
+    };
+  }, [isPlaying, contentId, isAuthenticated, currentTime, lastSyncTime]);
+
+  // Sync progress when component unmounts
+  useEffect(() => {
+    return () => {
+      if (isAuthenticated && contentId && currentTime > 0) {
+        syncWatchProgress(currentTime);
+      }
+    };
+  }, [contentId, isAuthenticated, currentTime]);
 
   // Force landscape on mount, revert on unmount
   useEffect(() => {

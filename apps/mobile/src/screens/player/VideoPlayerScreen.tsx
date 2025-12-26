@@ -1,16 +1,22 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
-import { contentService } from '../../services';
+import { contentService, userService } from '../../services';
 import { RootStackParamList } from '../../types';
 import { COLORS, THEME } from '../../constants';
+import { useAuthStore } from '../../store/authStore';
 import HLSPlayer from '../../components/video/HLSPlayer';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VideoPlayer'>;
 
 const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
   const { contentId } = route.params;
+  const { isAuthenticated } = useAuthStore();
+
+  // Watch progress tracking
+  const [lastSyncTime, setLastSyncTime] = useState(0);
+  const progressSyncTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch content data
   const { data: content, isLoading, error } = useQuery({
@@ -28,6 +34,44 @@ const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
     },
     enabled: !!contentId,
   });
+
+  // Watch progress sync function
+  const syncWatchProgress = async (progressSeconds: number) => {
+    if (!isAuthenticated || !contentId) return;
+
+    try {
+      await userService.updateWatchProgress(contentId, Math.floor(progressSeconds));
+      setLastSyncTime(progressSeconds);
+      console.log('Watch progress synced:', Math.floor(progressSeconds));
+    } catch (error) {
+      console.error('Failed to sync watch progress:', error);
+    }
+  };
+
+  // Handle progress updates with debouncing
+  const handleProgress = (progressSeconds: number) => {
+    // Clear previous timeout
+    if (progressSyncTimeout.current) {
+      clearTimeout(progressSyncTimeout.current);
+    }
+
+    // Only sync if 10+ seconds have passed since last sync
+    if (progressSeconds - lastSyncTime > 10) {
+      // Debounce: sync after 5 seconds of no progress updates (user paused or seeking)
+      progressSyncTimeout.current = setTimeout(() => {
+        syncWatchProgress(progressSeconds);
+      }, 5000);
+    }
+  };
+
+  // Sync progress when user leaves the screen
+  useEffect(() => {
+    return () => {
+      if (progressSyncTimeout.current) {
+        clearTimeout(progressSyncTimeout.current);
+      }
+    };
+  }, []);
 
   // Loading state
   if (isLoading) {
@@ -90,10 +134,8 @@ const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
       source={videoUrl}
       onBack={() => navigation.goBack()}
       title={content.title}
-      onProgress={(progress) => {
-        // TODO: Sync watch progress to API
-        console.log('Watch progress:', progress);
-      }}
+      contentId={contentId}
+      onProgress={handleProgress}
     />
   );
 };

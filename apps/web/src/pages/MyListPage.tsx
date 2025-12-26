@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { userService } from '@/services/auth.service'
+import { userService } from '@/services/user.service'
 import { ContentCard } from '@/components/home/ContentCard'
 import Layout from '@/components/layout/Layout'
 
@@ -12,8 +12,8 @@ const MyListPage = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-black flex items-center justify-center">
-          <div className="text-white">Loading...</div>
+        <div className="min-h-screen bg-warm-charcoal-100 flex items-center justify-center">
+          <div className="text-cream-50">Loading...</div>
         </div>
       </Layout>
     )
@@ -22,10 +22,10 @@ const MyListPage = () => {
   if (error) {
     return (
       <Layout>
-        <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="min-h-screen bg-warm-charcoal-100 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Error</h1>
-            <p className="text-gray-400">Gagal memuat daftar Anda. Silakan coba lagi.</p>
+            <h1 className="text-2xl font-bold text-cream-50 mb-4">Error</h1>
+            <p className="text-cream-200">Gagal memuat daftar Anda. Silakan coba lagi.</p>
           </div>
         </div>
       </Layout>
@@ -34,21 +34,21 @@ const MyListPage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-black pt-24 px-4 sm:px-8">
+      <div className="min-h-screen bg-warm-charcoal-100 pt-24 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-8 text-white">Daftar Saya</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-8 text-cream-50">Daftar Saya</h1>
 
           {!watchlist || watchlist.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-gray-400 text-xl mb-4">
+              <p className="text-cream-200 text-xl mb-4">
                 Daftar Anda masih kosong
               </p>
-              <p className="text-gray-500 mb-6">
+              <p className="text-cream-100 mb-6">
                 Tambahkan film dan series favorit Anda ke daftar
               </p>
               <a
                 href="/browse"
-                className="inline-block px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                className="inline-block px-6 py-3 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-cream-50 rounded-full transition-all duration-300 font-semibold"
                 onClick={(e) => {
                   e.preventDefault()
                   window.location.href = '/browse'

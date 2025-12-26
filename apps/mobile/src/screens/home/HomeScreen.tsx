@@ -14,7 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuthStore } from '../../store/authStore';
-import { contentService } from '../../services';
+import { contentService, userService } from '../../services';
 import { Content, RootStackParamList } from '../../types';
 import { COLORS, THEME } from '../../constants';
 import ContentCard from '../../components/ui/ContentCard';
@@ -51,7 +51,13 @@ const HomeScreen: React.FC = () => {
     queryFn: () => contentService.getFeaturedContent(),
   });
 
-  
+  // Continue Watching - Only for authenticated users (immediate load)
+  const { data: continueWatching, isLoading: loadingContinue } = useQuery({
+    queryKey: ['continue-watching'],
+    queryFn: () => userService.getContinueWatching(),
+    enabled: isAuthenticated,
+  });
+
   // Priority 2: Load after 1 second delay
   const { data: indonesian, isLoading: loadingIndonesian } = useQuery({
     queryKey: ['indonesian'],
@@ -167,7 +173,14 @@ const HomeScreen: React.FC = () => {
           />
         )}
 
-      
+        {/* Continue Watching - Only for authenticated users */}
+        {isAuthenticated && continueWatching && continueWatching.length > 0 && (
+          <View style={styles.section}>
+            {renderSectionHeader('Lanjut Tonton')}
+            {renderContentList(continueWatching)}
+          </View>
+        )}
+
       {/* Made in Indonesia */}
       {loadSecondary && (
         <View style={styles.section}>

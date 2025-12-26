@@ -19,4 +19,14 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://www.jitpack.io' }
+        // Midtrans Maven repository
+        maven { url 'https://maven.midtrans.com/repository/maven-public' }
+    }
+}
+
 apply plugin: "com.facebook.react.rootproject"

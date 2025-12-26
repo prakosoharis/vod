@@ -146,7 +146,8 @@
       "Bash(ls:*)",
       "Bash(echo:*)",
       "Bash(grep:*)",
-      "Bash(npx react-native-asset)"
+      "Bash(npx react-native-asset)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

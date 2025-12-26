@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,17 @@ import {
   Image,
   StatusBar,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeIcon } from '../../components/ui';
+import PaymentOptionsModal from '../../components/payment/PaymentOptionsModal';
 import { RootStackParamList } from '../../types';
 import { COLORS, THEME } from '../../constants';
+import { paymentService } from '../../services';
+import { useAuthStore } from '../../store/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ContentDetail'>;
 
@@ -21,9 +26,69 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { content } = route.params;
+  const { isAuthenticated } = useAuthStore();
 
-  const handlePlayPress = () => {
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(false);
+
+  const handlePlayPress = async () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Login Diperlukan',
+        'Silakan login terlebih dahulu untuk menonton konten ini.',
+        [
+          {
+            text: 'Batal',
+            style: 'cancel',
+          },
+          {
+            text: 'Login',
+            onPress: () => {
+              // Navigate to auth stack (user will be redirected to login)
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Auth' as any }],
+              });
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    try {
+      setIsCheckingAccess(true);
+
+      // Check if user has access to this content
+      const accessInfo = await paymentService.checkContentAccess(content.id);
+
+      if (!accessInfo.data.has_access) {
+        // User doesn't have access, show payment modal
+        setShowPaymentModal(true);
+        return;
+      }
+
+      // User has access, play video
+      navigation.navigate('VideoPlayer', { contentId: content.id });
+    } catch (error: any) {
+      console.error('Access check error:', error);
+
+      // On error, assume no access and show payment modal (safe fallback)
+      setShowPaymentModal(true);
+    } finally {
+      setIsCheckingAccess(false);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    // After successful payment, navigate to video player
     navigation.navigate('VideoPlayer', { contentId: content.id });
+  };
+
+  const handleNavigateToSubscription = () => {
+    // Navigate to pricing/subscription screen
+    navigation.navigate('Pricing' as any);
   };
 
   const handleBackPress = () => {
@@ -105,6 +170,7 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 style={styles.playButton}
                 onPress={handlePlayPress}
                 activeOpacity={0.8}
+                disabled={isCheckingAccess}
               >
                 <LinearGradient
                   colors={[COLORS.accent[500], COLORS.accent[600]]}
@@ -112,8 +178,17 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   end={{ x: 1, y: 0 }}
                   style={styles.playButtonGradient}
                 >
-                  <SafeIcon name="play-arrow" size={28} color={COLORS.cream[50]} />
-                  <Text style={styles.playButtonText}>Tonton Sekarang</Text>
+                  {isCheckingAccess ? (
+                    <>
+                      <ActivityIndicator size="small" color={COLORS.cream[50]} />
+                      <Text style={styles.playButtonText}>Memeriksa Akses...</Text>
+                    </>
+                  ) : (
+                    <>
+                      <SafeIcon name="play-arrow" size={28} color={COLORS.cream[50]} />
+                      <Text style={styles.playButtonText}>Tonton Sekarang</Text>
+                    </>
+                  )}
                 </LinearGradient>
               </TouchableOpacity>
 
@@ -177,6 +252,16 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           </View>
         </ScrollView>
       </View>
+
+      {/* Payment Options Modal */}
+      <PaymentOptionsModal
+        visible={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        contentId={content.id}
+        contentTitle={content.title}
+        onPaymentSuccess={handlePaymentSuccess}
+        onNavigateToSubscription={handleNavigateToSubscription}
+      />
     </>
   );
 };

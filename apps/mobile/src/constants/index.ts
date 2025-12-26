@@ -8,9 +8,17 @@
 import { COLORS, NETFLIX_RED } from './colors';
 import THEME from './theme';
 
-// API Configuration
+// API Configuration (Production)
 export const API_BASE_URL = 'https://api.mostara.id/api';
 export const SOCKET_URL = 'https://api.mostara.id';
+
+// Midtrans Configuration (SANDBOX mode)
+export const MIDTRANS_CONFIG = {
+  clientKey: 'Mid-client-VMvBYBwPbEvGFUO3',
+  merchantId: 'G136369276',
+  isProduction: false, // SANDBOX mode for testing
+  merchantBaseUrl: 'https://api.mostara.id/api/payment',
+};
 
 // Re-export design system
 export { COLORS, NETFLIX_RED, THEME };

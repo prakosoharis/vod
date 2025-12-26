@@ -2,6 +2,38 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import prisma from '../config/database.js';
 import { ContentType } from '@prisma/client';
 
+// Helper function to transform localhost URLs to production URLs
+function transformMediaUrls(content: any) {
+  if (!content) return content;
+
+  const PRODUCTION_HLS_URL = process.env.HLS_CDN_URL || 'https://upload.transcode.mostara.id';
+  const LOCALHOST_PATTERNS = [
+    'http://localhost:8080',
+    'http://localhost:8089',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:8089',
+  ];
+
+  // Transform HLS URLs
+  if (content.hls_url) {
+    LOCALHOST_PATTERNS.forEach(pattern => {
+      if (content.hls_url.startsWith(pattern)) {
+        content.hls_url = content.hls_url.replace(pattern, PRODUCTION_HLS_URL);
+      }
+    });
+  }
+
+  if (content.hls_cdn_url) {
+    LOCALHOST_PATTERNS.forEach(pattern => {
+      if (content.hls_cdn_url.startsWith(pattern)) {
+        content.hls_cdn_url = content.hls_cdn_url.replace(pattern, PRODUCTION_HLS_URL);
+      }
+    });
+  }
+
+  return content;
+}
+
 interface PaginationQuery {
   page?: string;
   limit?: string;
@@ -58,8 +90,11 @@ export async function getAllContent(
 
     const totalPages = Math.ceil(total / limit);
 
+    // Transform URLs for all content items
+    const transformedData = data.map(transformMediaUrls);
+
     reply.send({
-      data,
+      data: transformedData,
       total,
       page,
       totalPages,
@@ -87,7 +122,10 @@ export async function getContentById(
       return;
     }
 
-    reply.send(content);
+    // Transform URLs before sending
+    const transformedContent = transformMediaUrls(content);
+
+    reply.send(transformedContent);
   } catch (error) {
     console.error('Error fetching content by ID:', error);
     reply.code(500).send({ error: 'Internal server error' });
@@ -106,7 +144,10 @@ export async function getFeaturedContent(
       orderBy: { created_at: 'desc' },
     });
 
-    reply.send(data);
+    // Transform URLs for all content items
+    const transformedData = data.map(transformMediaUrls);
+
+    reply.send(transformedData);
   } catch (error) {
     console.error('Error fetching featured content:', error);
     reply.code(500).send({ error: 'Internal server error' });
@@ -129,7 +170,10 @@ export async function getTrendingContent(
     const shuffled = allContent.sort(() => Math.random() - 0.5);
     const data = shuffled.slice(0, 20); // Return 20 random items
 
-    reply.send(data);
+    // Transform URLs for all content items
+    const transformedData = data.map(transformMediaUrls);
+
+    reply.send(transformedData);
   } catch (error) {
     console.error('Error fetching trending content:', error);
     reply.code(500).send({ error: 'Internal server error' });
@@ -169,7 +213,10 @@ export async function searchContent(
       orderBy: { created_at: 'desc' },
     });
 
-    reply.send(data);
+    // Transform URLs for all content items
+    const transformedData = data.map(transformMediaUrls);
+
+    reply.send(transformedData);
   } catch (error) {
     console.error('Error searching content:', error);
     reply.code(500).send({ error: 'Internal server error' });

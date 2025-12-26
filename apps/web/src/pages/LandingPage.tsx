@@ -8,6 +8,7 @@ import ContentDetailModal from '@/components/content/ContentDetailModal';
 import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal';
 import { contentService } from '@/services/content.service';
 import { paymentService } from '@/services/payment.service';
+import { userService } from '@/services/user.service';
 import useLiveStream from '@/hooks/useLiveStream';
 import { Radio, Play } from 'lucide-react';
 import type { Content } from '@/types';
@@ -82,6 +83,13 @@ export const LandingPage: React.FC = () => {
     },
   })
 
+  // CONTINUE WATCHING - Only for authenticated users
+  const { data: continueWatching } = useQuery({
+    queryKey: ['continue-watching'],
+    queryFn: () => userService.getContinueWatching(),
+    enabled: isAuthenticated,
+  })
+
   // Modal handlers
   const openModal = (content: Content) => {
     setSelectedContent(content)
@@ -138,9 +146,21 @@ export const LandingPage: React.FC = () => {
         />
       )}
 
+      {/* Continue Watching - Only for authenticated users */}
+      {isAuthenticated && continueWatching && continueWatching.length > 0 && (
+        <div className="pt-8 md:pt-16">
+          <ContentRow
+            title="Lanjut Tonton"
+            contents={continueWatching}
+            onInfoClick={openModal}
+            onPlayClick={handlePlayClick}
+          />
+        </div>
+      )}
+
       {/* Rilis Terbaru - Mobile Priority Section */}
       {latestReleases && latestReleases.length > 0 && (
-        <div className="pt-8 md:pt-16">
+        <div className={isAuthenticated && continueWatching && continueWatching.length > 0 ? "pt-8" : "pt-8 md:pt-16"}>
           <ContentRow
             title="Rilis Terbaru"
             contents={latestReleases}

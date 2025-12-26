@@ -23,6 +23,7 @@ interface HLSPlayerProps {
   source: string;
   onBack: () => void;
   title: string;
+  contentId: string;
   onProgress?: (progress: number) => void;
 }
 
@@ -43,7 +44,7 @@ const SPEED_OPTIONS = [
   { label: '2x', value: 2.0 },
 ];
 
-const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, onProgress }) => {
+const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId, onProgress }) => {
   const videoRef = useRef<Video>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapRef = useRef<{ time: number; side: 'left' | 'right' | null }>({
