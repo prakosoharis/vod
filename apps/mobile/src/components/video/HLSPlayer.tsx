@@ -65,6 +65,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [wasPlayingBeforeScrub, setWasPlayingBeforeScrub] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(true);
 
   // Modal States
   const [showQualityModal, setShowQualityModal] = useState(false);
@@ -80,13 +81,17 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
   // Force landscape on mount
   useEffect(() => {
     StatusBar.setHidden(true);
-    Orientation.lockToLandscape();
+    if (isFullscreen) {
+      Orientation.lockToLandscape();
+    } else {
+      Orientation.lockToPortrait();
+    }
 
     return () => {
       StatusBar.setHidden(false);
       Orientation.lockToPortrait();
     };
-  }, []);
+  }, [isFullscreen]);
 
   // Auto-hide controls
   useEffect(() => {
@@ -143,6 +148,12 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
 
   const toggleMute = () => {
     setIsMuted((prev) => !prev);
+    setShowControls(true);
+    resetControlsTimer();
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
     setShowControls(true);
     resetControlsTimer();
   };
@@ -426,7 +437,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
           ref={videoRef}
           source={{ uri: source }}
           style={styles.video}
-          resizeMode="contain"
+          resizeMode={isFullscreen ? 'cover' : 'contain'}
           paused={!isPlaying}
           muted={isMuted}
           rate={playbackRate}
@@ -622,6 +633,17 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
                   }}
                 >
                   <SafeIcon name="hd" size={28} color={COLORS.cream[50]} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.controlBtn}
+                  onPress={toggleFullscreen}
+                >
+                  <SafeIcon
+                    name={isFullscreen ? 'fullscreen-exit' : 'fullscreen'}
+                    size={28}
+                    color={COLORS.cream[50]}
+                  />
                 </TouchableOpacity>
 
                 <TouchableOpacity
