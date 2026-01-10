@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #1A1614;
+    color: #F4EDE3;
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #2D2826;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3A1E0A;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #914B19;
+  }
+
+  [data-focused] {
+    outline: none;
+    box-shadow: 0 0 0 4px #C67D4B;
+  }
+}
+
+@layer components {
+  .focus-visible {
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .focus-visible:focus {
+    box-shadow: 0 0 0 4px #C67D4B;
+  }
+}
+
+@layer utilities {
+  .tv-button {
+    @apply focus-visible;
+  }
+
+  .tv-card {
+    @apply focus-visible transition-transform duration-200;
+  }
+
+  .tv-card:hover,
+  .tv-card:focus {
+    @apply scale-105 z-10;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #3A1E0A;
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #914B19;
+  }
+}

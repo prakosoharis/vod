@@ -1,0 +1,35 @@
+{
+  "id": "com.mostara.webos",
+  "version": "1.0.0",
+  "vendor": "Mostara",
+  "type": "web",
+  "main": "index.html",
+  "title": "Mostara VOD",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgImage": "bgImage.png",
+  "iconColor": "#914B19",
+  "visible": true,
+  "enableKeyboard": true,
+  "disableBackHistoryAPI": false,
+  "uiRevision": 2,
+  "trustLevel": "normal",
+  "privileged": false,
+  "accessControl": {
+    "public": [
+      "external",
+      "internal"
+    ]
+  },
+  "supportGIP": false,
+  "permissions": [
+    "time.query",
+    "settings.read"
+  ],
+  "keywords": [
+    "vod",
+    "video",
+    "streaming",
+    "mostara"
+  ]
+}

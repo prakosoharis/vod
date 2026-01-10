@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create WebOS Icons</title>
+</head>
+<body>
+    <script>
+        // Create standard icon (80x80)
+        const canvas = document.createElement('canvas');
+        canvas.width = 80;
+        canvas.height = 80;
+        const ctx = canvas.getContext('2d');
+
+        // Draw background
+        ctx.fillStyle = '#914B19'; // Primary color
+        ctx.fillRect(0, 0, 80, 80);
+
+        // Draw "M" for Mostara
+        ctx.fillStyle = '#F4EDE3'; // Cream text color
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('M', 40, 42);
+
+        // Download icon
+        const link = document.createElement('a');
+        link.download = 'icon.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        // Create large icon (130x130)
+        const canvas2 = document.createElement('canvas');
+        canvas2.width = 130;
+        canvas2.height = 130;
+        const ctx2 = canvas2.getContext('2d');
+        ctx2.fillStyle = '#914B19';
+        ctx2.fillRect(0, 0, 130, 130);
+        ctx2.fillStyle = '#F4EDE3';
+        ctx2.font = 'bold 80px Arial';
+        ctx2.textAlign = 'center';
+        ctx2.textBaseline = 'middle';
+        ctx2.fillText('M', 65, 68);
+
+        const link2 = document.createElement('a');
+        link2.download = 'largeIcon.png';
+        link2.href = canvas2.toDataURL('image/png');
+        link2.click();
+
+        // Create background image (1920x1080)
+        const canvas3 = document.createElement('canvas');
+        canvas3.width = 1920;
+        canvas3.height = 1080;
+        const ctx3 = canvas3.getContext('2d');
+        ctx3.fillStyle = '#1A1614';
+        ctx3.fillRect(0, 0, 1920, 1080);
+        ctx3.fillStyle = '#914B19';
+        ctx3.font = 'bold 200px Arial';
+        ctx3.textAlign = 'center';
+        ctx3.textBaseline = 'middle';
+        ctx3.fillText('MOSTARA', 960, 540);
+
+        const link3 = document.createElement('a');
+        link3.download = 'bgImage.png';
+        link3.href = canvas3.toDataURL('image/png');
+        link3.click();
+
+        console.log('Icons created!');
+        alert('Icons created! icon.png, largeIcon.png, and bgImage.png have been downloaded.');
+    </script>
+</body>
+</html>

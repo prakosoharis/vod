@@ -1,0 +1,10 @@
+{
+  "main": "index.html",
+  "title": "Mostara VOD",
+  "icon": "icon.png",
+  "type": "web",
+  "version": "1.0.0",
+  "appDescription": "Mostara Video on Demand Application for WebOS TV",
+  "windowOrientation": "landscape",
+  "lockOrientation": "true"
+}

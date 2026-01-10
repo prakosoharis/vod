@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mostara VOD - Browser Testing</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1A1614;
+            color: #F4EDE3;
+            font-family: system-ui, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .info {
+            background: #2D2826;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 15px;
+            background: #C67D4B;
+            color: #F4EDE3;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #9E643C;
+        }
+        .key-display {
+            background: #36302E;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mostara VOD - TV Remote Control Tester</h1>
+        
+        <div class="info">
+            <h3>Instructions:</h3>
+            <ul>
+                <li>Gunakan tombol di bawah untuk simulasi remote TV</li>
+                <li>Atau gunakan keyboard: Arrow keys, Enter, Backspace</li>
+                <li>Buka aplikasi di localhost:5173 setelah testing</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <button onclick="simulateKey('ArrowUp')">⬆ Up</button>
+            <button onclick="simulateKey('ArrowDown')">⬇ Down</button>
+            <button onclick="simulateKey('ArrowLeft')">⬅ Left</button>
+            <button onclick="simulateKey('ArrowRight')">➡ Right</button>
+            <button onclick="simulateKey('Enter')">OK/Enter</button>
+            <button onclick="simulateKey('Backspace')">Back</button>
+            <button onclick="simulateKey('Escape')">Home</button>
+            <button onclick="simulateKey(' ')">Play/Pause</button>
+        </div>
+
+        <div class="key-display">
+            Last Key Pressed: <span id="keyDisplay">None</span>
+        </div>
+
+        <div class="info">
+            <h3>Keyboard Shortcuts:</h3>
+            <ul>
+                <li><strong>Arrow Keys</strong> - Navigasi</li>
+                <li><strong>Enter</strong> - Pilih item</li>
+                <li><strong>Backspace</strong> - Kembali</li>
+                <li><strong>Escape</strong> - Home</li>
+                <li><strong>Space</strong> - Play/Pause</li>
+                <li><strong>F</strong> - Toggle fullscreen</li>
+            </ul>
+        </div>
+
+        <div class="info">
+            <a href="http://localhost:5173" target="_blank" style="color: #C67D4B; font-size: 18px; text-decoration: none;">
+                🚀 Launch Mostara VOD App
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('keydown', (e) => {
+            document.getElementById('keyDisplay').textContent = e.key;
+        });
+
+        function simulateKey(key) {
+            document.getElementById('keyDisplay').textContent = key;
+
+            // Send key event to iframe or window if needed
+            const event = new KeyboardEvent('keydown', {
+                key: key,
+                code: key,
+                keyCode: getKeyCode(key)
+            });
+
+            window.dispatchEvent(event);
+        }
+
+        function getKeyCode(key) {
+            const keyMap = {
+                'ArrowUp': 38,
+                'ArrowDown': 40,
+                'ArrowLeft': 37,
+                'ArrowRight': 39,
+                'Enter': 13,
+                'Backspace': 8,
+                'Escape': 27,
+                ' ': 32
+            };
+            return keyMap[key] || 0;
+        }
+    </script>
+</body>
+</html>
