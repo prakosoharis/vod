@@ -45,6 +45,56 @@ server {
     # allow 5.6.7.8;        # Your home IP
     # deny all;             # Block everyone else
 
+    # ============================================================
+    # BUCKET ACCESS - MinIO S3 API (port 9000) with CORS
+    # Allows browser to fetch HLS/video files from mostara.id
+    # ============================================================
+    location ~ ^/(perm-storage-wasabi|temp-raw-aws)/ {
+        proxy_pass http://127.0.0.1:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Hide MinIO's own CORS headers (we override below)
+        proxy_hide_header Access-Control-Allow-Origin;
+        proxy_hide_header Access-Control-Allow-Methods;
+        proxy_hide_header Access-Control-Allow-Headers;
+        proxy_hide_header Access-Control-Expose-Headers;
+
+        # CORS headers - allow mostara.id and all origins
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'Range, Authorization, Content-Type' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length, Content-Range, Accept-Ranges' always;
+
+        # Handle CORS preflight
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'Range, Authorization, Content-Type';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+
+        # Range request support (video seeking)
+        proxy_set_header Range $http_range;
+        proxy_set_header If-Range $http_if_range;
+
+        # Streaming settings
+        proxy_buffering off;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+
+        # Timeout
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+
+    # ============================================================
+    # MinIO Console (port 9001) - Admin UI
+    # ============================================================
     location / {
         proxy_pass http://127.0.0.1:9001;
         proxy_set_header Host $host;

@@ -147,7 +147,9 @@
       "Bash(echo:*)",
       "Bash(grep:*)",
       "Bash(npx react-native-asset)",
-      "WebSearch"
+      "WebSearch",
+      "Bash($ANDROID_HOME/build-tools/34.0.0/aapt:*)",
+      "Bash(unzip:*)"
     ],
     "deny": [],
     "ask": []

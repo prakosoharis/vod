@@ -1,5 +1,5 @@
 /**
- * Alkamus VOD Mobile App
+ * Mostara Mobile App
  * @format
  */
 
