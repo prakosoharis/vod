@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>name</key>
+		<string>ATM BCA</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Select ‘other transactions’ on the main menu.</string>
+				<key>image</key>
+				<string>bca_atm_1</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Select ‘transfer’</string>
+				<key>image</key>
+				<string>bca_atm_2</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Select to ‘BCA virtual account’.</string>
+				<key>image</key>
+				<string>bca_atm_3</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Insert ‘BCA virtual account number’.</string>
+				<key>image</key>
+				<string>bca_atm_4</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Insert the ‘payable amount’, then ‘confirm’.</string>
+				<key>image</key>
+				<string>bca_atm_5</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Payment completed.</string>
+				<key>image</key>
+				<string>bca_atm_6</string>
+			</dict>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Klik BCA</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Select ‘fund transfer’</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Select ‘transfer to BCA virtual account’</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Insert ‘BCA virtual account number’</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Insert the ‘payable amount’, then ‘confirm’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Payment completed.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>m-BCA</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Select ‘m-Transfer’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Select ‘BCA virtual account’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Insert ‘BCA virtual account number’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Insert the ‘payable amount’, then ‘confirm’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Payment completed.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+		</array>
+	</dict>
+</array>
+</plist>

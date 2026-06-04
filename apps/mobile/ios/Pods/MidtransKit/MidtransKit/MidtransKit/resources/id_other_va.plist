@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>name</key>
+		<string>Prima</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transaksi lainnya pada menu utama’.</string>
+				<key>image</key>
+				<string>other_prima_1</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transfer’.</string>
+				<key>image</key>
+				<string>other_prima_2</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘rekening bank lain’.</string>
+				<key>image</key>
+				<string>other_prima_3</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan 002 sebagai ‘kode bank’.</string>
+				<key>image</key>
+				<string>other_prima_4</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘jumlah yang akan dibayar’.</string>
+				<key>image</key>
+				<string>other_prima_5</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘nomor rekening pembayaran’, lalu ‘konfirmasi’.</string>
+				<key>image</key>
+				<string>other_prima_6</string>
+			</dict>
+			<dict>
+				<key>content</key>
+                <string>Pembayaran berhasil.</string>
+				<key>image</key>
+				<string>other_prima_7</string>
+			</dict>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>ATM Bersama</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transaksi lainnya’ pada menu utama.</string>
+				<key>image</key>
+				<string>other_atm_1</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transfer’.</string>
+				<key>image</key>
+				<string>other_atm_2</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘antar bank online’.</string>
+				<key>image</key>
+				<string>other_atm_3</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan 002 sebagai ‘kode bank’.</string>
+				<key>image</key>
+				<string>other_atm_4</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘jumlah yang akan dibayar’.</string>
+				<key>image</key>
+				<string>other_atm_5</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘nomor rekening pembayaran’, lalu ‘konfirmasi’.</string>
+				<key>image</key>
+				<string>other_atm_6</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pembayaran berhasil.</string>
+				<key>image</key>
+				<string>other_atm_7</string>
+			</dict>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Alto</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transaksi lainnya’ pada menu utama.</string>
+				<key>image</key>
+				<string>other_alto_1</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transfer’.</string>
+				<key>image</key>
+				<string>other_alto_2</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘rekening bank lain’.</string>
+				<key>image</key>
+				<string>other_alto_3</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan 002 sebagai ‘kode bank’.</string>
+				<key>image</key>
+				<string>other_alto_4</string>
+			</dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘jumlah yang akan dibayar’.</string>
+                <key>image</key>
+                <string>other_alto_5</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘nomor rekening pembayaran’, lalu ‘konfirmasi’.</string>
+                <key>image</key>
+                <string>other_alto_6</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pembayaran berhasil.</string>
+                <key>image</key>
+                <string>other_prima_7</string>
+            </dict>
+		</array>
+	</dict>
+</array>
+</plist>

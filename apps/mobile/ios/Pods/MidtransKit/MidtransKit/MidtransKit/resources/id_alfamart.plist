@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>content</key>
+        <string>Setelah melakukan konfirmasi pembayaran, Anda akan diberikan Kode Pembayaran yang unik.</string>
+		<key>image</key>
+		<string></string>
+	</dict>
+	<dict>
+		<key>content</key>
+		<string>Salinlah Kode Pembayaran Anda dan jumlah pembayaran yang akan dibayarkan. Jangan Khawatir, Kami juga akan mengirimkan salinan Kode Pembayaran dan Instruksi Pembayaran melalui email kepada Anda.</string>
+		<key>image</key>
+		<string></string>
+	</dict>
+	<dict>
+		<key>content</key>
+		<string>Silakan pergi ke gerai Alfamart, Alfamidi, atau Dan+Dan terdekat dan berikanlah nomor Kode Pembayaran Anda ke kasir.</string>
+		<key>image</key>
+		<string></string>
+	</dict>
+	<dict>
+		<key>content</key>
+		<string>Kasir akan mengkonfirmasi transaksi dengan menanyakan jumlah transaksi dan nama merchant.</string>
+		<key>image</key>
+		<string></string>
+	</dict>
+    <dict>
+        <key>content</key>
+        <string>Konfirmasikan pembayaran Anda ke kasir.</string>
+        <key>image</key>
+        <string></string>
+    </dict>
+    <dict>
+        <key>content</key>
+        <string>Transaksi Anda berhasil! Anda akan mendapatkan email konfirmasi pembayaran dan simpanlah struk transaksi Anda.</string>
+        <key>image</key>
+        <string></string>
+    </dict>
+</array>
+</plist>

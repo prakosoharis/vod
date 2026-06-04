@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+    <dict>
+        <key>name</key>
+        <string>ATM BCA</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘transaksi lainnya’ pada menu utama.</string>
+                <key>image</key>
+                <string>bca_atm_1</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘transfer’</string>
+                <key>image</key>
+                <string>bca_atm_2</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ke rekening ‘BCA virtual account’.</string>
+                <key>image</key>
+                <string>bca_atm_3</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘nomor BCA virtual account’.</string>
+                <key>image</key>
+                <string>bca_atm_4</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘jumlah yang akan dibayar’, lalu ‘konfirmasi’.</string>
+                <key>image</key>
+                <string>bca_atm_5</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pembayaran berhasil.</string>
+                <key>image</key>
+                <string>bca_atm_6</string>
+            </dict>
+        </array>
+    </dict>
+    <dict>
+        <key>name</key>
+        <string>Klik BCA</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘transfer dana’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘transfer ke BCA virtual account’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘nomor BCA virtual account’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘jumlah yang akan dibayar’, lalu ‘konfirmasi’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pembayaran berhasil.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+        </array>
+    </dict>
+    <dict>
+        <key>name</key>
+        <string>m-BCA</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘m-Transfer’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘BCA virtual account’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘nomor BCA virtual account’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘jumlah yang akan dibayar’, lalu ‘konfirmasi’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Konfirmasi pembayaran.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pembayaran berhasil.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+        </array>
+    </dict>
+</array>
+</plist>

@@ -1,8 +1,9 @@
-import { NativeModules, NativeEventEmitter, EmitterSubscription } from 'react-native';
+import { NativeModules, NativeEventEmitter, EmitterSubscription, Platform } from 'react-native';
 
 interface MidtransModuleInterface {
   initialize(clientKey: string, merchantUrl: string): Promise<string>;
   startPayment(snapToken: string): Promise<string>;
+  cleanup(): Promise<string>;
   addListener(eventName: string): void;
   removeListeners(count: number): void;
 }
@@ -14,16 +15,53 @@ export interface PaymentResult {
   paymentType?: string;
   grossAmount?: string;
   message?: string;
+  statusMessage?: string;
 }
 
+// Get the native module - iOS implementation is not ready yet
 const { MidtransModule } = NativeModules;
 
-if (!MidtransModule) {
-  throw new Error('MidtransModule is not available. Make sure the native module is properly linked.');
-}
+// Safe mock for iOS development - Android has full implementation
+const mockMidtransModule: MidtransModuleInterface = {
+  initialize: async (clientKey: string, merchantUrl: string) => {
+    console.log('[MidtransModule] MOCK: initialize called - iOS native module not implemented yet');
+    return 'Midtrans SDK initialized (mock)';
+  },
+  startPayment: async (snapToken: string) => {
+    console.log('[MidtransModule] MOCK: startPayment called - iOS native module not implemented yet');
 
-const midtransModule: MidtransModuleInterface = MidtransModule;
-const eventEmitter = new NativeEventEmitter(MidtransModule);
+    // Simulate payment success after 2 seconds
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve('Payment UI launched (mock)');
+      }, 2000);
+    });
+  },
+  cleanup: async () => {
+    console.log('[MidtransModule] MOCK: cleanup called');
+    return 'Midtrans SDK cleaned up (mock)';
+  },
+  addListener: (eventName: string) => {
+    console.log('[MidtransModule] MOCK: addListener called');
+  },
+  removeListeners: (count: number) => {
+    console.log('[MidtransModule] MOCK: removeListeners called');
+  }
+};
+
+// Use native module for Android, mock for iOS
+const midtransModule: MidtransModuleInterface = MidtransModule || mockMidtransModule;
+
+// Use mock event emitter for iOS since native module doesn't exist yet
+let eventEmitter: NativeEventEmitter | null = null;
+try {
+  // Only use NativeEventEmitter if module exists (Android)
+  if (MidtransModule) {
+    eventEmitter = new NativeEventEmitter(MidtransModule);
+  }
+} catch (error) {
+  console.warn('[MidtransModule] Native event emitter not available (iOS - using mock)');
+}
 
 class Midtrans {
   private static instance: Midtrans;

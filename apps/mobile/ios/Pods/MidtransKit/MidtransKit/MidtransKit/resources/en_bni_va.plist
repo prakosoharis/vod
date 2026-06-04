@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+    <dict>
+        <key>name</key>
+        <string>ATM BNI</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Select ‘others’ on the main menu.</string>
+                <key>image</key>
+                <string>bni_va1</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Select ‘transfer’.</string>
+                <key>image</key>
+                <string>bni_va2</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Select ‘to BNI account’.</string>
+                <key>image</key>
+                <string>bni_va3</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Insert the ‘payment account number’.</string>
+                <key>image</key>
+                <string>bni_va4</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Insert the ‘payable amount’, then ‘confirm’.</string>
+                <key>image</key>
+                <string>bni_va5</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Payment completed.</string>
+                <key>image</key>
+                <string>bni_va6</string>
+            </dict>
+        </array>
+    </dict>
+    <dict>
+        <key>name</key>
+        <string>Internet Banking</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Select ‘transaction’, then ‘transfer administration info’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Select ‘set destination account’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Insert ‘account info’, then ‘confirm’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Select ‘transfer’, then ‘transfer to BNI account’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Insert ‘payment details’, then ‘confirm’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Payment completed.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+        </array>
+    </dict>
+    <dict>
+        <key>name</key>
+        <string>Mobile Banking</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Select ‘transfer’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Select ‘virtual account billing’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Select the ‘debit account’ you want to use.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Insert the ‘virtual account number’, then ‘confirm’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Payment completed.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+        </array>
+    </dict>
+</array>
+</plist>

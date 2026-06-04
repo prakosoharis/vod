@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+    <dict>
+        <key>name</key>
+        <string>ATM BRI</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘transaksi lainnya’ pada menu utama.</string>
+                <key>image</key>
+                <string>bri_va1</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘pembayaran’.</string>
+                <key>image</key>
+                <string>bri_va2</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘lainnya’.</string>
+                <key>image</key>
+                <string>bri_va3</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘BRIVA’</string>
+                <key>image</key>
+                <string>bri_va4</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan nomor ‘BRIVA’, lalu ‘konfirmasi’.</string>
+                <key>image</key>
+                <string>bri_va5</string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pembayaran berhasil.</string>
+                <key>image</key>
+                <string>bri_va6</string>
+            </dict>
+        </array>
+    </dict>
+    <dict>
+        <key>name</key>
+        <string>IB BRI</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘pembayaran &amp; pembelian’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘BRIVA’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘nomor BRIVA’, lalu ‘konfirmasi’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pembayaran berhasil.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+        </array>
+    </dict>
+    <dict>
+        <key>name</key>
+        <string>BRImo</string>
+        <key>guides</key>
+        <array>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘pembayaran’</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘BRIVA’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Masukkan ‘nomor BRIVA’, lalu ‘konfirmasi’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+            <dict>
+                <key>content</key>
+                <string>Pembayaran berhasil.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+        </array>
+    </dict>
+</array>
+</plist>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>name</key>
+		<string>ATM BNI</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘menu lain’ pada menu utama.</string>
+				<key>image</key>
+				<string>bni_va1</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transfer’</string>
+				<key>image</key>
+				<string>bni_va2</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘ke rekening BNI’.</string>
+				<key>image</key>
+				<string>bni_va3</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘nomor rekening pembayaran’.</string>
+				<key>image</key>
+				<string>bni_va4</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘jumlah yang akan dibayar’, lalu ‘konfirmasi’.</string>
+				<key>image</key>
+				<string>bni_va5</string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pembayaran berhasil.</string>
+				<key>image</key>
+				<string>bni_va6</string>
+			</dict>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Internet Banking</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transaksi’, lalu ‘info &amp; administrasi transfer’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+            <dict>
+                <key>content</key>
+                <string>Pilih ‘atur rekening tujuan’.</string>
+                <key>image</key>
+                <string></string>
+            </dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘informasi rekening’, lalu ‘konfirmasi’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transfer, lalu transfer ke rekening BNI’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘detail pembayaran’, lalu ‘konfirmasi’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pembayaran berhasil.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Mobile Banking</string>
+		<key>guides</key>
+		<array>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘transfer’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘virtual account billing’.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pilih ‘rekening debit’ yang akan digunakan.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Masukkan ‘nomor virtual account’, lalu ‘konfirmasi.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>content</key>
+				<string>Pembayaran berhasil.</string>
+				<key>image</key>
+				<string></string>
+			</dict>
+		</array>
+	</dict>
+</array>
+</plist>

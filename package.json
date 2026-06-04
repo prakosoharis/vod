@@ -1,1 +1,5 @@
-{}
+{
+  "dependencies": {
+    "react-native-video": "^6.19.2"
+  }
+}

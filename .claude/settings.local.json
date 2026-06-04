@@ -149,7 +149,9 @@
       "Bash(npx react-native-asset)",
       "WebSearch",
       "Bash($ANDROID_HOME/build-tools/34.0.0/aapt:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(pod install:*)",
+      "Bash(xcodebuild:*)"
     ],
     "deny": [],
     "ask": []
