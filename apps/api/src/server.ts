@@ -10,6 +10,8 @@ import { contentRoutes } from './routes/content.js';
 import { uploadRoutes } from './routes/upload.js';
 import { eventRoutes } from './routes/event.js';
 import paymentRoutes from './routes/payment.js';
+import { broadcastRoutes } from './routes/broadcastRoutes.js';
+import { getChatWebSocket } from './websocket/chatWebSocket.js';
 import prisma from './config/database.js';
 
 
@@ -85,6 +87,11 @@ async function build(): Promise<FastifyInstance> {
   await fastify.register(eventRoutes, { prefix: '/api/events' });
   await fastify.register(paymentRoutes, { prefix: '/api/payment' });
   await fastify.register(uploadRoutes, { prefix: '/api' });
+  await fastify.register(broadcastRoutes, { prefix: '/api' });
+
+  // Start WebSocket server for chat
+  const chatWebSocket = getChatWebSocket();
+  chatWebSocket.start(parseInt(process.env.WEBSOCKET_PORT || '3002', 10));
 
   // Global error handler
   fastify.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {

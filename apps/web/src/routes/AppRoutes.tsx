@@ -14,6 +14,7 @@ const VideoPlayerPage = lazy(() => import('../pages/VideoPlayerPage'))
 const MyListPage = lazy(() => import('../pages/MyListPage'))
 const LiveStreamingPage = lazy(() => import('../pages/LiveStreamingPage'))
 const LiveEventsPage = lazy(() => import('../pages/LiveEventsPage'))
+const LiveBroadcastPage = lazy(() => import('../pages/LiveBroadcastPage'))
 const PricingPage = lazy(() => import('../pages/PricingPage'))
 const PaymentSuccessPage = lazy(() => import('../pages/PaymentSuccessPage'))
 const PaymentErrorPage = lazy(() => import('../pages/PaymentErrorPage'))
@@ -61,6 +62,13 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <Suspense fallback={<LoadingSpinner />}>
               <LiveStreamingPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/live/:id" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LiveBroadcastPage />
             </Suspense>
           </ProtectedRoute>
         } />

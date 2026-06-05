@@ -130,6 +130,63 @@ model LiveEvent {
   @@map("live_events")
 }
 
+// ============ LIVE STREAMING BROADCAST ============
+
+enum BroadcastStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model BroadcastEvent {
+  id              String         @id @default(uuid())
+  title           String
+  description     String?        @db.Text
+  scheduled_time  DateTime       @default(now())
+  category        String         // "Sports", "Music", "Education", "Gaming", etc
+  chat_enabled    Boolean        @default(true)
+  status          BroadcastStatus @default(SCHEDULED)
+
+  // IVS Credentials (hardcoded from environment)
+  stream_key      String
+  rtmp_url        String
+  playback_url    String
+
+  viewer_count    Int            @default(0)
+  started_at      DateTime?
+  ended_at        DateTime?
+  created_by      String?        // Optional: user yang buat event
+
+  // Relationships
+  chat_messages   ChatMessage[]
+
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  @@index([status])
+  @@index([scheduled_time])
+  @@index([category])
+  @@map("broadcast_events")
+}
+
+model ChatMessage {
+  id              String         @id @default(uuid())
+  broadcast_id    String
+  username        String         // "Viewer" atau username user (kalau logged in)
+  message         String         @db.Text
+  is_host_message Boolean        @default(false)  // True kalau dari broadcaster
+
+  created_at      DateTime       @default(now())
+
+  // Relationship
+  broadcast       BroadcastEvent @relation(fields: [broadcast_id], references: [id], onDelete: Cascade)
+
+  @@index([broadcast_id])
+  @@index([created_at])
+  @@map("chat_messages")
+}
+
 // ============ PAYMENT SYSTEM ============
 
 enum PaymentType {
