@@ -44,9 +44,10 @@ async function build(): Promise<FastifyInstance> {
   // JWT
   await registerJwt(fastify);
 
-  // Static file serving for uploads (use fixed absolute path)
+  // Static file serving for uploads
+  const uploadsPath = process.env.UPLOADS_PATH || '/app/uploads';
   await fastify.register(fastifyStatic, {
-    root: '/var/www/vod/apps/api/uploads',
+    root: uploadsPath,
     prefix: '/api/uploads/',
     decorateReply: false,
   });

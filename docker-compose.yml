@@ -48,6 +48,9 @@ services:
       - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY}
       - MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY}
       - DISABLE_HLS_TRANSFORM=true
+      - UPLOADS_PATH=/var/www/vod/apps/api/uploads
+    volumes:
+      - /var/www/vod/apps/api/uploads:/var/www/vod/apps/api/uploads
     depends_on:
       postgres:
         condition: service_healthy
