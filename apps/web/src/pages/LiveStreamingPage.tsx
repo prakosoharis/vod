@@ -17,8 +17,8 @@ const LiveStreamingPage = () => {
 
   // Configuration
   const CONFIG = {
-    HLS_URL: (streamKey: string) => `https://live.mostara.id/hls/${streamKey}/index.m3u8`,
-    CHAT_SERVER: 'https://live.mostara.id',
+    HLS_URL: (streamKey: string) => `http://localhost:8089/hls/${streamKey}/index.m3u8`,
+    CHAT_SERVER: 'http://localhost:3002',
     RECONNECT_INTERVAL: 5000
   };
 

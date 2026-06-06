@@ -1,12 +1,31 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3006;
+
+// API proxy - forward /api requests to API service
+const apiTarget = process.env.API_SERVICE_URL || 'http://localhost:3005';
+const apiProxy = createProxyMiddleware({
+  target: apiTarget,
+  changeOrigin: true,
+  secure: false,
+});
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api')) {
+    apiProxy(req, res, next);
+  } else {
+    next();
+  }
+});
 
 // Serve static files from the dist directory with proper MIME types
 app.use(express.static(path.join(__dirname, 'dist'), {

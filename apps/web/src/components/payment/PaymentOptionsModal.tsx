@@ -32,13 +32,14 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
       paymentService.openMidtransSnap(
         response.data.token,
         () => {
-          // Success
+          // Success - redirect to payment success page for verification
           onClose();
-          navigate(`/watch/${content.id}`);
+          navigate(`/payment/success?order_id=${response.data.order_id}`);
         },
         (error) => {
           // Error
           console.error('Payment error:', error);
+          navigate(`/payment/error?order_id=${response.data.order_id}`);
         }
       );
     } catch (error: any) {

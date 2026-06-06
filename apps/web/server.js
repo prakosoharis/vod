@@ -20,24 +20,36 @@ app.use(express.static(path.join(__dirname, 'dist'), {
   }
 }));
 
-// API routes proxy (untuk development)
-if (isDev) {
-  app.use('/api', createProxyMiddleware({
-    target: 'http://localhost:3005',
-    changeOrigin: true,
-    secure: false,
-  }));
-}
-
-// Backoffice proxy (untuk production dan development)
-app.use('/backoffice', createProxyMiddleware({
-  target: 'http://localhost:3006',
+// API routes proxy
+const apiTarget = process.env.API_SERVICE_URL || 'http://localhost:3005';
+const apiProxy = createProxyMiddleware({
+  target: apiTarget,
   changeOrigin: true,
-  pathRewrite: {
-    '^/backoffice': '',
-  },
   secure: false,
-}));
+});
+// Use custom handler to preserve full /api path (Express app.use strips mount prefix)
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api')) {
+    apiProxy(req, res, next);
+  } else {
+    next();
+  }
+});
+
+// Backoffice proxy
+const backofficeTarget = process.env.BACKOFFICE_SERVICE_URL || 'http://localhost:3006';
+const backofficeProxy = createProxyMiddleware({
+  target: backofficeTarget,
+  changeOrigin: true,
+  secure: false,
+});
+app.use((req, res, next) => {
+  if (req.url.startsWith('/backoffice')) {
+    backofficeProxy(req, res, next);
+  } else {
+    next();
+  }
+});
 
 // Always serve the index.html for any request
 app.get('*', (req, res) => {

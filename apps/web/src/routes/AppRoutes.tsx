@@ -73,9 +73,11 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } />
         <Route path="/live-events" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <LiveEventsPage />
-          </Suspense>
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LiveEventsPage />
+            </Suspense>
+          </ProtectedRoute>
         } />
         <Route path="/pricing" element={
           <Layout>

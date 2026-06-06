@@ -37,7 +37,7 @@ export const LandingPage: React.FC = () => {
   const [paymentContent, setPaymentContent] = useState<Content | null>(null)
 
   // Live streaming check
-  const HLS_URL = (streamKey: string) => `https://live.mostara.id/hls/${streamKey}/index.m3u8`
+  const HLS_URL = (streamKey: string) => `http://localhost:8089/hls/${streamKey}/index.m3u8`
   const { streamStatus, checkStreamStatus } = useLiveStream({
     hlsUrl: HLS_URL,
     checkInterval: 30000

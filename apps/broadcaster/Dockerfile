@@ -1,22 +1,15 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY package-lock.json* ./
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-# Install dependencies
-RUN npm ci
-
-# Copy source code
 COPY . .
-
-# Build Next.js app
 RUN npm run build
 
-# Expose port
-EXPOSE 3000
+EXPOSE 3010
 
-# Start the application
+ENV PORT=3010
+
 CMD ["npm", "start"]

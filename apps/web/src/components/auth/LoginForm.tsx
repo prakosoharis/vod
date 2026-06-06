@@ -6,7 +6,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/stores/authStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const loginSchema = z.object({
   email: z.string().email('Format email tidak valid'),
@@ -26,6 +26,8 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
 
   const { login, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from || '/browse';
 
   const {
     register,
@@ -41,7 +43,7 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
       if (isModal && onSuccess) {
         onSuccess();
       } else {
-        navigate('/browse');
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
       // Error is handled by the store

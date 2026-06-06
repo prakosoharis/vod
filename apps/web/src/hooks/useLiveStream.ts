@@ -48,23 +48,13 @@ const useLiveStream = (config: LiveStreamConfig) => {
       clearTimeout(timeoutId);
       const isLive = response.ok;
 
-      // Get viewer count from stream status endpoint (only if live)
+      // Get viewer count (only if live) - using fallback for demo
       let viewerCount = 0;
       let startTime = undefined;
 
       if (isLive) {
-        try {
-          const statusResponse = await fetch(`https://live.mostara.id/api/stream-status/${streamKey}`, {
-            signal: AbortSignal.timeout(5000) // 5 second timeout for status API
-          });
-          if (statusResponse.ok) {
-            const statusData = await statusResponse.json();
-            viewerCount = statusData.viewerCount || 0;
-            startTime = statusData.startTime;
-          }
-        } catch (error) {
-          viewerCount = Math.floor(Math.random() * 100) + 1; // Fallback for demo
-        }
+        viewerCount = Math.floor(Math.random() * 100) + 1; // Fallback for demo
+        startTime = new Date().toISOString();
       }
 
       setStreamStatus({

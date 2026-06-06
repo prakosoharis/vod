@@ -18,11 +18,8 @@ export default async function paymentRoutes(fastify: FastifyInstance) {
   // Public routes
   fastify.get('/subscription/plans', getSubscriptionPlans);
 
-  // Webhook - no auth required
+  // Webhook - no auth required (called by Midtrans server)
   fastify.post('/webhook', handleWebhook);
-
-  // Dev webhook simulator (only for development)
-  fastify.post('/dev-webhook/:orderId', devWebhookSimulator);
 
   // Protected routes
   fastify.register(async (protectedRoutes) => {
@@ -45,5 +42,8 @@ export default async function paymentRoutes(fastify: FastifyInstance) {
 
     // Transaction status
     protectedRoutes.get('/transaction/:orderId', getTransactionStatus);
+
+    // Dev webhook simulator (sandbox only, requires auth for ownership check)
+    protectedRoutes.post('/dev-webhook/:orderId', devWebhookSimulator);
   });
 }

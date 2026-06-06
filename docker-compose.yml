@@ -1,62 +1,197 @@
-version: '3.8'
-
 services:
+  # ================================================================
+  # PostgreSQL Database
+  # ================================================================
   postgres:
     image: postgres:15-alpine
-    container_name: streamkita-postgres
+    container_name: vod-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: streamkita
-      POSTGRES_PASSWORD: streamkita123
-      POSTGRES_DB: streamkita_dev
+      POSTGRES_USER: ${POSTGRES_USER:-streamkita}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-streamkita123}
+      POSTGRES_DB: ${POSTGRES_DB:-streamkita_dev}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U streamkita -d streamkita_dev"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-streamkita} -d ${POSTGRES_DB:-streamkita_dev}"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-# Nginx RTMP Streaming Server
-  nginx-rtmp:
-    build:
-      context: ./rtmp
-      dockerfile: Dockerfile
-    container_name: nginx-rtmp
-    ports:
-      - "1935:1935"   # RTMP port
-      - "8080:80"     # HLS HTTP port
-    volumes:
-      - ./rtmp/hls:/usr/local/nginx/html/hls
-      - ./rtmp/data:/usr/local/nginx/html/data
-    environment:
-      - NGINX_PORT=80
-    restart: unless-stopped
     networks:
-      - live-streaming
+      - vod-network
 
-  # Live Chat Server
-  live-chat:
+  # ================================================================
+  # API Server (Fastify + WebSocket Chat)
+  # ================================================================
+  api:
     build:
-      context: ./rtmp/chat
+      context: ./apps/api
       dockerfile: Dockerfile
-    container_name: live-chat
+    container_name: vod-api
+    restart: unless-stopped
     ports:
-      - "3007:3007"
+      - "${API_PORT:-3001}:3001"
+      - "${WS_PORT:-3002}:3002"
     environment:
       - NODE_ENV=production
-      - PORT=3007
-      - CORS_ORIGIN=https://mostara.id,https://live.mostara.id
-    restart: unless-stopped
+      - PORT=3001
+      - WEBSOCKET_PORT=3002
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-streamkita}:${POSTGRES_PASSWORD:-streamkita123}@postgres:5432/${POSTGRES_DB:-streamkita_dev}?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - IVS_STREAM_KEY=${IVS_STREAM_KEY}
+      - IVS_RTMP_URL=${IVS_RTMP_URL}
+      - IVS_PLAYBACK_URL=${IVS_PLAYBACK_URL}
+      - MIDTRANS_IS_PRODUCTION=${MIDTRANS_IS_PRODUCTION:-false}
+      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY}
+      - MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY}
+      - DISABLE_HLS_TRANSFORM=true
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
-      - live-streaming
+      - vod-network
+
+  # ================================================================
+  # Web Frontend (React + Express)
+  # ================================================================
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api}
+        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:3002}
+    container_name: vod-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - API_SERVICE_URL=http://api:3001
+      - BACKOFFICE_SERVICE_URL=http://backoffice:3006
+    depends_on:
+      - api
+      - backoffice
+    networks:
+      - vod-network
+
+  # ================================================================
+  # Backoffice Admin Panel (React + Express)
+  # ================================================================
+  backoffice:
+    build:
+      context: ./apps/backoffice
+      dockerfile: Dockerfile
+    container_name: vod-backoffice
+    restart: unless-stopped
+    ports:
+      - "${BACKOFFICE_PORT:-3006}:3006"
+    environment:
+      - NODE_ENV=production
+      - PORT=3006
+      - API_SERVICE_URL=http://api:3001
+    networks:
+      - vod-network
+
+  # ================================================================
+  # Broadcaster Dashboard (Next.js)
+  # ================================================================
+  broadcaster:
+    build:
+      context: ./apps/broadcaster
+      dockerfile: Dockerfile
+    container_name: vod-broadcaster
+    restart: unless-stopped
+    ports:
+      - "${BROADCASTER_PORT:-3010}:3010"
+    environment:
+      - NODE_ENV=production
+      - PORT=3010
+    networks:
+      - vod-network
+
+  # ================================================================
+  # MinIO - S3 Compatible Storage
+  # ================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: vod-minio
+    restart: unless-stopped
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - vod-network
+
+  # ================================================================
+  # HLS Transcoder Backend (Node.js + FFmpeg)
+  # ================================================================
+  hls-backend:
+    build:
+      context: ./services/hls-transcoder/backend
+      dockerfile: Dockerfile
+    container_name: vod-hls-backend
+    restart: unless-stopped
+    ports:
+      - "${HLS_BACKEND_PORT:-5000}:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-admin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-password123}
+      - MINIO_USE_SSL=false
+      - TEMP_BUCKET=temp-raw-aws
+      - PERM_BUCKET=perm-storage-wasabi
+      - CDN_BASE_URL=${CDN_BASE_URL:-http://localhost:8089}
+    volumes:
+      - ./services/hls-transcoder/backend/uploads:/app/uploads
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - vod-network
+
+  # ================================================================
+  # HLS CDN / Reverse Proxy (Nginx)
+  # ================================================================
+  hls-nginx:
+    image: nginx:alpine
+    container_name: vod-hls-nginx
+    restart: unless-stopped
+    ports:
+      - "${HLS_NGINX_PORT:-8089}:80"
+    volumes:
+      - ./services/hls-transcoder/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./services/hls-transcoder/frontend-test:/usr/share/nginx/html:ro
+    depends_on:
+      - minio
+      - hls-backend
+    networks:
+      - vod-network
 
 volumes:
   postgres_data:
     driver: local
+  minio_data:
+    driver: local
 
 networks:
-  live-streaming:
+  vod-network:
     driver: bridge

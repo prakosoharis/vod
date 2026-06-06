@@ -59,7 +59,7 @@ const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onC
   // Action button handlers
   const handlePlayClick = () => {
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/login', { state: { from: `/watch/${content?.id}` } })
       return
     }
 

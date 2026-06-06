@@ -159,14 +159,6 @@ const StreamStatus: React.FC<StreamStatusProps> = ({
             Last checked: {lastChecked.toLocaleTimeString('id-ID')}
           </div>
         )}
-
-        {/* OBS Instructions */}
-        <div className="bg-gray-800 p-3 rounded-lg text-xs">
-          <p className="font-semibold mb-1">OBS Studio Settings:</p>
-          <p>Service: Custom</p>
-          <p>Server: rtmp://live.mostara.id:1935/live</p>
-          <p>Stream Key: {customStreamKey.trim() || defaultStreamKey}</p>
-        </div>
       </CardContent>
     </Card>
   );

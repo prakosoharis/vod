@@ -6,6 +6,11 @@ import { ContentType } from '@prisma/client';
 function transformMediaUrls(content: any) {
   if (!content) return content;
 
+  // Skip transform if explicitly disabled (for local development with docker)
+  if (process.env.DISABLE_HLS_TRANSFORM === 'true') {
+    return content;
+  }
+
   const PRODUCTION_HLS_URL = process.env.HLS_CDN_URL || 'https://upload.transcode.mostara.id';
   const LOCALHOST_PATTERNS = [
     'http://localhost:8080',

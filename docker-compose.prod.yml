@@ -1,0 +1,86 @@
+# ================================================================
+# Production Override for Ubuntu Server
+# ================================================================
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This file:
+# - Binds ports to 127.0.0.1 only (host nginx handles public access)
+# - Uses production build args
+# - Adds logging limits
+# ================================================================
+
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  api:
+    ports:
+      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:3002:3002"
+    environment:
+      - FRONTEND_URL=${FRONTEND_URL:-https://mostara.id}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    build:
+      args:
+        - VITE_API_BASE_URL=/api
+        - VITE_WS_URL=${VITE_WS_URL:-wss://mostara.id/ws}
+    ports:
+      - "127.0.0.1:3000:3000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backoffice:
+    ports:
+      - "127.0.0.1:3006:3006"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  broadcaster:
+    ports:
+      - "127.0.0.1:3010:3010"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  minio:
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  hls-backend:
+    environment:
+      - CDN_BASE_URL=${CDN_BASE_URL:-https://transcode.mostara.id}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  hls-nginx:
+    ports:
+      - "127.0.0.1:8089:80"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

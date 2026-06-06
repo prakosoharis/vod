@@ -80,19 +80,7 @@ export const createSubscription = async (
     const expiredAt = new Date();
     expiredAt.setDate(expiredAt.getDate() + plan.duration_days);
 
-    // Create subscription (pending)
-    const subscription = await prisma.userSubscription.create({
-      data: {
-        user_id: userId,
-        plan_id: plan.id,
-        status: 'ACTIVE', // Will be set to ACTIVE after payment
-        started_at: new Date(),
-        expired_at: expiredAt,
-        auto_renew: true,
-      },
-    });
-
-    // Create transaction
+    // Create transaction with plan info in metadata (subscription created on webhook)
     const transaction = await prisma.transaction.create({
       data: {
         user_id: userId,
@@ -100,7 +88,11 @@ export const createSubscription = async (
         payment_type: 'SUBSCRIPTION',
         amount: plan.price,
         status: 'PENDING',
-        subscription_id: subscription.id,
+        metadata: {
+          plan_id: plan.id,
+          duration_days: plan.duration_days,
+          expired_at: expiredAt.toISOString(),
+        },
       },
     });
 
@@ -198,14 +190,27 @@ export const rentContent = async (
       });
     }
 
-    // Get rental price
-    const rentalPrice = await prisma.rentalPrice.findUnique({
+    // Get rental price (fallback to default if not set)
+    let rentalPrice = await prisma.rentalPrice.findUnique({
       where: { content_id },
       include: { content: true },
     });
 
-    if (!rentalPrice || !rentalPrice.is_active) {
-      return reply.status(404).send({ success: false, error: 'Rental price not found' });
+    if (!rentalPrice) {
+      // Auto-create default rental price for this content
+      rentalPrice = await prisma.rentalPrice.create({
+        data: {
+          content_id,
+          price: 10000,
+          duration_hours: 24,
+          is_active: true,
+        },
+        include: { content: true },
+      });
+    }
+
+    if (!rentalPrice.is_active) {
+      return reply.status(400).send({ success: false, error: 'Rental is not available for this content' });
     }
 
     // Get user details
@@ -490,12 +495,21 @@ export const handleWebhook = async (
 
     // If payment successful, grant access
     if (paymentStatus === 'SETTLEMENT') {
-      if (transaction.payment_type === 'SUBSCRIPTION' && transaction.subscription_id) {
-        // Activate subscription
-        await prisma.userSubscription.update({
-          where: { id: transaction.subscription_id },
-          data: { status: 'ACTIVE' },
-        });
+      if (transaction.payment_type === 'SUBSCRIPTION') {
+        // Create subscription on successful payment
+        const metadata = transaction.metadata as any;
+        if (metadata?.plan_id) {
+          await prisma.userSubscription.create({
+            data: {
+              user_id: transaction.user_id,
+              plan_id: metadata.plan_id,
+              status: 'ACTIVE',
+              started_at: new Date(),
+              expired_at: new Date(metadata.expired_at),
+              auto_renew: true,
+            },
+          });
+        }
       } else if (transaction.payment_type === 'RENTAL') {
         // Create rental access
         const metadata = transaction.metadata as any;
@@ -733,8 +747,8 @@ export const devWebhookSimulator = async (
   reply: FastifyReply
 ) => {
   try {
-    // Only allow in development mode
-    if (process.env.NODE_ENV === 'production') {
+    // Only allow when using Midtrans sandbox (not production payment)
+    if (process.env.MIDTRANS_IS_PRODUCTION === 'true') {
       return reply.status(403).send({ success: false, error: 'Dev webhook not available in production' });
     }
 
@@ -743,13 +757,21 @@ export const devWebhookSimulator = async (
     // Get transaction
     const transaction = await prisma.transaction.findUnique({
       where: { order_id: orderId },
-      include: {
-        subscription: true,
-      },
     });
 
     if (!transaction) {
       return reply.status(404).send({ success: false, error: 'Transaction not found' });
+    }
+
+    // Check ownership
+    const userId = (request.user as any).userId;
+    if (transaction.user_id !== userId) {
+      return reply.status(403).send({ success: false, error: 'Unauthorized' });
+    }
+
+    // Already settled - skip
+    if (transaction.status === 'SETTLEMENT') {
+      return reply.send({ success: true, message: 'Transaction already settled' });
     }
 
     // Simulate successful payment
@@ -766,12 +788,21 @@ export const devWebhookSimulator = async (
 
     // Grant access based on payment type
     if (paymentStatus === 'SETTLEMENT') {
-      if (transaction.payment_type === 'SUBSCRIPTION' && transaction.subscription_id) {
-        // Activate subscription
-        await prisma.userSubscription.update({
-          where: { id: transaction.subscription_id },
-          data: { status: 'ACTIVE' },
-        });
+      if (transaction.payment_type === 'SUBSCRIPTION') {
+        // Create subscription on successful payment
+        const metadata = transaction.metadata as any;
+        if (metadata?.plan_id) {
+          await prisma.userSubscription.create({
+            data: {
+              user_id: transaction.user_id,
+              plan_id: metadata.plan_id,
+              status: 'ACTIVE',
+              started_at: new Date(),
+              expired_at: new Date(metadata.expired_at),
+              auto_renew: true,
+            },
+          });
+        }
       } else if (transaction.payment_type === 'RENTAL') {
         // Create rental access
         const metadata = transaction.metadata as any;

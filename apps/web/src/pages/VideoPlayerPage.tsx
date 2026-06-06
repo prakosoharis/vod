@@ -1,5 +1,6 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft,
   Play,
@@ -11,7 +12,9 @@ import {
   SkipForward,
   ThumbsUp,
   Plus,
-  Share2
+  Share2,
+  Loader2,
+  Lock
 } from 'lucide-react'
 
 // Import custom hooks
@@ -22,17 +25,21 @@ import { useContentModal } from '@/hooks/useModal'
 // Import components
 import ContentRow from '@/components/home/ContentRow'
 import ContentDetailModal from '@/components/content/ContentDetailModal'
+import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { HLSPlayer } from '@/components/video/HLSPlayer'
 
 // Import services
 import { userService } from '@/services/user.service'
+import { paymentService } from '@/services/payment.service'
 import { useAuthStore } from '@/stores/authStore'
 
 const VideoPlayerPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { isAuthenticated } = useAuthStore()
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   // Use custom hooks
   const {
@@ -53,6 +60,15 @@ const VideoPlayerPage = () => {
     contentId: id,
     enabled: !!id
   })
+
+  // Check payment access to this content
+  const { data: accessInfo, isLoading: checkingAccess, refetch: refetchAccess } = useQuery({
+    queryKey: ['content-access', id],
+    queryFn: () => id ? paymentService.checkContentAccess(id) : null,
+    enabled: !!id && isAuthenticated,
+  })
+
+  const hasAccess = accessInfo?.data?.has_access || false
 
   const {
     isOpen: modalOpen,
@@ -222,7 +238,7 @@ const VideoPlayerPage = () => {
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [videoActions, videoState.duration, videoRef])
 
-  if (isLoading) {
+  if (isLoading || checkingAccess) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -242,6 +258,64 @@ const VideoPlayerPage = () => {
             Kembali ke Browse
           </button>
         </div>
+      </div>
+    )
+  }
+
+  // Show payment wall if user has no access
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="max-w-lg w-full mx-4">
+          {/* Content Preview */}
+          <div className="relative rounded-xl overflow-hidden mb-6">
+            <img
+              src={content.backdrop_url || content.thumbnail_url}
+              alt={content.title}
+              className="w-full h-48 object-cover"
+            />
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <div className="text-center">
+                <Lock className="w-12 h-12 text-white/80 mx-auto mb-3" />
+                <h2 className="text-xl font-bold text-white">{content.title}</h2>
+                <p className="text-white/70 text-sm mt-1">Konten ini memerlukan pembayaran</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              className="w-full py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold text-lg rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              <Play size={20} fill="white" />
+              Sewa / Berlangganan untuk Nonton
+            </button>
+            <button
+              onClick={() => navigate('/browse')}
+              className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-colors"
+            >
+              Kembali ke Browse
+            </button>
+          </div>
+
+          {/* Access Info */}
+          {accessInfo?.data?.access_type === null && (
+            <p className="text-gray-400 text-center text-sm mt-4">
+              Belum berlangganan? Sewa film ini mulai Rp 10.000 atau berlangganan untuk akses unlimited.
+            </p>
+          )}
+        </div>
+
+        {/* Payment Options Modal */}
+        {content && (
+          <PaymentOptionsModal
+            content={content}
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+          />
+        )}
       </div>
     )
   }
