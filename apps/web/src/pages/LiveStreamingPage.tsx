@@ -12,13 +12,23 @@ import LiveChat from '@/components/live/LiveChat';
 // Import custom hook
 import useLiveStream from '@/hooks/useLiveStream';
 
+interface BroadcastEvent {
+  id: string;
+  title: string;
+  status: 'SCHEDULED' | 'LIVE' | 'ENDED' | 'CANCELLED';
+}
+
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3002';
+
 const LiveStreamingPage = () => {
   const [defaultStreamKey] = useState('deluwang-live');
+  const [liveBroadcastId, setLiveBroadcastId] = useState<string | null>(null);
 
   // Configuration
   const CONFIG = {
     HLS_URL: (streamKey: string) => `http://localhost:8089/hls/${streamKey}/index.m3u8`,
-    CHAT_SERVER: 'http://localhost:3002',
+    CHAT_SERVER: WS_URL,
     RECONNECT_INTERVAL: 5000
   };
 
@@ -32,6 +42,28 @@ const LiveStreamingPage = () => {
     checkInterval: 30000
   });
 
+  // Fetch live broadcast info
+  useEffect(() => {
+    const fetchLiveBroadcast = async () => {
+      try {
+        const response = await fetch(`${API_URL}/broadcasts`);
+        if (response.ok) {
+          const broadcasts: BroadcastEvent[] = await response.json();
+          const liveBroadcast = broadcasts.find(b => b.status === 'LIVE');
+          if (liveBroadcast) {
+            setLiveBroadcastId(liveBroadcast.id);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching live broadcast:', error);
+      }
+    };
+
+    fetchLiveBroadcast();
+    const interval = setInterval(fetchLiveBroadcast, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Auto-check for stream on mount and set up interval
   useEffect(() => {
     setTimeout(() => {
@@ -40,7 +72,7 @@ const LiveStreamingPage = () => {
 
     const interval = setInterval(() => {
       checkStreamStatus(defaultStreamKey);
-    }, 30000); // Check every 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [defaultStreamKey, checkStreamStatus]);
@@ -109,7 +141,13 @@ const LiveStreamingPage = () => {
 
           {/* Chat Section */}
           <div className="lg:col-span-1">
-            <LiveChat chatServer={CONFIG.CHAT_SERVER} />
+            {liveBroadcastId ? (
+              <LiveChat chatServer={CONFIG.CHAT_SERVER} broadcastId={liveBroadcastId} />
+            ) : (
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center text-gray-500">
+                Tidak ada siaran live saat ini
+              </div>
+            )}
           </div>
         </div>
       </div>

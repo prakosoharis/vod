@@ -14,9 +14,13 @@ export class ChatWebSocket {
   private io: SocketIOServer;
   private httpServer: ReturnType<typeof createServer>;
 
-  constructor() {
+  private path: string;
+
+  constructor(path: string = '/socket.io/') {
+    this.path = path;
     this.httpServer = createServer();
     this.io = new SocketIOServer(this.httpServer, {
+      path: this.path,
       cors: {
         origin: '*',
         methods: ['GET', 'POST'],
@@ -45,6 +49,15 @@ export class ChatWebSocket {
 
       // Receive chat message
       socket.on('send-chat', async (data: ChatMessage) => {
+        console.log('📨 Received chat data:', JSON.stringify(data, null, 2));
+        console.log('📨 Data types:', {
+          broadcast_id: typeof data.broadcast_id,
+          broadcast_id_value: data.broadcast_id,
+          username: typeof data.username,
+          message: typeof data.message,
+          is_host_message: typeof data.is_host_message
+        });
+
         try {
           // Save to database
           const chatMessage = await broadcastService.createChatMessage(
@@ -115,9 +128,9 @@ export class ChatWebSocket {
 // Singleton instance
 let chatWebSocket: ChatWebSocket | null = null;
 
-export function getChatWebSocket(): ChatWebSocket {
+export function getChatWebSocket(path?: string): ChatWebSocket {
   if (!chatWebSocket) {
-    chatWebSocket = new ChatWebSocket();
+    chatWebSocket = new ChatWebSocket(path);
   }
   return chatWebSocket;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -9,9 +9,11 @@ import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal';
 import { contentService } from '@/services/content.service';
 import { paymentService } from '@/services/payment.service';
 import { userService } from '@/services/user.service';
-import useLiveStream from '@/hooks/useLiveStream';
 import { Radio, Play } from 'lucide-react';
 import type { Content } from '@/types';
+
+// API base URL
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.mostara.id/api';
 
 // Simple Loading
 const LoadingSkeleton = () => (
@@ -36,20 +38,19 @@ export const LandingPage: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentContent, setPaymentContent] = useState<Content | null>(null)
 
-  // Live streaming check
-  const HLS_URL = (streamKey: string) => `http://localhost:8089/hls/${streamKey}/index.m3u8`
-  const { streamStatus, checkStreamStatus } = useLiveStream({
-    hlsUrl: HLS_URL,
-    checkInterval: 30000
+  // Fetch LIVE broadcasts for live streaming banner
+  const { data: liveBroadcasts } = useQuery({
+    queryKey: ['live-broadcasts'],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/broadcasts?status=LIVE`)
+      if (!response.ok) throw new Error('Failed to fetch live broadcasts')
+      return response.json()
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
   })
 
-  useEffect(() => {
-    checkStreamStatus('deluwang-live')
-    const interval = setInterval(() => {
-      checkStreamStatus('deluwang-live')
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [checkStreamStatus])
+  // Check if there's any live broadcast
+  const hasLiveStream = liveBroadcasts && liveBroadcasts.length > 0
 
   // SIMPLE: Load everything at once - NO staggered delays!
   const { data: featured, isLoading: loadingFeatured } = useQuery<Content[]>({
@@ -171,10 +172,10 @@ export const LandingPage: React.FC = () => {
       )}
 
       {/* Live Streaming Banner - Only show when live */}
-      {streamStatus.isLive && (
+      {hasLiveStream && (
         <div className="px-6 md:px-12 pt-12 md:pt-24">
           <button
-            onClick={() => navigate('/live')}
+            onClick={() => navigate(`/live/${liveBroadcasts[0].id}`)}
             className="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 rounded-2xl p-6 md:p-8 transition-all duration-300 transform hover:scale-[1.02] cursor-pointer"
           >
             <div className="flex items-center justify-between">
@@ -182,7 +183,7 @@ export const LandingPage: React.FC = () => {
                 <Radio className="w-6 h-6 md:w-8 md:h-8 text-cream-50 animate-pulse" />
                 <div className="text-left">
                   <h2 className="text-xl md:text-2xl font-bold text-cream-50 mb-1">Live Sekarang</h2>
-                  <p className="text-cream-100 text-xs md:text-sm">Streaming sedang berlangsung - Klik untuk menonton</p>
+                  <p className="text-cream-100 text-xs md:text-sm">{liveBroadcasts[0].title} - Klik untuk menonton</p>
                 </div>
               </div>
               <div className="bg-cream-50 text-primary-500 px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold text-sm md:text-base">
@@ -194,7 +195,7 @@ export const LandingPage: React.FC = () => {
       )}
 
       {/* TONIGHT'S PICK - Signature Hero Card */}
-      {!streamStatus.isLive && movies && movies.length > 0 && (
+      {!hasLiveStream && movies && movies.length > 0 && (
         <div className="pt-16 px-6 md:px-12">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-1.5 h-8 bg-accent-500 rounded-full"></div>
