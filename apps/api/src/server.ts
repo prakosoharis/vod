@@ -30,7 +30,7 @@ async function build(): Promise<FastifyInstance> {
 
   // CORS
   await fastify.register(cors, {
-    origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id', '*'],
+    origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id', 'https://broadcaster.mostara.id', '*'],
     credentials: true,
   });
 
@@ -91,7 +91,8 @@ async function build(): Promise<FastifyInstance> {
   await fastify.register(broadcastRoutes, { prefix: '/api' });
 
   // Start WebSocket server for chat
-  const chatWebSocket = getChatWebSocket();
+  const wsPath = process.env.WEBSOCKET_PATH || '/ws';
+  const chatWebSocket = getChatWebSocket(wsPath);
   chatWebSocket.start(parseInt(process.env.WEBSOCKET_PORT || '3002', 10));
 
   // Global error handler

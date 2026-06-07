@@ -159,8 +159,12 @@ const LiveBroadcastPage: React.FC = () => {
   useEffect(() => {
     if (!id) return;
 
-    const socket = io(WS_URL, {
+    const wsUrl = WS_URL;
+    const wsPath = wsUrl.includes('/ws') ? '/ws' : '/socket.io/';
+
+    const socket = io(wsUrl.replace('/ws', ''), {
       transports: ['websocket', 'polling'],
+      path: wsPath,
     });
 
     socket.on('connect', () => {

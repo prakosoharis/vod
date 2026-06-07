@@ -53,7 +53,13 @@ export default function BroadcasterPage() {
 
   // WebSocket connection
   useEffect(() => {
-    const socketInstance = io(WS_URL);
+    const wsPath = WS_URL.includes('/ws') ? '/ws' : '/socket.io/';
+    const wsBaseUrl = WS_URL.replace('/ws', '');
+
+    const socketInstance = io(wsBaseUrl, {
+      transports: ['websocket', 'polling'],
+      path: wsPath,
+    });
 
     socketInstance.on('connect', () => {
       console.log('Connected to chat WebSocket');

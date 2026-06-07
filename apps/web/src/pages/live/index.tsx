@@ -36,8 +36,8 @@ export default function LivePage() {
   const socketRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3002';
+  const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+  const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3002';
 
   // Fetch broadcasts
   useEffect(() => {
@@ -46,7 +46,13 @@ export default function LivePage() {
 
   // WebSocket connection
   useEffect(() => {
-    const socket = io(WS_URL);
+    const wsPath = WS_URL.includes('/ws') ? '/ws' : '/socket.io/';
+    const wsUrl = WS_URL.replace('/ws', '');
+
+    const socket = io(wsUrl, {
+      path: wsPath,
+      transports: ['websocket', 'polling'],
+    });
 
     socket.on('connect', () => {
       console.log('Connected to chat WebSocket');
@@ -106,7 +112,7 @@ export default function LivePage() {
   const fetchBroadcasts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/broadcasts`);
+      const response = await fetch(`${API_URL}/broadcasts`);
       const data = await response.json();
       setBroadcasts(data);
 

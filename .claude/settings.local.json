@@ -152,7 +152,14 @@
       "Bash(unzip:*)",
       "Bash(pod install:*)",
       "Bash(xcodebuild:*)",
-      "Bash(fi:*)"
+      "Bash(fi:*)",
+      "Bash(./deploy-docker.sh:*)",
+      "Bash(fuser:*)",
+      "Bash(vod_api:*)",
+      "Bash(vite build:*)",
+      "Bash(npx vite:*)",
+      "Bash(vod-web:*)",
+      "Bash(certbot:*)"
     ],
     "deny": [],
     "ask": []

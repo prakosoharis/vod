@@ -7,23 +7,24 @@ import { MessageCircle, Send, Wifi, WifiOff } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
 interface ChatMessage {
-  id: number;
+  id: string;
+  broadcast_id: string;
   username: string;
   message: string;
-  timestamp: string;
-  userId: string;
+  is_host_message: boolean;
+  created_at: string;
 }
 
 interface LiveChatProps {
   chatServer: string;
+  broadcastId: string;
 }
 
-const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
+const LiveChat: React.FC<LiveChatProps> = ({ chatServer, broadcastId }) => {
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
-  const [viewerCount, setViewerCount] = useState(0);
 
   const socketRef = useRef<Socket | null>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -33,15 +34,19 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
 
     return () => {
       if (socketRef.current) {
+        socketRef.current.emit('leave-broadcast', broadcastId);
         socketRef.current.disconnect();
       }
     };
-  }, []);
+  }, [broadcastId]);
 
   const initializeChat = () => {
     try {
-      socketRef.current = io(chatServer, {
-        path: '/socket.io/',
+      const wsPath = chatServer.includes('/ws') ? '/ws' : '/socket.io/';
+      const wsUrl = chatServer.replace('/ws', '');
+
+      socketRef.current = io(wsUrl, {
+        path: wsPath,
         transports: ['websocket', 'polling'],
         secure: true,
         rejectUnauthorized: false
@@ -49,28 +54,22 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
 
       socketRef.current.on('connect', () => {
         setIsConnected(true);
-        socketRef.current?.emit('userInfo', {
-          username: user?.full_name || user?.email?.split('@')[0] || 'Anonymous'
-        });
+        socketRef.current?.emit('join-broadcast', broadcastId);
       });
 
       socketRef.current.on('disconnect', () => {
         setIsConnected(false);
       });
 
-      socketRef.current.on('message', (message: ChatMessage) => {
+      socketRef.current.on('recent-messages', (previousMessages: ChatMessage[]) => {
+        setMessages(previousMessages);
+      });
+
+      socketRef.current.on('chat-message', (message: ChatMessage) => {
         setMessages(prev => [...prev, message]);
         setTimeout(() => {
           chatMessagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }, 100);
-      });
-
-      socketRef.current.on('previousMessages', (previousMessages: ChatMessage[]) => {
-        setMessages(previousMessages);
-      });
-
-      socketRef.current.on('viewerCount', (count: number) => {
-        setViewerCount(count);
       });
 
       socketRef.current.on('connect_error', () => {
@@ -84,7 +83,13 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
 
   const sendMessage = () => {
     if (newMessage.trim() && socketRef.current && isConnected) {
-      socketRef.current.emit('message', newMessage.trim());
+      const username = user?.full_name || user?.email?.split('@')[0] || 'Anonymous';
+      socketRef.current.emit('send-chat', {
+        broadcast_id: broadcastId,
+        username,
+        message: newMessage.trim(),
+        is_host_message: false
+      });
       setNewMessage('');
     }
   };
@@ -116,7 +121,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
             {isConnected ? (
               <div className="flex items-center gap-1 text-green-500">
                 <Wifi className="w-4 h-4" />
-                <span className="text-xs">{viewerCount}</span>
+                <span className="text-xs">Connected</span>
               </div>
             ) : (
               <div className="flex items-center gap-1 text-red-500">
@@ -144,11 +149,14 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer }) => {
             messages.map((message) => (
               <div key={message.id} className="break-words">
                 <div className="flex items-start gap-2">
-                  <span className="font-semibold text-sm text-blue-400 min-w-0">
+                  <span className={`font-semibold text-sm min-w-0 ${
+                    message.is_host_message ? 'text-yellow-400' : 'text-blue-400'
+                  }`}>
+                    {message.is_host_message && '[HOST] '}
                     {message.username}
                   </span>
                   <span className="text-xs text-gray-500 flex-shrink-0">
-                    {formatTimestamp(message.timestamp)}
+                    {formatTimestamp(message.created_at)}
                   </span>
                 </div>
                 <p className="text-sm text-gray-300 ml-0 break-words">
