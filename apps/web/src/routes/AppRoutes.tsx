@@ -11,6 +11,7 @@ const RegisterPage = lazy(() => import('../pages/RegisterPage'))
 const BrowsePage = lazy(() => import('../pages/BrowsePage'))
 const UpcomingPage = lazy(() => import('../pages/UpcomingPage'))
 const VideoPlayerPage = lazy(() => import('../pages/VideoPlayerPage'))
+const WatchHistoryPage = lazy(() => import('../pages/WatchHistoryPage'))
 const MyListPage = lazy(() => import('../pages/MyListPage'))
 const LiveStreamingPage = lazy(() => import('../pages/LiveStreamingPage'))
 const LiveEventsPage = lazy(() => import('../pages/LiveEventsPage'))
@@ -118,6 +119,16 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <Suspense fallback={<LoadingSpinner />}>
                 <MyListPage />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/watch-history"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<LoadingSpinner />}>
+                <WatchHistoryPage />
               </Suspense>
             </ProtectedRoute>
           }

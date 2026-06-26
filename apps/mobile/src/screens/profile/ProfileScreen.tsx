@@ -8,6 +8,7 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { SafeIcon } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS, THEME } from '../../constants';
@@ -15,6 +16,7 @@ import Button from '../../components/ui/Button';
 
 const ProfileScreen: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuthStore();
+  const navigation = useNavigation();
 
   const handleLogout = () => {
     Alert.alert(
@@ -39,13 +41,31 @@ const ProfileScreen: React.FC = () => {
       icon: 'bookmark-border',
       title: 'Daftar Saya',
       subtitle: 'Lihat film dan serial yang ditandai',
-      onPress: () => console.log('Navigate to My List'),
+      onPress: () => navigation.navigate('MyList'),
     },
     {
       icon: 'history',
       title: 'Riwayat Tontonan',
       subtitle: 'Lihat film yang telah ditonton',
-      onPress: () => console.log('Navigate to Watch History'),
+      onPress: () => navigation.navigate('WatchHistory'),
+    },
+    {
+      icon: 'workspace-premium',
+      title: 'Langganan',
+      subtitle: 'Kelola langganan Anda',
+      onPress: () => navigation.navigate('Subscription'),
+    },
+    {
+      icon: 'local-movies',
+      title: 'Film Disewa',
+      subtitle: 'Lihat film yang Anda sewa',
+      onPress: () => navigation.navigate('RentalHistory'),
+    },
+    {
+      icon: 'event',
+      title: 'Live Events',
+      subtitle: 'Lihat siaran langsung dan jadwal',
+      onPress: () => navigation.navigate('LiveEvents'),
     },
     {
       icon: 'file-download',
@@ -64,12 +84,6 @@ const ProfileScreen: React.FC = () => {
       title: 'Bantuan',
       subtitle: 'Dapatkan bantuan dan dukungan',
       onPress: () => console.log('Navigate to Help'),
-    },
-    {
-      icon: 'info-outline',
-      title: 'Tentang',
-      subtitle: 'Informasi tentang aplikasi',
-      onPress: () => console.log('Navigate to About'),
     },
   ];
 

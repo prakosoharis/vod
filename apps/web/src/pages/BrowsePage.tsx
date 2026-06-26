@@ -5,6 +5,7 @@ import ContentRow from '@/components/home/ContentRow'
 import FeaturedCarousel from '@/components/home/FeaturedCarousel'
 import ContentDetailModal from '@/components/content/ContentDetailModal'
 import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal'
+import ContentCard from '@/components/content/ContentCard'
 import { contentService } from '@/services/content.service'
 import { userService } from '@/services/auth.service'
 import { paymentService } from '@/services/payment.service'
@@ -35,11 +36,22 @@ const BrowsePage = () => {
   const [loadSecondary, setLoadSecondary] = useState(false)
   const [loadGenre, setLoadGenre] = useState(false)
 
+  // State for genre filtering
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
+
   // State for modal
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedContent, setSelectedContent] = useState<Content | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentContent, setPaymentContent] = useState<Content | null>(null)
+
+  // Available genres
+  const genres = [
+    'Action', 'Drama', 'Comedy', 'Horror', 'Thriller', 'Sci-Fi',
+    'Romance', 'Animation', 'Documentary', 'Fantasy', 'Mystery',
+    'Adventure', 'Crime', 'Family', 'War', 'Musical', 'Biography',
+    'History', 'Sport', 'Indonesian'
+  ]
 
   // Load secondary content after 1 second
   useEffect(() => {
@@ -138,6 +150,22 @@ const BrowsePage = () => {
     enabled: !!selectedContent?.genre?.[0]
   })
 
+  // Genre filtered content
+  const { data: genreFilteredContent, isLoading: loadingGenreFilter } = useQuery<{
+    data: Content[]
+    total: number
+  }>({
+    queryKey: ['genre-filter', selectedGenre],
+    queryFn: async () => {
+      if (!selectedGenre) return { data: [], total: 0 }
+      return await contentService.getAllContent({
+        genre: selectedGenre,
+        limit: 50
+      })
+    },
+    enabled: !!selectedGenre
+  })
+
   // Modal handlers
   const openModal = (content: Content) => {
     setSelectedContent(content)
@@ -194,6 +222,37 @@ const BrowsePage = () => {
 
   return (
     <div className="bg-warm-charcoal-100 min-h-screen">
+      {/* Genre Filter Section */}
+      <div className="sticky top-0 z-20 bg-warm-charcoal-100/95 backdrop-blur-sm border-b border-warm-charcoal-50 px-4 py-3">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
+            <button
+              onClick={() => setSelectedGenre(null)}
+              className={`px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-all ${
+                selectedGenre === null
+                  ? 'bg-accent-500 text-white shadow-coffee-glow'
+                  : 'bg-warm-charcoal-50 text-gray-400 hover:bg-warm-charcoal-100 hover:text-gray-300'
+              }`}
+            >
+              Semua
+            </button>
+            {genres.map((genre) => (
+              <button
+                key={genre}
+                onClick={() => setSelectedGenre(genre)}
+                className={`px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-all ${
+                  selectedGenre === genre
+                    ? 'bg-accent-500 text-white shadow-coffee-glow'
+                    : 'bg-warm-charcoal-50 text-gray-400 hover:bg-warm-charcoal-100 hover:text-gray-300'
+                }`}
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Featured Carousel */}
       {featured && featured.length >= 3 && (
         <FeaturedCarousel
@@ -206,13 +265,46 @@ const BrowsePage = () => {
 
       {/* Negative margin to overlap hero */}
       <div className="relative -mt-22 z-10 space-y-12 pb-20 pt-8">
+        {/* Genre Filter Results */}
+        {selectedGenre && (
+          <div className="px-4 sm:px-6 lg:px-8">
+            {loadingGenreFilter ? (
+              <div className="space-y-4">
+                <div className="h-6 w-48 bg-gray-800 rounded animate-pulse" />
+                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
+              </div>
+            ) : genreFilteredContent && genreFilteredContent.data.length > 0 ? (
+              <>
+                <h2 className="text-2xl font-bold mb-4">
+                  {selectedGenre} <span className="text-gray-400 text-lg font-normal">({genreFilteredContent.total} hasil)</span>
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {genreFilteredContent.data.map((content) => (
+                    <div key={content.id} className="group">
+                      <ContentCard
+                        content={content}
+                        onPress={() => openModal(content)}
+                        onPlay={() => handlePlayClick(content)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-400">Tidak ada konten untuk genre {selectedGenre}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 1. Continue Watching (conditional) */}
-        {continueWatching && continueWatching.length > 0 && (
+        {!selectedGenre && continueWatching && continueWatching.length > 0 && (
           <ContentRow title="Lanjutkan Menonton" contents={continueWatching} onInfoClick={openModal} onPlayClick={handlePlayClick} />
         )}
 
         {/* 2. Made in Indonesia (Priority 2) */}
-        {loadSecondary && (
+        {!selectedGenre && loadSecondary && (
           <>
             {loadingIndonesian ? (
               <div className="px-12">
@@ -226,7 +318,7 @@ const BrowsePage = () => {
         )}
 
         {/* 4. New Releases (Priority 2) */}
-        {loadSecondary && (
+        {!selectedGenre && loadSecondary && (
           <>
             {loadingNewReleases ? (
               <div className="px-12">
@@ -239,9 +331,9 @@ const BrowsePage = () => {
           </>
         )}
 
-  
+
         {/* 6. Genre rows (Priority 3) */}
-        {loadGenre && (
+        {!selectedGenre && loadGenre && (
           <>
             {loadingAction ? (
               <div className="px-12">

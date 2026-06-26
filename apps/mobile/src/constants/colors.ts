@@ -60,6 +60,38 @@ export const COLORS = {
   warning: '#F59E0B',  // Amber for warnings
   info: '#3B82F6',     // Blue for info
 
+  // CATEGORY COLORS (For live streaming categories, etc.)
+  blue: {
+    500: '#3B82F6',
+  },
+  purple: {
+    500: '#8B5CF6',
+  },
+  green: {
+    500: '#10B981',
+  },
+  yellow: {
+    400: '#FBBF24',
+    500: '#F59E0B',
+  },
+  orange: {
+    500: '#F97316',
+  },
+  pink: {
+    500: '#EC4899',
+  },
+  teal: {
+    500: '#14B8A6',
+  },
+  gray: {
+    500: '#6B7280',
+  },
+  red: {
+    400: '#F87171',
+    500: '#EF4444',
+    600: '#DC2626',
+  },
+
   // SPECIAL: Transparent overlays
   overlay: {
     light: 'rgba(26, 22, 20, 0.6)',   // Light overlay

@@ -123,4 +123,20 @@ dependencies {
 
     // Midtrans Mobile SDK v2 (sandbox mode)
     implementation 'com.midtrans:uikit:2.3.0-SANDBOX'
+
+    // Fix for legacy Android Support Library dependencies
+    implementation "androidx.appcompat:appcompat:1.6.1"
+}
+
+// Fix for legacy Android Support Library to AndroidX mapping
+configurations.all {
+    resolutionStrategy {
+        eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'com.android.support') {
+                if (details.requested.name == 'appcompat-v7') {
+                    details.useTarget("androidx.appcompat:appcompat:1.6.1")
+                }
+            }
+        }
+    }
 }

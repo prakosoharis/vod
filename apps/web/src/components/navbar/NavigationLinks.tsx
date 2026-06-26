@@ -79,6 +79,17 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
             Daftar Saya
           </Link>
         )}
+
+        {/* RIWAYAT TONTONAN - Watch history (protected) */}
+        {isAuthenticated && (
+          <Link
+            to="/watch-history"
+            className={`${linkClass} ${isActive('/watch-history') ? activeClass : inactiveClass}`}
+            onClick={handleProtectedClick}
+          >
+            Riwayat
+          </Link>
+        )}
       </nav>
 
       {/* Auth Modal */}

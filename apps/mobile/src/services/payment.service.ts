@@ -30,7 +30,9 @@ export interface Subscription {
   plan_id: string;
   start_date: string;
   end_date: string;
-  status: 'active' | 'expired' | 'cancelled';
+  started_at?: string;
+  expired_at?: string;
+  status: 'active' | 'expired' | 'cancelled' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
   auto_renew: boolean;
 }
 
@@ -79,7 +81,8 @@ class PaymentService {
   async getMySubscription(): Promise<Subscription | null> {
     try {
       const response = await this.client.get('/payment/subscription/me');
-      return response.data;
+      // API returns { success: true, data: { ... } }
+      return response.data?.data || response.data || null;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null;
@@ -123,7 +126,8 @@ class PaymentService {
   // Access Check
   async checkContentAccess(contentId: string): Promise<AccessCheckResponse> {
     const response = await this.client.get(`/payment/access/${contentId}`);
-    return response.data;
+    // API returns { success: true, data: { ... } }
+    return response.data?.data || response.data;
   }
 
   // Verify Payment Status (after Midtrans callback)

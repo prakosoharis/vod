@@ -45,7 +45,9 @@ const VideoPlayerPage = () => {
   const {
     videoRef,
     state: videoState,
-    actions: videoActions
+    actions: videoActions,
+    playbackSpeeds,
+    qualityOptions
   } = useVideoPlayer({
     autoHideControls: true,
     autoHideDelay: 3000
@@ -481,6 +483,32 @@ const VideoPlayerPage = () => {
               </div>
 
               <div className="flex items-center gap-2 md:gap-3">
+                {/* Playback Speed Selector */}
+                <div className="relative">
+                  <button
+                    onClick={videoActions.toggleSpeedMenu}
+                    className="flex items-center gap-1 md:gap-2 p-2 md:p-1.5 hover:bg-white/10 rounded transition"
+                  >
+                    <span className="text-sm md:text-sm font-semibold">{videoState.playbackSpeed}x</span>
+                  </button>
+
+                  {videoState.showSpeedMenu && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-black/90 rounded p-2 min-w-[100px]">
+                      {playbackSpeeds.map(speed => (
+                        <button
+                          key={speed}
+                          onClick={() => videoActions.selectSpeed(speed)}
+                          className={`block w-full text-left px-2 py-1 text-sm hover:bg-white/20 rounded ${
+                            videoState.playbackSpeed === speed ? 'text-red-500' : 'text-white'
+                          }`}
+                        >
+                          {speed}x
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Quality Selector */}
                 <div className="relative">
                   <button
@@ -493,7 +521,7 @@ const VideoPlayerPage = () => {
 
                   {videoState.showQualityMenu && (
                     <div className="absolute bottom-full right-0 mb-2 bg-black/90 rounded p-2 min-w-[100px]">
-                      {['Auto', '1080p', '720p', '480p'].map(quality => (
+                      {qualityOptions.map(quality => (
                         <button
                           key={quality}
                           onClick={() => videoActions.selectQuality(quality)}

@@ -31,7 +31,8 @@ export class LiveService {
     }
 
     this.socket = io(SOCKET_URL, {
-      transports: ['websocket'],
+      path: '/ws/socket.io/',
+      transports: ['websocket', 'polling'],
       autoConnect: true,
     });
 

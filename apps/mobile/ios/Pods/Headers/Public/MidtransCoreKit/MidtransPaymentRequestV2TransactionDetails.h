@@ -1,1 +1,0 @@
-../../../MidtransCoreKit/MidtransCoreKit/MidtransCoreKit/MidtransPaymentRequestV2TransactionDetails.h

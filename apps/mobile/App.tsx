@@ -16,7 +16,7 @@ function App() {
     <SafeAreaProvider>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={COLORS.background}
+        backgroundColor={COLORS.warmCharcoal[100]}
         translucent={false}
       />
       <NavigationContainer>

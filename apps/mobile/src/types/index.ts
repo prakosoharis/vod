@@ -53,9 +53,19 @@ export interface RegisterRequest {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  Search: undefined;
   VideoPlayer: { contentId: string };
-  LiveStream: undefined;
+  LiveStream: { broadcastId?: string } | undefined;
   ContentDetail: { content: Content };
+  Pricing: undefined;
+  PaymentSuccess: { transactionId: string; amount: number; type: 'subscription' | 'rental' | 'event' };
+  PaymentError: { errorMessage?: string };
+  MyList: undefined;
+  WatchHistory: undefined;
+  Subscription: undefined;
+  RentalHistory: undefined;
+  LiveEvents: undefined;
+  Upcoming: undefined;
 };
 
 export type MainTabParamList = {

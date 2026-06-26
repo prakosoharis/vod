@@ -9,6 +9,8 @@ interface VideoPlayerState {
   isMuted: boolean;
   showQualityMenu: boolean;
   selectedQuality: string;
+  playbackSpeed: number;
+  showSpeedMenu: boolean;
 }
 
 interface VideoPlayerOptions {
@@ -34,7 +36,9 @@ const useVideoPlayer = (options: VideoPlayerOptions = {}) => {
     volume: 1,
     isMuted: false,
     showQualityMenu: false,
-    selectedQuality: 'Auto'
+    selectedQuality: 'Auto',
+    playbackSpeed: 1,
+    showSpeedMenu: false
   });
 
   // Update state helper
@@ -131,6 +135,28 @@ const useVideoPlayer = (options: VideoPlayerOptions = {}) => {
       showQualityMenu: false
     });
   }, [updateState]);
+
+  // Toggle speed menu
+  const toggleSpeedMenu = useCallback(() => {
+    updateState({ showSpeedMenu: !state.showSpeedMenu });
+  }, [state.showSpeedMenu, updateState]);
+
+  // Select playback speed
+  const selectSpeed = useCallback((speed: number) => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+      updateState({
+        playbackSpeed: speed,
+        showSpeedMenu: false
+      });
+    }
+  }, [updateState]);
+
+  // Available playback speeds
+  const playbackSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
+  // Available quality options
+  const qualityOptions = ['Auto', '1080p', '720p', '480p', '360p'];
 
   // Format time helper
   const formatTime = useCallback((seconds: number) => {
@@ -283,8 +309,12 @@ const useVideoPlayer = (options: VideoPlayerOptions = {}) => {
       hideControls,
       toggleQualityMenu,
       selectQuality,
+      toggleSpeedMenu,
+      selectSpeed,
       formatTime
-    }
+    },
+    playbackSpeeds,
+    qualityOptions
   };
 };
 

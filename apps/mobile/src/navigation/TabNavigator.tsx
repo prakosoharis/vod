@@ -1,18 +1,30 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Platform } from 'react-native';
+import { Platform, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { SafeIcon } from '../components/ui';
 import { COLORS, THEME } from '../constants';
 import HomeScreen from '../screens/home/HomeScreen';
 import BrowseScreen from '../screens/browse/BrowseScreen';
 import LiveScreen from '../screens/live/LiveScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
-import { MainTabParamList } from '../types';
+import { MainTabParamList, RootStackParamList } from '../types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const TabNavigator = () => {
+  const navigation = useNavigation();
+
+  const SearchButton = () => (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('Search' as never)}
+      style={{ marginRight: 16 }}
+    >
+      <SafeIcon name="search" size={24} color={COLORS.cream[50]} />
+    </TouchableOpacity>
+  );
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -91,7 +103,8 @@ const TabNavigator = () => {
         component={HomeScreen}
         options={{
           title: 'Beranda',
-          headerShown: false,
+          headerShown: true,
+          headerRight: () => <SearchButton />,
         }}
       />
       <Tab.Screen

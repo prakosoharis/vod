@@ -12,12 +12,13 @@ import {
   Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeIcon } from '../../components/ui';
 import PaymentOptionsModal from '../../components/payment/PaymentOptionsModal';
 import { RootStackParamList } from '../../types';
 import { COLORS, THEME } from '../../constants';
-import { paymentService } from '../../services';
+import { paymentService, userService } from '../../services';
 import { useAuthStore } from '../../store/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ContentDetail'>;
@@ -27,9 +28,42 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { content } = route.params;
   const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
+
+  // Check if content is in watchlist
+  const { data: isInWatchlist } = useQuery({
+    queryKey: ['watchlist'],
+    queryFn: () => userService.getWatchlist(),
+    select: (watchlist: any[]) => watchlist.some((item: any) => item.id === content.id),
+    enabled: isAuthenticated,
+  });
+
+  // Add to watchlist mutation
+  const addToWatchlistMutation = useMutation({
+    mutationFn: (contentId: string) => userService.addToWatchlist(contentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] });
+      Alert.alert('Berhasil', 'Ditambahkan ke Daftar Saya');
+    },
+    onError: () => {
+      Alert.alert('Gagal', 'Gagal menambahkan ke Daftar Saya');
+    },
+  });
+
+  // Remove from watchlist mutation
+  const removeFromWatchlistMutation = useMutation({
+    mutationFn: (contentId: string) => userService.removeFromWatchlist(contentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] });
+      Alert.alert('Berhasil', 'Dihapus dari Daftar Saya');
+    },
+    onError: () => {
+      Alert.alert('Gagal', 'Gagal menghapus dari Daftar Saya');
+    },
+  });
 
   const handlePlayPress = async () => {
     // Check if user is authenticated
@@ -60,22 +94,89 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       setIsCheckingAccess(true);
 
-      // Check if user has access to this content
-      const accessInfo = await paymentService.checkContentAccess(content.id);
+      console.log('=== ACCESS CHECK START ===');
+      console.log('Content ID:', content.id);
+      console.log('User authenticated:', isAuthenticated);
 
-      if (!accessInfo.data.has_access) {
-        // User doesn't have access, show payment modal
-        setShowPaymentModal(true);
-        return;
+      // First, try to check user's subscription status directly
+      try {
+        const mySubscription = await paymentService.getMySubscription();
+        console.log('=== SUBSCRIPTION CHECK ===');
+        console.log('Raw subscription data:', JSON.stringify(mySubscription, null, 2));
+
+        // If user has active subscription, grant access directly
+        if (mySubscription && (mySubscription.status === 'active' || mySubscription.status === 'ACTIVE')) {
+          const now = new Date();
+          // Handle both end_date and expired_at field names
+          const endDateStr = mySubscription.expired_at || mySubscription.end_date;
+          const endDate = new Date(endDateStr);
+
+          console.log('Subscription status:', mySubscription.status);
+          console.log('End date:', endDateStr);
+          console.log('Current date:', now.toISOString());
+          console.log('Is valid:', endDate > now);
+
+          if (endDate > now) {
+            console.log('✅ User has active subscription, granting access');
+            navigation.navigate('VideoPlayer', { contentId: content.id });
+            return;
+          } else {
+            console.log('⚠️ Subscription expired');
+          }
+        } else {
+          console.log('⚠️ No active subscription found');
+        }
+      } catch (subError: any) {
+        console.log('❌ Subscription check failed:', subError.message);
+        console.log('Falling back to content access check');
       }
 
-      // User has access, play video
-      navigation.navigate('VideoPlayer', { contentId: content.id });
-    } catch (error: any) {
-      console.error('Access check error:', error);
+      // Fallback: Check if user has access to this specific content
+      try {
+        const accessInfo = await paymentService.checkContentAccess(content.id);
 
-      // On error, assume no access and show payment modal (safe fallback)
+        console.log('=== CONTENT ACCESS CHECK ===');
+        console.log('Raw access data:', JSON.stringify(accessInfo, null, 2));
+        console.log('Has access:', accessInfo.has_access);
+        console.log('Access type:', accessInfo.access_type);
+
+        if (accessInfo.has_access) {
+          console.log('✅ Content access granted via API');
+          navigation.navigate('VideoPlayer', { contentId: content.id });
+          return;
+        } else {
+          console.log('⚠️ No access via content check API');
+        }
+      } catch (accessError: any) {
+        console.log('❌ Content access check failed:', accessError.message);
+      }
+
+      // If we reach here, user doesn't have access - show payment modal
+      console.log('=== NO ACCESS FOUND ===');
+      console.log('Showing payment modal');
       setShowPaymentModal(true);
+
+    } catch (error: any) {
+      console.error('=== ACCESS CHECK ERROR ===');
+      console.error('Error:', error.message);
+      console.error('Details:', error);
+
+      // Show detailed error to help debugging
+      Alert.alert(
+        'Access Check Error',
+        `Error: ${error.message}\n\nPlease check console logs for details.`,
+        [
+          {
+            text: 'Batal',
+            style: 'cancel',
+            onPress: () => setIsCheckingAccess(false),
+          },
+          {
+            text: 'Coba Lagi',
+            onPress: () => handlePlayPress(),
+          },
+        ]
+      );
     } finally {
       setIsCheckingAccess(false);
     }
@@ -93,6 +194,37 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handleBackPress = () => {
     navigation.goBack();
+  };
+
+  const handleWatchlistPress = () => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Login Diperlukan',
+        'Silakan login terlebih dahulu untuk menambahkan ke Daftar Saya.',
+        [
+          {
+            text: 'Batal',
+            style: 'cancel',
+          },
+          {
+            text: 'Login',
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Auth' as any }],
+              });
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    if (isInWatchlist) {
+      removeFromWatchlistMutation.mutate(content.id);
+    } else {
+      addToWatchlistMutation.mutate(content.id);
+    }
   };
 
   return (
@@ -193,9 +325,19 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               </TouchableOpacity>
 
               <View style={styles.secondaryActions}>
-                <TouchableOpacity style={styles.iconButton}>
-                  <SafeIcon name="add" size={28} color={COLORS.cream[50]} />
-                  <Text style={styles.iconButtonLabel}>Daftar Saya</Text>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={handleWatchlistPress}
+                  disabled={!isAuthenticated || addToWatchlistMutation.isPending || removeFromWatchlistMutation.isPending}
+                >
+                  <SafeIcon
+                    name={isInWatchlist ? 'check' : 'add'}
+                    size={28}
+                    color={isInWatchlist ? COLORS.accent[500] : COLORS.cream[50]}
+                  />
+                  <Text style={[styles.iconButtonLabel, isInWatchlist && styles.iconButtonLabelActive]}>
+                    {isInWatchlist ? 'Ditambahkan' : 'Daftar Saya'}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.iconButton}>
@@ -394,6 +536,9 @@ const styles = StyleSheet.create({
     fontSize: THEME.typography.fontSize.xs,
     color: COLORS.cream[200],
     fontWeight: THEME.typography.fontWeight.medium,
+  },
+  iconButtonLabelActive: {
+    color: COLORS.accent[400],
   },
   descriptionContainer: {
     marginBottom: THEME.spacing.xl,

@@ -536,7 +536,13 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
             <View style={styles.topBar}>
               <TouchableOpacity
                 style={styles.backButton}
-                onPress={onBack}
+                onPress={() => {
+                  // Unlock orientation before going back
+                  Orientation.unlockAll();
+                  Orientation.lockToPortrait();
+                  StatusBar.setHidden(false);
+                  onBack();
+                }}
                 activeOpacity={0.7}
               >
                 <SafeIcon name="arrow-back" size={24} color={COLORS.cream[50]} />

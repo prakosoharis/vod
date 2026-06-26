@@ -17,7 +17,7 @@ export const MIDTRANS_CONFIG = {
   clientKey: 'Mid-client-VMvBYBwPbEvGFUO3',
   merchantId: 'G136369276',
   isProduction: false, // SANDBOX mode for testing
-  merchantBaseUrl: 'https://api.mostara.id/api/payment',
+  merchantBaseUrl: 'https://api.mostara.id/api/payment/',
 };
 
 // Re-export design system
