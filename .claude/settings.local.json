@@ -159,7 +159,15 @@
       "Bash(vite build:*)",
       "Bash(npx vite:*)",
       "Bash(vod-web:*)",
-      "Bash(certbot:*)"
+      "Bash(certbot:*)",
+      "Bash(brew:*)",
+      "Bash(ares:*)",
+      "Bash(npm config:*)",
+      "Bash(ares-setup-device:*)",
+      "Bash(bash:*)",
+      "Bash(ares-package:*)",
+      "Bash(file:*)",
+      "Bash(ares-install:*)"
     ],
     "deny": [],
     "ask": []

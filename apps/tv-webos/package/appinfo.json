@@ -1,0 +1,14 @@
+{
+  "id": "com.mostara.vod.tv",
+  "version": "1.0.13",
+  "vendor": "Mostara",
+  "type": "web",
+  "main": "index.html",
+  "title": "Mostara VOD",
+  "appDescription": "Mostara Video On Demand - Streaming, film dan live event",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#1A1614",
+  "resolution": "1920x1080",
+  "inspectable": true
+}

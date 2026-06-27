@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1A1614" />
+    <title>Mostara VOD</title>
+    <link rel="icon" type="image/png" href="./assets/icon-sPrUuL4i.png" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #1A1614;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        color: #F4EDE3;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #root {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+      /* Disable default focus ring - we use custom focus styles */
+      *:focus {
+        outline: none;
+      }
+      /* Initial loading splash */
+      #splash {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: #050505;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      #splash .mark {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 420px;
+        height: 220px;
+        animation: mark-reveal 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+      #splash .logo {
+        max-width: 340px;
+        max-height: 180px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+      }
+      @keyframes mark-reveal {
+        0% { opacity: 0; transform: scale(0.92); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+    </style>
+    <script defer src="./assets/index-C4i4AXXT.js"></script>
+  </head>
+  <body>
+    <div id="splash">
+      <div class="mark">
+        <img class="logo" src="./assets/splash-BXF5iMO3.png" alt="Most" />
+      </div>
+    </div>
+    <audio id="splash-audio" src="./splash-intro.mp3" preload="auto"></audio>
+    <div id="root"></div>
+    <script>
+      (function () {
+        var audio = document.getElementById('splash-audio');
+        if (!audio) return;
+        audio.volume = 1;
+        audio.load();
+        window.playSplashIntroSound = function () {
+          if (audio.dataset.played === 'true') return;
+          audio.currentTime = 0;
+          var result = audio.play();
+          if (result && result.then) {
+            result.then(function () {
+              audio.dataset.played = 'true';
+            }).catch(function () {});
+          } else {
+            audio.dataset.played = 'true';
+          }
+        };
+        var play = function () {
+          window.playSplashIntroSound();
+        };
+        play();
+        window.addEventListener('load', play);
+        window.addEventListener('focus', play);
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden) play();
+        });
+        document.addEventListener('keydown', play, { once: true });
+        document.addEventListener('click', play, { once: true });
+      })();
+    </script>
+  </body>
+</html>

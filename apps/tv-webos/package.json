@@ -1,0 +1,44 @@
+{
+  "name": "alkamus-vod-tv-webos",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mostara VOD - LG webOS TV App",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "package": "node scripts/package-ipk.mjs",
+    "deploy-simulator": "ares-install -d emulator dist/ipk/*.ipk && ares-launch -d emulator com.mostara.vod.tv",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
+    "@tanstack/react-query": "^4.36.1",
+    "axios": "^1.7.9",
+    "clsx": "^2.1.1",
+    "hls.js": "^1.5.17",
+    "lodash": "^4.17.21",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-router-dom": "^6.28.0",
+    "socket.io-client": "^4.8.1",
+    "zod": "^3.24.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.13",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
