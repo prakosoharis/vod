@@ -152,6 +152,8 @@ model BroadcastEvent {
   stream_key      String
   rtmp_url        String
   playback_url    String
+  thumbnail_url   String?
+  backdrop_url    String?
 
   viewer_count    Int            @default(0)
   started_at      DateTime?
@@ -321,4 +323,3 @@ model Transaction {
   @@index([order_id])
   @@map("transactions")
 }
-

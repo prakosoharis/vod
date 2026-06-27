@@ -26,6 +26,8 @@ const LiveScreen: React.FC<Props> = ({ navigation }) => {
   const { data: broadcasts, isLoading } = useQuery({
     queryKey: ['broadcasts'],
     queryFn: () => broadcastService.getBroadcasts(),
+    refetchInterval: 15000,
+    refetchOnMount: true,
   });
 
   // Filter broadcasts

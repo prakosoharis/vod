@@ -8,6 +8,8 @@ export interface CreateBroadcastInput {
   scheduled_time?: Date;
   category: string;
   chat_enabled: boolean;
+  thumbnail_url?: string;
+  backdrop_url?: string;
 }
 
 export interface UpdateBroadcastInput {
@@ -16,6 +18,8 @@ export interface UpdateBroadcastInput {
   scheduled_time?: Date;
   category?: string;
   chat_enabled?: boolean;
+  thumbnail_url?: string;
+  backdrop_url?: string;
 }
 
 export class BroadcastService {
@@ -42,6 +46,8 @@ export class BroadcastService {
         stream_key: ivsCredentials.stream_key,
         rtmp_url: ivsCredentials.rtmp_url,
         playback_url: ivsCredentials.playback_url,
+        thumbnail_url: input.thumbnail_url,
+        backdrop_url: input.backdrop_url,
         status: 'SCHEDULED',
       },
     });

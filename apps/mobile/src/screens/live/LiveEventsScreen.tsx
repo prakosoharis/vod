@@ -8,6 +8,7 @@ import {
   StatusBar,
   TextInput,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,6 +31,8 @@ const LiveEventsScreen: React.FC<Props> = ({ navigation }) => {
   const { data: broadcasts, isLoading } = useQuery({
     queryKey: ['broadcasts'],
     queryFn: () => broadcastService.getBroadcasts(),
+    refetchInterval: 15000,
+    refetchOnMount: true,
   });
 
   // Filter broadcasts
@@ -111,6 +114,14 @@ const LiveEventsScreen: React.FC<Props> = ({ navigation }) => {
     >
       {/* Category Color Bar */}
       <View style={[styles.categoryBar, { backgroundColor: getCategoryColor(item.category) }]} />
+
+      {(item.thumbnail_url || item.backdrop_url) && (
+        <Image
+          source={{ uri: item.thumbnail_url || item.backdrop_url }}
+          style={styles.broadcastImage}
+          resizeMode="cover"
+        />
+      )}
 
       <View style={styles.broadcastContent}>
         <View style={styles.broadcastHeader}>
@@ -396,6 +407,11 @@ const styles = StyleSheet.create({
     height: 3,
     width: '100%',
   },
+  broadcastImage: {
+    width: '100%',
+    height: 150,
+    backgroundColor: COLORS.warmCharcoal[100],
+  },
   broadcastContent: {
     padding: THEME.spacing.md,
   },
@@ -463,7 +479,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeTextEnded: {
     fontSize: THEME.typography.fontSize.xs,
-    color: COLORS.gray[400],
+    color: COLORS.gray[500],
     fontWeight: THEME.typography.fontWeight.semibold,
   },
   broadcastTitle: {

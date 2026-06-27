@@ -15,10 +15,25 @@ export interface BroadcastEvent {
   ended_at?: string;
   created_at: string;
   thumbnail_url?: string;
+  backdrop_url?: string;
   stream_key?: string;
   rtmp_url?: string;
   playback_url?: string;
 }
+
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
+
+const resolveMediaUrl = (url?: string) => {
+  if (!url) return undefined;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
+};
+
+const normalizeBroadcast = (broadcast: BroadcastEvent): BroadcastEvent => ({
+  ...broadcast,
+  thumbnail_url: resolveMediaUrl(broadcast.thumbnail_url),
+  backdrop_url: resolveMediaUrl(broadcast.backdrop_url),
+});
 
 class BroadcastService {
   private client: AxiosInstance;
@@ -60,35 +75,36 @@ class BroadcastService {
   async getBroadcasts(): Promise<BroadcastEvent[]> {
     const response = await this.client.get('/broadcasts');
     // API returns { success: true, data: [...] }
-    return response.data?.data || response.data || [];
+    const broadcasts = response.data?.data || response.data || [];
+    return broadcasts.map(normalizeBroadcast);
   }
 
   // Get broadcast by ID
   async getBroadcastById(id: string): Promise<BroadcastEvent> {
     const response = await this.client.get(`/broadcasts/${id}`);
     // API returns { success: true, data: { ... } }
-    return response.data?.data || response.data;
+    return normalizeBroadcast(response.data?.data || response.data);
   }
 
   // Get live broadcasts only
   async getLiveBroadcasts(): Promise<BroadcastEvent[]> {
     const response = await this.client.get('/broadcasts');
     const broadcasts = response.data?.data || response.data || [];
-    return broadcasts.filter((b: BroadcastEvent) => b.status === 'LIVE');
+    return broadcasts.map(normalizeBroadcast).filter((b: BroadcastEvent) => b.status === 'LIVE');
   }
 
   // Get scheduled broadcasts only
   async getScheduledBroadcasts(): Promise<BroadcastEvent[]> {
     const response = await this.client.get('/broadcasts');
     const broadcasts = response.data?.data || response.data || [];
-    return broadcasts.filter((b: BroadcastEvent) => b.status === 'SCHEDULED');
+    return broadcasts.map(normalizeBroadcast).filter((b: BroadcastEvent) => b.status === 'SCHEDULED');
   }
 
   // Get ended broadcasts only
   async getEndedBroadcasts(): Promise<BroadcastEvent[]> {
     const response = await this.client.get('/broadcasts');
     const broadcasts = response.data?.data || response.data || [];
-    return broadcasts.filter((b: BroadcastEvent) => b.status === 'ENDED');
+    return broadcasts.map(normalizeBroadcast).filter((b: BroadcastEvent) => b.status === 'ENDED');
   }
 }
 

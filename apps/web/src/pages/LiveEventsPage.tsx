@@ -14,10 +14,20 @@ interface BroadcastEvent {
   viewer_count: number;
   started_at?: string;
   ended_at?: string;
+  thumbnail_url?: string;
+  backdrop_url?: string;
   created_at: string;
 }
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
+
+const resolveBroadcastImage = (url?: string) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (API_URL.startsWith('/')) return url;
+  return `${API_ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
+};
 
 const LiveEventsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,12 +37,14 @@ const LiveEventsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    fetchBroadcasts();
+    fetchBroadcasts(true);
+    const interval = window.setInterval(() => fetchBroadcasts(false), 15000);
+    return () => window.clearInterval(interval);
   }, []);
 
-  const fetchBroadcasts = async () => {
+  const fetchBroadcasts = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const response = await fetch(`${API_URL}/broadcasts`);
       const data = await response.json();
       setBroadcasts(data);
@@ -166,11 +178,21 @@ const LiveEventsPage: React.FC = () => {
                     onClick={() => navigate(`/live/${broadcast.id}`)}
                     className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-900/40 to-red-950/60 border border-red-500/20 p-6 text-left transition-all duration-300 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 hover:scale-[1.02]"
                   >
+                    {(broadcast.backdrop_url || broadcast.thumbnail_url) && (
+                      <>
+                        <img
+                          src={resolveBroadcastImage(broadcast.backdrop_url || broadcast.thumbnail_url)}
+                          alt={broadcast.title}
+                          className="absolute inset-0 h-full w-full object-cover opacity-35 transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+                      </>
+                    )}
                     <div className="absolute top-4 right-4">
                       {getStatusBadge(broadcast.status)}
                     </div>
-                    <div className="flex items-start gap-4">
-                      <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${getCategoryIcon(broadcast.category)} flex items-center justify-center`}>
+                    <div className="relative flex items-start gap-4">
+                      <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${getCategoryIcon(broadcast.category)} flex items-center justify-center shadow-lg`}>
                         <Play className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -192,7 +214,7 @@ const LiveEventsPage: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <div className="mt-4 flex items-center gap-2 text-red-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="relative mt-4 flex items-center gap-2 text-red-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                       <Play className="w-4 h-4" />
                       Tonton Sekarang
                     </div>
@@ -259,11 +281,20 @@ const LiveEventsPage: React.FC = () => {
                   <button
                     key={broadcast.id}
                     onClick={() => navigate(`/live/${broadcast.id}`)}
-                    className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-5 text-left transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
+                    className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 text-left transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
                   >
                     {/* Category gradient bar */}
                     <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${getCategoryIcon(broadcast.category)}`} />
 
+                    {(broadcast.thumbnail_url || broadcast.backdrop_url) && (
+                      <img
+                        src={resolveBroadcastImage(broadcast.thumbnail_url || broadcast.backdrop_url)}
+                        alt={broadcast.title}
+                        className="h-40 w-full object-cover"
+                      />
+                    )}
+
+                    <div className="p-5">
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className={`flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br ${getCategoryIcon(broadcast.category)} flex items-center justify-center`}>
                         <Video className="w-5 h-5 text-white" />
@@ -303,6 +334,7 @@ const LiveEventsPage: React.FC = () => {
                         {broadcast.viewer_count} viewers
                       </div>
                     )}
+                    </div>
                   </button>
                 ))}
             </div>

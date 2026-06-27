@@ -14,6 +14,8 @@ interface BroadcastEvent {
   stream_key: string;
   rtmp_url: string;
   playback_url: string;
+  thumbnail_url?: string;
+  backdrop_url?: string;
   created_at: string;
 }
 
@@ -36,6 +38,8 @@ export default function BroadcasterPage() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [chatEnabled, setChatEnabled] = useState(true);
+  const [eventImage, setEventImage] = useState<File | null>(null);
+  const [eventImagePreview, setEventImagePreview] = useState('');
 
   // Chat state
   const [chatInput, setChatInput] = useState('');
@@ -45,6 +49,13 @@ export default function BroadcasterPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
   const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3002';
+  const apiOrigin = API_URL.replace(/\/api\/?$/, '');
+
+  const resolveAssetUrl = (url?: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `${apiOrigin}${url.startsWith('/') ? url : `/${url}`}`;
+  };
 
   // Fetch broadcasts on load
   useEffect(() => {
@@ -103,11 +114,32 @@ export default function BroadcasterPage() {
     }
   };
 
+  const uploadEventImage = async () => {
+    if (!eventImage) return undefined;
+
+    const formData = new FormData();
+    formData.append('file', eventImage);
+
+    const response = await fetch(`${API_URL}/api/upload?type=broadcast`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload broadcast image');
+    }
+
+    const result = await response.json();
+    return result.data?.url as string | undefined;
+  };
+
   const createBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const uploadedImageUrl = await uploadEventImage();
+
       const response = await fetch(`${API_URL}/api/broadcasts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,6 +148,8 @@ export default function BroadcasterPage() {
           description,
           category,
           chat_enabled: chatEnabled,
+          thumbnail_url: uploadedImageUrl,
+          backdrop_url: uploadedImageUrl,
         }),
       });
 
@@ -129,6 +163,8 @@ export default function BroadcasterPage() {
         setDescription('');
         setCategory('');
         setChatEnabled(true);
+        setEventImage(null);
+        setEventImagePreview('');
 
         alert('Broadcast created successfully!');
       } else {
@@ -139,6 +175,30 @@ export default function BroadcasterPage() {
       alert('Error creating broadcast');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteBroadcast = async (broadcast: BroadcastEvent) => {
+    const confirmed = window.confirm(`Delete broadcast "${broadcast.title}"? Event ini akan hilang dari web dan aplikasi.`);
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/broadcasts/${broadcast.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete broadcast');
+      }
+
+      setBroadcasts((prev) => prev.filter((item) => item.id !== broadcast.id));
+      if (currentBroadcast?.id === broadcast.id) {
+        setCurrentBroadcast(null);
+        setChatMessages([]);
+      }
+    } catch (error) {
+      console.error('Error deleting broadcast:', error);
+      alert('Error deleting broadcast');
     }
   };
 
@@ -240,6 +300,27 @@ export default function BroadcasterPage() {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium mb-1">Event Image</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setEventImage(file);
+                      setEventImagePreview(file ? URL.createObjectURL(file) : '');
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:outline-none text-sm"
+                  />
+                  {eventImagePreview && (
+                    <img
+                      src={eventImagePreview}
+                      alt="Event preview"
+                      className="mt-3 h-32 w-full rounded object-cover border border-gray-700"
+                    />
+                  )}
+                </div>
+
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -275,17 +356,40 @@ export default function BroadcasterPage() {
                         : 'bg-gray-700 hover:bg-gray-600'
                     }`}
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-medium">{broadcast.title}</div>
-                        <div className="text-sm text-gray-300">{broadcast.category}</div>
+                    <div className="flex items-center gap-3">
+                      {broadcast.thumbnail_url ? (
+                        <img
+                          src={resolveAssetUrl(broadcast.thumbnail_url)}
+                          alt={broadcast.title}
+                          className="h-14 w-20 flex-shrink-0 rounded object-cover bg-gray-900"
+                        />
+                      ) : (
+                        <div className="h-14 w-20 flex-shrink-0 rounded bg-gray-900 flex items-center justify-center text-gray-500 text-xs">
+                          No image
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate">{broadcast.title}</div>
+                        <div className="text-sm text-gray-300 truncate">{broadcast.category}</div>
                       </div>
-                      <div className={`px-2 py-1 rounded text-xs ${
-                        broadcast.status === 'LIVE' ? 'bg-red-600' :
-                        broadcast.status === 'ENDED' ? 'bg-gray-600' :
-                        'bg-yellow-600'
-                      }`}>
-                        {broadcast.status}
+                      <div className="flex flex-col items-end gap-2">
+                        <div className={`px-2 py-1 rounded text-xs ${
+                          broadcast.status === 'LIVE' ? 'bg-red-600' :
+                          broadcast.status === 'ENDED' ? 'bg-gray-600' :
+                          'bg-yellow-600'
+                        }`}>
+                          {broadcast.status}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteBroadcast(broadcast);
+                          }}
+                          className="rounded bg-red-600/20 px-2 py-1 text-xs text-red-200 hover:bg-red-600/40"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -301,6 +405,14 @@ export default function BroadcasterPage() {
                 <h2 className="text-xl font-semibold mb-4">Stream Info</h2>
 
                 <div className="space-y-4">
+                  {currentBroadcast.thumbnail_url && (
+                    <img
+                      src={resolveAssetUrl(currentBroadcast.thumbnail_url)}
+                      alt={currentBroadcast.title}
+                      className="h-44 w-full rounded-lg object-cover border border-gray-700"
+                    />
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium mb-1 text-gray-400">Title</label>
                     <div className="text-lg">{currentBroadcast.title}</div>

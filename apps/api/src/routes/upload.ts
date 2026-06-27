@@ -13,25 +13,32 @@ const ALLOWED_IMAGE_TYPES = {
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const UPLOAD_TYPES = ['thumbnail', 'backdrop', 'avatar', 'logo', 'broadcast'] as const;
+const UPLOAD_SUBDIRS: Record<(typeof UPLOAD_TYPES)[number], string> = {
+  thumbnail: 'thumbnails',
+  backdrop: 'backdrops',
+  avatar: 'avatars',
+  logo: 'logos',
+  broadcast: 'broadcasts',
+};
 
 // Validation schemas
 const uploadSchema = z.object({
-  type: z.enum(['thumbnail', 'backdrop', 'avatar', 'logo']),
+  type: z.enum(UPLOAD_TYPES),
 });
 
 interface UploadQuery {
-  type: 'thumbnail' | 'backdrop' | 'avatar' | 'logo';
+  type: (typeof UPLOAD_TYPES)[number];
 }
 
 export async function uploadRoutes(fastify: FastifyInstance) {
+  const uploadRoot = process.env.UPLOADS_PATH || path.join(process.cwd(), 'uploads');
+
   // Ensure upload directories exist
   const ensureDirectories = async () => {
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    const subdirs = ['thumbnails', 'backdrops', 'avatars', 'logos'];
-
-    await fs.mkdir(uploadDir, { recursive: true });
-    for (const subdir of subdirs) {
-      await fs.mkdir(path.join(uploadDir, subdir), { recursive: true });
+    await fs.mkdir(uploadRoot, { recursive: true });
+    for (const subdir of Object.values(UPLOAD_SUBDIRS)) {
+      await fs.mkdir(path.join(uploadRoot, subdir), { recursive: true });
     }
   };
 
@@ -79,14 +86,15 @@ export async function uploadRoutes(fastify: FastifyInstance) {
       const filename = `${uuidv4()}${fileExtension}`;
 
       // Determine upload path based on type
-      const uploadPath = path.join(process.cwd(), 'uploads', `${type}s`, filename);
+      const subdir = UPLOAD_SUBDIRS[type];
+      const uploadPath = path.join(uploadRoot, subdir, filename);
 
       // Save file
       const buffer = await data.toBuffer();
       await fs.writeFile(uploadPath, buffer);
 
       // Return file URL
-      const fileUrl = `/api/uploads/${type}s/${filename}`;
+      const fileUrl = `/api/uploads/${subdir}/${filename}`;
 
       return reply.send({
         success: true,
@@ -116,7 +124,7 @@ export async function uploadRoutes(fastify: FastifyInstance) {
       const { type, filename } = request.params;
 
       // Validate type
-      if (!['thumbnail', 'backdrop', 'avatar', 'logo'].includes(type)) {
+      if (!UPLOAD_TYPES.includes(type as UploadQuery['type'])) {
         return reply.code(400).send({
           error: {
             message: 'Invalid upload type',
@@ -125,7 +133,8 @@ export async function uploadRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const filePath = path.join(process.cwd(), 'uploads', `${type}s`, filename);
+      const subdir = UPLOAD_SUBDIRS[type as UploadQuery['type']];
+      const filePath = path.join(uploadRoot, subdir, filename);
 
       // Check if file exists
       try {
@@ -164,7 +173,7 @@ export async function uploadRoutes(fastify: FastifyInstance) {
       const { type, filename } = request.params;
 
       // Validate type
-      if (!['thumbnail', 'backdrop', 'avatar', 'logo'].includes(type)) {
+      if (!UPLOAD_TYPES.includes(type as UploadQuery['type'])) {
         return reply.code(400).send({
           error: {
             message: 'Invalid upload type',
@@ -173,7 +182,8 @@ export async function uploadRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const filePath = path.join(process.cwd(), 'uploads', `${type}s`, filename);
+      const subdir = UPLOAD_SUBDIRS[type as UploadQuery['type']];
+      const filePath = path.join(uploadRoot, subdir, filename);
 
       // Check if file exists
       try {
