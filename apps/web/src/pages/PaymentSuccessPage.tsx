@@ -57,6 +57,8 @@ export const PaymentSuccessPage: React.FC = () => {
       // Redirect based on payment type
       if (transaction?.payment_type === 'RENTAL' && transaction.rental) {
         navigate(`/watch/${transaction.rental.content_id}`);
+      } else if (transaction?.payment_type === 'EVENT_TICKET' && transaction.broadcast_ticket) {
+        navigate(`/live/${transaction.broadcast_ticket.broadcast.id}`);
       } else {
         navigate('/');
       }
@@ -174,6 +176,12 @@ export const PaymentSuccessPage: React.FC = () => {
           </p>
         )}
 
+        {transaction.payment_type === 'EVENT_TICKET' && transaction.broadcast_ticket && (
+          <p className="text-cream-100 mb-6">
+            Tiket untuk <span className="font-semibold text-accent-400">{transaction.broadcast_ticket.broadcast.title}</span> berhasil dibeli!
+          </p>
+        )}
+
         {/* Transaction Details */}
         <div className="bg-warm-charcoal-100 rounded-xl p-4 mb-6 text-left">
           <div className="flex justify-between mb-2">
@@ -205,6 +213,16 @@ export const PaymentSuccessPage: React.FC = () => {
               className="w-full py-3 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-cream-50 font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
             >
               Tonton Sekarang
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          )}
+
+          {transaction.payment_type === 'EVENT_TICKET' && transaction.broadcast_ticket && (
+            <button
+              onClick={() => navigate(`/live/${transaction.broadcast_ticket!.broadcast.id}`)}
+              className="w-full py-3 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-cream-50 font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              Masuk ke Live Event
               <ArrowRight className="w-5 h-5" />
             </button>
           )}

@@ -20,7 +20,10 @@ import {
   Maximize2,
   Monitor,
   RefreshCw,
+  Lock,
+  CreditCard,
 } from 'lucide-react';
+import { paymentService } from '@/services/payment.service';
 
 interface BroadcastEvent {
   id: string;
@@ -32,6 +35,7 @@ interface BroadcastEvent {
   status: 'SCHEDULED' | 'LIVE' | 'ENDED' | 'CANCELLED';
   playback_url: string;
   viewer_count: number;
+  ticket_price?: number | string;
   started_at?: string;
   ended_at?: string;
   created_at: string;
@@ -52,9 +56,12 @@ const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3002';
 const LiveBroadcastPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, token, isAuthenticated } = useAuthStore();
 
   const [broadcast, setBroadcast] = useState<BroadcastEvent | null>(null);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessLoading, setAccessLoading] = useState(true);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +85,8 @@ const LiveBroadcastPage: React.FC = () => {
   useEffect(() => {
     if (!id) return;
     fetchBroadcast();
-  }, [id]);
+    checkAccess();
+  }, [id, isAuthenticated]);
 
   const fetchBroadcast = async () => {
     try {
@@ -90,6 +98,10 @@ const LiveBroadcastPage: React.FC = () => {
       }
       const data = await response.json();
       setBroadcast(data);
+      if (Number(data.ticket_price || 0) <= 0) {
+        setHasAccess(true);
+        setAccessLoading(false);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -97,9 +109,78 @@ const LiveBroadcastPage: React.FC = () => {
     }
   };
 
+  const checkAccess = async () => {
+    if (!id) return;
+    if (!isAuthenticated) {
+      setHasAccess(false);
+      setAccessLoading(false);
+      return;
+    }
+
+    try {
+      setAccessLoading(true);
+      const response = await paymentService.checkBroadcastAccess(id);
+      setHasAccess(response.data.has_access);
+      if (response.data.has_access) {
+        await fetchPlayerBroadcast();
+      }
+    } catch {
+      setHasAccess(false);
+    } finally {
+      setAccessLoading(false);
+    }
+  };
+
+  const fetchPlayerBroadcast = async () => {
+    if (!id) return null;
+
+    const response = await fetch(`${API_URL}/broadcasts/${id}/player`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    if (!response.ok) {
+      throw new Error('Akses live event belum tersedia');
+    }
+
+    const data = await response.json();
+    setBroadcast(data);
+    return data;
+  };
+
+  const handleBuyTicket = async () => {
+    if (!id || !broadcast) return;
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    if (broadcast.status === 'ENDED' || broadcast.status === 'CANCELLED') {
+      setError('Penjualan tiket untuk broadcast ini sudah ditutup');
+      return;
+    }
+
+    try {
+      setPaymentLoading(true);
+      const response = await paymentService.buyBroadcastTicket(id);
+      paymentService.openMidtransSnap(
+        response.data.token,
+        async () => {
+          navigate(`/payment/success?order_id=${response.data.order_id}`);
+        },
+        () => {
+          navigate(`/payment/error?order_id=${response.data.order_id}`);
+        }
+      );
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Gagal membuat pembayaran tiket');
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
   // Initialize HLS player
   useEffect(() => {
-    if (!broadcast || !videoRef.current) return;
+    if (!broadcast || !videoRef.current || !hasAccess) return;
 
     const playbackUrl = broadcast.playback_url;
     if (!playbackUrl) return;
@@ -153,11 +234,11 @@ const LiveBroadcastPage: React.FC = () => {
         hlsRef.current = null;
       }
     };
-  }, [broadcast?.id, broadcast?.status, broadcast?.playback_url]);
+  }, [broadcast?.id, broadcast?.status, broadcast?.playback_url, hasAccess]);
 
   // WebSocket chat connection
   useEffect(() => {
-    if (!id) return;
+    if (!id || !hasAccess) return;
 
     const wsUrl = WS_URL;
     const wsPath = wsUrl.includes('/ws') ? '/ws' : '/socket.io/';
@@ -210,7 +291,7 @@ const LiveBroadcastPage: React.FC = () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [id]);
+  }, [id, hasAccess]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -287,7 +368,7 @@ const LiveBroadcastPage: React.FC = () => {
     });
   };
 
-  if (loading) {
+  if (loading || accessLoading) {
     return (
       <Layout>
         <div className="min-h-screen bg-[#0f0f0f] pt-24 px-6">
@@ -314,6 +395,68 @@ const LiveBroadcastPage: React.FC = () => {
             >
               Kembali ke Live Events
             </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!hasAccess) {
+    const price = Number(broadcast.ticket_price || 0);
+    return (
+      <Layout>
+        <div className="min-h-screen bg-[#0f0f0f] pt-24 px-6">
+          <div className="max-w-3xl mx-auto">
+            <button
+              onClick={() => navigate('/live-events')}
+              className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition mb-6 text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Kembali ke Live Events
+            </button>
+
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/15 text-red-300">
+                <Lock className="h-8 w-8" />
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">{broadcast.title}</h1>
+              {price > 0 ? (
+                <>
+                  <p className="text-gray-400 mb-6">
+                    Event ini membutuhkan tiket seharga{' '}
+                    <span className="font-semibold text-white">Rp {price.toLocaleString('id-ID')}</span>.
+                  </p>
+                  {isAuthenticated ? (
+                    broadcast.status === 'ENDED' || broadcast.status === 'CANCELLED' ? (
+                      <p className="text-sm text-gray-500">Penjualan tiket untuk event ini sudah ditutup.</p>
+                    ) : (
+                      <button
+                        onClick={handleBuyTicket}
+                        disabled={paymentLoading}
+                        className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+                      >
+                        <CreditCard className="h-5 w-5" />
+                        {paymentLoading ? 'Membuat pembayaran...' : 'Beli Tiket'}
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:bg-white/90"
+                    >
+                      Login untuk Beli Tiket
+                    </button>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={checkAccess}
+                  className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:bg-white/90"
+                >
+                  Masuk ke Event Gratis
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </Layout>

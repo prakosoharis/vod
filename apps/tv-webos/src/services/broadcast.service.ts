@@ -11,6 +11,7 @@ export interface BroadcastEvent {
   chat_enabled: boolean;
   status: 'SCHEDULED' | 'LIVE' | 'ENDED' | 'CANCELLED';
   viewer_count: number;
+  ticket_price?: number;
   started_at?: string;
   ended_at?: string;
   created_at: string;

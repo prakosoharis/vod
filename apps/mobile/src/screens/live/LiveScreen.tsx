@@ -115,6 +115,11 @@ const LiveScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.liveNowText}>Sedang berlangsung</Text>
             </View>
           )}
+          <Text style={styles.ticketText}>
+            {Number(item.ticket_price || 0) > 0
+              ? `Rp ${Number(item.ticket_price).toLocaleString('id-ID')}`
+              : 'Gratis'}
+          </Text>
         </View>
       </View>
       <SafeIcon name="chevron-right" size={24} color={COLORS.cream[200]} style={{ marginLeft: THEME.spacing.sm }} />
@@ -257,6 +262,11 @@ const styles = StyleSheet.create({
   },
   statValueLive: {
     color: COLORS.red[400],
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  ticketText: {
+    fontSize: THEME.typography.fontSize.xs,
+    color: COLORS.accent[400],
     fontWeight: THEME.typography.fontWeight.semibold,
   },
   statValueScheduled: {

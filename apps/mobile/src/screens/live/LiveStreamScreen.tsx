@@ -1,32 +1,111 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import { SafeIcon } from '../../components/ui';
 import LiveChat from '../../components/live/LiveChat';
-import { broadcastService } from '../../services';
+import { broadcastService, paymentService } from '../../services';
 import { RootStackParamList } from '../../types';
-import { COLORS, THEME } from '../../constants';
+import { COLORS, THEME, MIDTRANS_CONFIG } from '../../constants';
 import { useAuthStore } from '../../store/authStore';
 import HLSPlayer from '../../components/video/HLSPlayer';
 import { SOCKET_URL } from '../../constants';
+import Midtrans from '../../modules/MidtransModule';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LiveStream'>;
 
 const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { broadcastId } = route.params;
+  const { broadcastId } = route.params || {};
   const { isAuthenticated } = useAuthStore();
   const [showChat, setShowChat] = useState(false); // Hidden by default
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+
+  useEffect(() => {
+    const initMidtrans = async () => {
+      try {
+        await Midtrans.initialize(
+          MIDTRANS_CONFIG.clientKey,
+          MIDTRANS_CONFIG.merchantBaseUrl
+        );
+      } catch (error) {
+        console.error('Failed to initialize Midtrans:', error);
+      }
+    };
+
+    initMidtrans();
+
+    return () => {
+      Midtrans.cleanup();
+    };
+  }, []);
 
   // Fetch broadcast data
   const { data: broadcast, isLoading, error } = useQuery({
     queryKey: ['broadcast', broadcastId],
-    queryFn: () => broadcastService.getBroadcastById(broadcastId),
+    queryFn: () => broadcastService.getBroadcastById(broadcastId!),
     enabled: !!broadcastId,
   });
 
+  const ticketPrice = Number(broadcast?.ticket_price || 0);
+
+  const { data: accessInfo, isLoading: isAccessLoading, refetch: refetchAccess } = useQuery({
+    queryKey: ['broadcast-access', broadcastId],
+    queryFn: () => paymentService.checkBroadcastAccess(broadcastId!),
+    enabled: !!broadcastId && !!broadcast && ticketPrice > 0 && isAuthenticated,
+  });
+
+  const hasAccess = ticketPrice <= 0 || !!accessInfo?.has_access;
+  const {
+    data: playerBroadcast,
+    isLoading: isPlayerLoading,
+    error: playerError,
+  } = useQuery({
+    queryKey: ['broadcast-player', broadcastId],
+    queryFn: () => broadcastService.getBroadcastPlayerById(broadcastId!),
+    enabled: !!broadcastId && !!broadcast && hasAccess && ticketPrice > 0,
+  });
+  const playbackBroadcast = playerBroadcast || broadcast;
+
+  const handleBuyTicket = async () => {
+    if (!broadcastId || !broadcast) return;
+
+    if (!isAuthenticated) {
+      Alert.alert('Login diperlukan', 'Silakan login untuk membeli tiket live event.', [
+        { text: 'OK', onPress: () => navigation.navigate('Auth') },
+      ]);
+      return;
+    }
+
+    if (broadcast.status === 'ENDED' || broadcast.status === 'CANCELLED') {
+      Alert.alert('Tiket ditutup', 'Tiket untuk live event ini sudah tidak tersedia.');
+      return;
+    }
+
+    setIsPaymentProcessing(true);
+    try {
+      const paymentResponse = await paymentService.buyBroadcastTicket(broadcastId);
+      const result = await Midtrans.startPayment(paymentResponse.snap_token);
+
+      if (result.status === 'success') {
+        await refetchAccess();
+        Alert.alert('Berhasil', 'Tiket berhasil dibeli. Anda dapat menonton live event ini.');
+      } else if (result.status === 'pending') {
+        Alert.alert('Pending', 'Pembayaran sedang diproses. Coba buka kembali event ini setelah pembayaran selesai.');
+      } else if (result.status === 'canceled') {
+        Alert.alert('Dibatalkan', 'Pembayaran dibatalkan.');
+      } else {
+        Alert.alert('Gagal', 'Pembayaran gagal. Silakan coba lagi.');
+      }
+    } catch (err: any) {
+      console.error('Ticket payment error:', err);
+      Alert.alert('Error', err.response?.data?.error || err.message || 'Gagal membuat pembayaran tiket.');
+    } finally {
+      setIsPaymentProcessing(false);
+    }
+  };
+
   // Loading state
-  if (isLoading) {
+  if (isLoading || isAccessLoading || isPlayerLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.accent[500]} />
@@ -36,7 +115,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
   }
 
   // Error state
-  if (error) {
+  if (error || (ticketPrice > 0 && hasAccess && playerError)) {
     return (
       <View style={styles.errorContainer}>
         <SafeIcon name="error-outline" size={48} color={COLORS.red[500]} />
@@ -68,7 +147,48 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   }
 
-  const streamUrl = broadcast.playback_url;
+  if (!hasAccess) {
+    return (
+      <View style={styles.errorContainer}>
+        <SafeIcon name="lock" size={48} color={COLORS.accent[500]} />
+        <Text style={styles.errorText}>{broadcast.title}</Text>
+        <Text style={styles.errorSubtext}>
+          Tiket diperlukan untuk menonton live event ini.
+        </Text>
+        <Text style={styles.ticketPrice}>
+          Rp {ticketPrice.toLocaleString('id-ID')}
+        </Text>
+        <TouchableOpacity
+          style={[styles.backButton, isPaymentProcessing && styles.buttonDisabled]}
+          onPress={handleBuyTicket}
+          disabled={isPaymentProcessing}
+        >
+          <Text style={styles.backButtonText}>
+            {isPaymentProcessing ? 'Memproses...' : 'Beli Tiket'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.secondaryButtonText}>Kembali</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!playbackBroadcast?.playback_url) {
+    return (
+      <View style={styles.errorContainer}>
+        <SafeIcon name="event-busy" size={48} color={COLORS.cream[200]} />
+        <Text style={styles.errorText}>Stream belum tersedia</Text>
+        <Text style={styles.errorSubtext}>{broadcast.title}</Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const streamUrl = playbackBroadcast.playback_url;
+  const activeBroadcastId = broadcastId!;
 
   return (
     <View style={styles.container}>
@@ -77,8 +197,8 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
         <HLSPlayer
           source={streamUrl}
           onBack={() => navigation.goBack()}
-          title={broadcast.title}
-          contentId={broadcastId}
+          title={playbackBroadcast.title}
+          contentId={activeBroadcastId}
         />
 
         {/* Stream Info Overlay */}
@@ -90,12 +210,12 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
           <Text style={styles.viewerCount}>
             <SafeIcon name="visibility" size={12} color={COLORS.cream[50]} />
             {' '}
-            {broadcast.viewer_count || 0}
+            {playbackBroadcast.viewer_count || 0}
           </Text>
         </View>
 
         {/* Chat Toggle Button */}
-        {broadcast.chat_enabled && isAuthenticated && (
+        {playbackBroadcast.chat_enabled && isAuthenticated && (
           <TouchableOpacity
             style={styles.chatToggle}
             onPress={() => setShowChat(!showChat)}
@@ -110,9 +230,9 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
       </View>
 
       {/* Chat Section */}
-      {broadcast.chat_enabled && isAuthenticated && showChat && (
+      {playbackBroadcast.chat_enabled && isAuthenticated && showChat && (
         <View style={styles.chatContainer}>
-          <LiveChat chatServer={SOCKET_URL} broadcastId={broadcastId} />
+          <LiveChat chatServer={SOCKET_URL} broadcastId={activeBroadcastId} />
         </View>
       )}
     </View>
@@ -167,9 +287,27 @@ const styles = StyleSheet.create({
     color: COLORS.cream[50],
     fontWeight: THEME.typography.fontWeight.semibold,
   },
+  secondaryButton: {
+    marginTop: THEME.spacing.md,
+    paddingHorizontal: THEME.spacing.xl,
+    paddingVertical: THEME.spacing.md,
+  },
+  secondaryButtonText: {
+    color: COLORS.cream[200],
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  ticketPrice: {
+    fontSize: THEME.typography.fontSize.xl,
+    color: COLORS.accent[400],
+    fontWeight: THEME.typography.fontWeight.bold,
+    marginBottom: THEME.spacing.xl,
+  },
   videoContainer: {
     flex: 1,
-    backgroundColor: COLORS.black,
+    backgroundColor: '#000000',
     position: 'relative',
   },
   streamInfo: {

@@ -166,6 +166,11 @@ const LiveEventsScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.scheduleText}>{formatTime(item.scheduled_time)}</Text>
           </View>
         </View>
+        <Text style={styles.ticketText}>
+          {Number(item.ticket_price || 0) > 0
+            ? `Tiket Rp ${Number(item.ticket_price).toLocaleString('id-ID')}`
+            : 'Gratis'}
+        </Text>
       </View>
 
       {item.status === 'LIVE' && (
@@ -481,6 +486,12 @@ const styles = StyleSheet.create({
     fontSize: THEME.typography.fontSize.xs,
     color: COLORS.gray[500],
     fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  ticketText: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.accent[400],
+    fontWeight: THEME.typography.fontWeight.semibold,
+    marginTop: THEME.spacing.sm,
   },
   broadcastTitle: {
     fontSize: THEME.typography.fontSize.md,

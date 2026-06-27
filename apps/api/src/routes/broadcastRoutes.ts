@@ -16,6 +16,7 @@ export async function broadcastRoutes(fastify: FastifyInstance) {
           chat_enabled: { type: 'boolean' },
           thumbnail_url: { type: 'string' },
           backdrop_url: { type: 'string' },
+          ticket_price: { type: 'number', minimum: 0 },
         },
       },
     },
@@ -39,6 +40,14 @@ export async function broadcastRoutes(fastify: FastifyInstance) {
     },
   }, broadcastController.getById);
 
+  fastify.get('/broadcasts/:id/player', {
+    schema: {
+      params: {
+        id: { type: 'string' },
+      },
+    },
+  }, broadcastController.getPlayer);
+
   // Update broadcast
   fastify.put('/broadcasts/:id', {
     schema: {
@@ -55,6 +64,7 @@ export async function broadcastRoutes(fastify: FastifyInstance) {
           chat_enabled: { type: 'boolean' },
           thumbnail_url: { type: 'string' },
           backdrop_url: { type: 'string' },
+          ticket_price: { type: 'number', minimum: 0 },
         },
       },
     },

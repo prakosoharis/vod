@@ -10,6 +10,71 @@ const generateOrderId = (): string => {
   return `ORD-${timestamp}-${random}`;
 };
 
+const grantPaidAccess = async (transaction: any) => {
+  if (transaction.payment_type === 'SUBSCRIPTION') {
+    const metadata = transaction.metadata as any;
+    if (metadata?.plan_id) {
+      await prisma.userSubscription.create({
+        data: {
+          user_id: transaction.user_id,
+          plan_id: metadata.plan_id,
+          status: 'ACTIVE',
+          started_at: new Date(),
+          expired_at: new Date(metadata.expired_at),
+          auto_renew: true,
+        },
+      });
+    }
+  } else if (transaction.payment_type === 'RENTAL') {
+    const metadata = transaction.metadata as any;
+    await prisma.userRental.create({
+      data: {
+        user_id: transaction.user_id,
+        content_id: metadata.content_id,
+        rental_price_id: metadata.rental_price_id,
+        rented_at: new Date(),
+        expired_at: new Date(metadata.expired_at),
+        transaction_id: transaction.id,
+      },
+    });
+  } else if (transaction.payment_type === 'EVENT_TICKET') {
+    const metadata = transaction.metadata as any;
+    if (metadata?.broadcast_id) {
+      await prisma.broadcastTicket.upsert({
+        where: {
+          user_id_broadcast_id: {
+            user_id: transaction.user_id,
+            broadcast_id: metadata.broadcast_id,
+          },
+        },
+        update: {},
+        create: {
+          user_id: transaction.user_id,
+          broadcast_id: metadata.broadcast_id,
+          purchased_at: new Date(),
+          transaction_id: transaction.id,
+        },
+      });
+    } else if (metadata?.event_id) {
+      await prisma.eventTicket.upsert({
+        where: {
+          user_id_event_id: {
+            user_id: transaction.user_id,
+            event_id: metadata.event_id,
+          },
+        },
+        update: {},
+        create: {
+          user_id: transaction.user_id,
+          event_id: metadata.event_id,
+          purchased_at: new Date(),
+          transaction_id: transaction.id,
+        },
+      });
+    }
+  }
+};
+
 // =============== SUBSCRIPTION ===============
 
 export const getSubscriptionPlans = async (
@@ -413,6 +478,150 @@ export const buyEventTicket = async (
   }
 };
 
+export const buyBroadcastTicket = async (
+  request: FastifyRequest<{
+    Params: { broadcastId: string };
+  }>,
+  reply: FastifyReply
+) => {
+  try {
+    const userId = (request.user as any).userId;
+    const { broadcastId } = request.params;
+
+    const broadcast = await prisma.broadcastEvent.findUnique({
+      where: { id: broadcastId },
+    });
+
+    if (!broadcast) {
+      return reply.status(404).send({ success: false, error: 'Broadcast not found' });
+    }
+
+    if (broadcast.status === 'ENDED' || broadcast.status === 'CANCELLED') {
+      return reply.status(400).send({ success: false, error: 'Ticket sales are closed for this broadcast' });
+    }
+
+    const ticketPrice = Number(broadcast.ticket_price || 0);
+    if (ticketPrice <= 0) {
+      return reply.status(400).send({ success: false, error: 'This broadcast is free' });
+    }
+
+    const existingTicket = await prisma.broadcastTicket.findUnique({
+      where: {
+        user_id_broadcast_id: {
+          user_id: userId,
+          broadcast_id: broadcastId,
+        },
+      },
+    });
+
+    if (existingTicket) {
+      return reply.status(400).send({
+        success: false,
+        error: 'You already have a ticket for this broadcast',
+      });
+    }
+
+    const existingPending = await prisma.transaction.findFirst({
+      where: {
+        user_id: userId,
+        payment_type: 'EVENT_TICKET',
+        status: 'PENDING',
+        metadata: {
+          path: ['broadcast_id'],
+          equals: broadcastId,
+        },
+      },
+    });
+
+    if (existingPending?.midtrans_token) {
+      return reply.send({
+        success: true,
+        data: {
+          token: existingPending.midtrans_token,
+          snap_token: existingPending.midtrans_token,
+          redirect_url: null,
+          order_id: existingPending.order_id,
+          transaction_id: existingPending.order_id,
+          gross_amount: Number(existingPending.amount),
+        },
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return reply.status(404).send({ success: false, error: 'User not found' });
+    }
+
+    const orderId = generateOrderId();
+
+    const transaction = await prisma.transaction.create({
+      data: {
+        user_id: userId,
+        order_id: orderId,
+        payment_type: 'EVENT_TICKET',
+        amount: broadcast.ticket_price,
+        status: 'PENDING',
+        metadata: {
+          broadcast_id: broadcast.id,
+          broadcast_title: broadcast.title,
+        },
+      },
+    });
+
+    const parameter = {
+      transaction_details: {
+        order_id: orderId,
+        gross_amount: ticketPrice,
+      },
+      customer_details: {
+        first_name: user.full_name || user.email.split('@')[0],
+        email: user.email,
+      },
+      item_details: [
+        {
+          id: broadcast.id,
+          name: `Live Ticket: ${broadcast.title}`,
+          price: ticketPrice,
+          quantity: 1,
+        },
+      ],
+      callbacks: {
+        finish: `${process.env.FRONTEND_URL}/payment/success?order_id=${orderId}`,
+        error: `${process.env.FRONTEND_URL}/payment/error?order_id=${orderId}`,
+        pending: `${process.env.FRONTEND_URL}/payment/pending?order_id=${orderId}`,
+      },
+    };
+
+    const snapTransaction = await snap.createTransaction(parameter);
+
+    await prisma.transaction.update({
+      where: { id: transaction.id },
+      data: {
+        midtrans_token: snapTransaction.token,
+        midtrans_transaction_id: orderId,
+      },
+    });
+
+    return reply.send({
+      success: true,
+      data: {
+        token: snapTransaction.token,
+        snap_token: snapTransaction.token,
+        redirect_url: snapTransaction.redirect_url,
+        order_id: orderId,
+        transaction_id: orderId,
+        gross_amount: ticketPrice,
+      },
+    });
+  } catch (error) {
+    console.error('Error buying broadcast ticket:', error);
+    return reply.status(500).send({ success: false, error: 'Failed to buy broadcast ticket' });
+  }
+};
+
 // =============== WEBHOOK & STATUS ===============
 
 interface MidtransNotification {
@@ -495,46 +704,7 @@ export const handleWebhook = async (
 
     // If payment successful, grant access
     if (paymentStatus === 'SETTLEMENT') {
-      if (transaction.payment_type === 'SUBSCRIPTION') {
-        // Create subscription on successful payment
-        const metadata = transaction.metadata as any;
-        if (metadata?.plan_id) {
-          await prisma.userSubscription.create({
-            data: {
-              user_id: transaction.user_id,
-              plan_id: metadata.plan_id,
-              status: 'ACTIVE',
-              started_at: new Date(),
-              expired_at: new Date(metadata.expired_at),
-              auto_renew: true,
-            },
-          });
-        }
-      } else if (transaction.payment_type === 'RENTAL') {
-        // Create rental access
-        const metadata = transaction.metadata as any;
-        await prisma.userRental.create({
-          data: {
-            user_id: transaction.user_id,
-            content_id: metadata.content_id,
-            rental_price_id: metadata.rental_price_id,
-            rented_at: new Date(),
-            expired_at: new Date(metadata.expired_at),
-            transaction_id: transaction.id,
-          },
-        });
-      } else if (transaction.payment_type === 'EVENT_TICKET') {
-        // Create event ticket
-        const metadata = transaction.metadata as any;
-        await prisma.eventTicket.create({
-          data: {
-            user_id: transaction.user_id,
-            event_id: metadata.event_id,
-            purchased_at: new Date(),
-            transaction_id: transaction.id,
-          },
-        });
-      }
+      await grantPaidAccess(transaction);
     }
 
     return reply.send({ success: true });
@@ -565,6 +735,9 @@ export const getTransactionStatus = async (
         },
         event_ticket: {
           include: { event: true },
+        },
+        broadcast_ticket: {
+          include: { broadcast: true },
         },
       },
     });
@@ -679,6 +852,80 @@ export const checkContentAccess = async (
   }
 };
 
+export const checkBroadcastAccess = async (
+  request: FastifyRequest<{
+    Params: { broadcastId: string };
+  }>,
+  reply: FastifyReply
+) => {
+  try {
+    const userId = (request.user as any).userId;
+    const { broadcastId } = request.params;
+
+    const broadcast = await prisma.broadcastEvent.findUnique({
+      where: { id: broadcastId },
+      select: {
+        id: true,
+        status: true,
+        ticket_price: true,
+      },
+    });
+
+    if (!broadcast) {
+      return reply.status(404).send({ success: false, error: 'Broadcast not found' });
+    }
+
+    const ticketPrice = Number(broadcast.ticket_price || 0);
+
+    if (ticketPrice <= 0) {
+      return reply.send({
+        success: true,
+        data: {
+          has_access: true,
+          access_type: 'free',
+          ticket_price: ticketPrice,
+          can_buy_ticket: false,
+        },
+      });
+    }
+
+    const ticket = await prisma.broadcastTicket.findUnique({
+      where: {
+        user_id_broadcast_id: {
+          user_id: userId,
+          broadcast_id: broadcastId,
+        },
+      },
+    });
+
+    if (ticket) {
+      return reply.send({
+        success: true,
+        data: {
+          has_access: true,
+          access_type: 'ticket',
+          ticket_price: ticketPrice,
+          can_buy_ticket: false,
+          purchased_at: ticket.purchased_at,
+        },
+      });
+    }
+
+    return reply.send({
+      success: true,
+      data: {
+        has_access: false,
+        access_type: null,
+        ticket_price: ticketPrice,
+        can_buy_ticket: broadcast.status !== 'ENDED' && broadcast.status !== 'CANCELLED',
+      },
+    });
+  } catch (error) {
+    console.error('Error checking broadcast access:', error);
+    return reply.status(500).send({ success: false, error: 'Failed to check broadcast access' });
+  }
+};
+
 export const getUserRentals = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -788,46 +1035,7 @@ export const devWebhookSimulator = async (
 
     // Grant access based on payment type
     if (paymentStatus === 'SETTLEMENT') {
-      if (transaction.payment_type === 'SUBSCRIPTION') {
-        // Create subscription on successful payment
-        const metadata = transaction.metadata as any;
-        if (metadata?.plan_id) {
-          await prisma.userSubscription.create({
-            data: {
-              user_id: transaction.user_id,
-              plan_id: metadata.plan_id,
-              status: 'ACTIVE',
-              started_at: new Date(),
-              expired_at: new Date(metadata.expired_at),
-              auto_renew: true,
-            },
-          });
-        }
-      } else if (transaction.payment_type === 'RENTAL') {
-        // Create rental access
-        const metadata = transaction.metadata as any;
-        await prisma.userRental.create({
-          data: {
-            user_id: transaction.user_id,
-            content_id: metadata.content_id,
-            rental_price_id: metadata.rental_price_id,
-            rented_at: new Date(),
-            expired_at: new Date(metadata.expired_at),
-            transaction_id: transaction.id,
-          },
-        });
-      } else if (transaction.payment_type === 'EVENT_TICKET') {
-        // Create event ticket
-        const metadata = transaction.metadata as any;
-        await prisma.eventTicket.create({
-          data: {
-            user_id: transaction.user_id,
-            event_id: metadata.event_id,
-            purchased_at: new Date(),
-            transaction_id: transaction.id,
-          },
-        });
-      }
+      await grantPaidAccess(transaction);
     }
 
     return reply.send({ success: true, message: 'Dev webhook simulated successfully' });

@@ -4,6 +4,8 @@ import {
   createSubscription,
   rentContent,
   buyEventTicket,
+  buyBroadcastTicket,
+  checkBroadcastAccess,
   handleWebhook,
   devWebhookSimulator,
   getTransactionStatus,
@@ -36,6 +38,8 @@ export default async function paymentRoutes(fastify: FastifyInstance) {
 
     // Event tickets
     protectedRoutes.post('/event/buy-ticket', buyEventTicket);
+    protectedRoutes.post('/broadcast/:broadcastId/ticket', buyBroadcastTicket);
+    protectedRoutes.get('/broadcast/:broadcastId/access', checkBroadcastAccess);
 
     // Access check
     protectedRoutes.get('/access/:contentId', checkContentAccess);

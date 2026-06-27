@@ -1,5 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { broadcastService } from '../services/broadcastService';
+import { prisma } from '../config/database';
+import { verifyToken } from '../utils/jwt.js';
 
 export class BroadcastController {
   // Create new broadcast
@@ -29,6 +31,48 @@ export class BroadcastController {
     try {
       const { id } = req.params as any;
       const broadcast = await broadcastService.getById(id);
+      return reply.send(broadcast);
+    } catch (error: any) {
+      if (error.message === 'Broadcast not found') {
+        return reply.code(404).send({ error: error.message });
+      }
+      return reply.code(500).send({ error: error.message });
+    }
+  }
+
+  async getPlayer(req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { id } = req.params as any;
+      const broadcast = await broadcastService.getById(id);
+      const ticketPrice = Number(broadcast.ticket_price || 0);
+
+      if (ticketPrice > 0) {
+        const authHeader = req.headers.authorization;
+        const [scheme, token] = authHeader?.split(' ') || [];
+        const decoded = scheme?.toLowerCase() === 'bearer' && token ? verifyToken(token) : null;
+        const userId = decoded && 'userId' in decoded ? decoded.userId : null;
+
+        if (!userId) {
+          return reply.code(401).send({ error: 'Login required' });
+        }
+
+        const ticket = await prisma.broadcastTicket.findUnique({
+          where: {
+            user_id_broadcast_id: {
+              user_id: userId,
+              broadcast_id: id,
+            },
+          },
+        });
+
+        if (!ticket) {
+          return reply.code(403).send({
+            error: 'Ticket required',
+            ticket_price: ticketPrice,
+          });
+        }
+      }
+
       return reply.send(broadcast);
     } catch (error: any) {
       if (error.message === 'Broadcast not found') {

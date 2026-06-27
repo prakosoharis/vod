@@ -62,6 +62,12 @@ export interface Transaction {
       title: string;
     };
   };
+  broadcast_ticket?: {
+    broadcast: {
+      id: string;
+      title: string;
+    };
+  };
 }
 
 export interface PaymentResponse {
@@ -79,6 +85,17 @@ export interface AccessInfo {
     has_access: boolean;
     access_type: 'subscription' | 'rental' | null;
     expires_at: string | null;
+  };
+}
+
+export interface BroadcastAccessInfo {
+  success: boolean;
+  data: {
+    has_access: boolean;
+    access_type: 'free' | 'ticket' | null;
+    ticket_price: number;
+    can_buy_ticket: boolean;
+    purchased_at?: string;
   };
 }
 
@@ -127,6 +144,16 @@ class PaymentService {
     const response = await api.post('/payment/event/buy-ticket', {
       event_id: eventId,
     });
+    return response.data;
+  }
+
+  async buyBroadcastTicket(broadcastId: string): Promise<PaymentResponse> {
+    const response = await api.post(`/payment/broadcast/${broadcastId}/ticket`);
+    return response.data;
+  }
+
+  async checkBroadcastAccess(broadcastId: string): Promise<BroadcastAccessInfo> {
+    const response = await api.get(`/payment/broadcast/${broadcastId}/access`);
     return response.data;
   }
 

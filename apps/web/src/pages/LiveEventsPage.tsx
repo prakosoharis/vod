@@ -12,6 +12,7 @@ interface BroadcastEvent {
   chat_enabled: boolean;
   status: 'SCHEDULED' | 'LIVE' | 'ENDED' | 'CANCELLED';
   viewer_count: number;
+  ticket_price?: number | string;
   started_at?: string;
   ended_at?: string;
   thumbnail_url?: string;
@@ -208,6 +209,11 @@ const LiveEventsPage: React.FC = () => {
                             <Users className="w-3.5 h-3.5" />
                             {broadcast.viewer_count} viewers
                           </span>
+                          <span className="text-sm text-gray-400">
+                            {Number(broadcast.ticket_price || 0) > 0
+                              ? `Rp ${Number(broadcast.ticket_price).toLocaleString('id-ID')}`
+                              : 'Gratis'}
+                          </span>
                         </div>
                         {broadcast.description && (
                           <p className="text-sm text-gray-500 mt-2 line-clamp-2">{broadcast.description}</p>
@@ -326,6 +332,12 @@ const LiveEventsPage: React.FC = () => {
                         <Clock className="w-3 h-3 inline mr-1" />
                         {formatTime(broadcast.scheduled_time)}
                       </div>
+                    </div>
+
+                    <div className="mt-3 text-sm font-semibold text-white">
+                      {Number(broadcast.ticket_price || 0) > 0
+                        ? `Tiket Rp ${Number(broadcast.ticket_price).toLocaleString('id-ID')}`
+                        : 'Gratis'}
                     </div>
 
                     {broadcast.viewer_count > 0 && (

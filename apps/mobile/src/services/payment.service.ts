@@ -14,16 +14,30 @@ export interface SubscriptionPlan {
 
 export interface PaymentResponse {
   snap_token: string;
+  token?: string;
   transaction_id: string;
   order_id: string;
   gross_amount: number;
+  redirect_url?: string;
 }
 
 export interface AccessCheckResponse {
   has_access: boolean;
-  access_type: 'subscription' | 'rental' | 'free' | null;
+  access_type: 'subscription' | 'rental' | 'free' | 'ticket' | null;
   expires_at: string | null;
+  ticket_price?: number;
+  can_buy_ticket?: boolean;
 }
+
+const unwrapPaymentResponse = (response: any): PaymentResponse => {
+  const data = response.data?.data || response.data;
+  return {
+    ...data,
+    snap_token: data.snap_token || data.token,
+    transaction_id: data.transaction_id || data.order_id,
+    gross_amount: data.gross_amount || data.amount || 0,
+  };
+};
 
 export interface Subscription {
   id: string;
@@ -95,7 +109,7 @@ class PaymentService {
     const response = await this.client.post('/payment/subscription/subscribe', {
       plan_id: planId,
     });
-    return response.data;
+    return unwrapPaymentResponse(response);
   }
 
   async cancelSubscription(): Promise<void> {
@@ -107,7 +121,7 @@ class PaymentService {
     const response = await this.client.post('/payment/rental/rent', {
       content_id: contentId,
     });
-    return response.data;
+    return unwrapPaymentResponse(response);
   }
 
   async getMyRentals(): Promise<any[]> {
@@ -120,7 +134,17 @@ class PaymentService {
     const response = await this.client.post('/payment/event/buy-ticket', {
       event_id: eventId,
     });
-    return response.data;
+    return unwrapPaymentResponse(response);
+  }
+
+  async buyBroadcastTicket(broadcastId: string): Promise<PaymentResponse> {
+    const response = await this.client.post(`/payment/broadcast/${broadcastId}/ticket`);
+    return unwrapPaymentResponse(response);
+  }
+
+  async checkBroadcastAccess(broadcastId: string): Promise<AccessCheckResponse> {
+    const response = await this.client.get(`/payment/broadcast/${broadcastId}/access`);
+    return response.data?.data || response.data;
   }
 
   // Access Check

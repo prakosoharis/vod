@@ -11,6 +11,7 @@ export interface BroadcastEvent {
   chat_enabled: boolean;
   status: 'SCHEDULED' | 'LIVE' | 'ENDED' | 'CANCELLED';
   viewer_count: number;
+  ticket_price?: number;
   started_at?: string;
   ended_at?: string;
   created_at: string;
@@ -83,6 +84,12 @@ class BroadcastService {
   async getBroadcastById(id: string): Promise<BroadcastEvent> {
     const response = await this.client.get(`/broadcasts/${id}`);
     // API returns { success: true, data: { ... } }
+    return normalizeBroadcast(response.data?.data || response.data);
+  }
+
+  // Get playable broadcast details after ticket access is verified
+  async getBroadcastPlayerById(id: string): Promise<BroadcastEvent> {
+    const response = await this.client.get(`/broadcasts/${id}/player`);
     return normalizeBroadcast(response.data?.data || response.data);
   }
 

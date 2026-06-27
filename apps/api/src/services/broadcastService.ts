@@ -10,6 +10,7 @@ export interface CreateBroadcastInput {
   chat_enabled: boolean;
   thumbnail_url?: string;
   backdrop_url?: string;
+  ticket_price?: number;
 }
 
 export interface UpdateBroadcastInput {
@@ -20,6 +21,7 @@ export interface UpdateBroadcastInput {
   chat_enabled?: boolean;
   thumbnail_url?: string;
   backdrop_url?: string;
+  ticket_price?: number;
 }
 
 export class BroadcastService {
@@ -48,6 +50,7 @@ export class BroadcastService {
         playback_url: ivsCredentials.playback_url,
         thumbnail_url: input.thumbnail_url,
         backdrop_url: input.backdrop_url,
+        ticket_price: input.ticket_price ?? 0,
         status: 'SCHEDULED',
       },
     });

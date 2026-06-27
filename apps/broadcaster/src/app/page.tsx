@@ -16,6 +16,7 @@ interface BroadcastEvent {
   playback_url: string;
   thumbnail_url?: string;
   backdrop_url?: string;
+  ticket_price?: number | string;
   created_at: string;
 }
 
@@ -40,6 +41,7 @@ export default function BroadcasterPage() {
   const [chatEnabled, setChatEnabled] = useState(true);
   const [eventImage, setEventImage] = useState<File | null>(null);
   const [eventImagePreview, setEventImagePreview] = useState('');
+  const [ticketPrice, setTicketPrice] = useState('0');
 
   // Chat state
   const [chatInput, setChatInput] = useState('');
@@ -150,6 +152,7 @@ export default function BroadcasterPage() {
           chat_enabled: chatEnabled,
           thumbnail_url: uploadedImageUrl,
           backdrop_url: uploadedImageUrl,
+          ticket_price: Math.max(0, Number(ticketPrice) || 0),
         }),
       });
 
@@ -165,6 +168,7 @@ export default function BroadcasterPage() {
         setChatEnabled(true);
         setEventImage(null);
         setEventImagePreview('');
+        setTicketPrice('0');
 
         alert('Broadcast created successfully!');
       } else {
@@ -332,6 +336,20 @@ export default function BroadcasterPage() {
                   <label htmlFor="chatEnabled" className="text-sm">Enable Live Chat</label>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium mb-1">Ticket Price (Rp)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1000"
+                    value={ticketPrice}
+                    onChange={(e) => setTicketPrice(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                    placeholder="0 untuk gratis"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">Isi 0 jika broadcast gratis.</p>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -371,6 +389,11 @@ export default function BroadcasterPage() {
                       <div className="min-w-0 flex-1">
                         <div className="font-medium truncate">{broadcast.title}</div>
                         <div className="text-sm text-gray-300 truncate">{broadcast.category}</div>
+                        <div className="text-xs text-gray-400">
+                          {Number(broadcast.ticket_price || 0) > 0
+                            ? `Rp ${Number(broadcast.ticket_price).toLocaleString('id-ID')}`
+                            : 'Free'}
+                        </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className={`px-2 py-1 rounded text-xs ${
@@ -426,6 +449,15 @@ export default function BroadcasterPage() {
                       'bg-yellow-600'
                     }`}>
                       {currentBroadcast.status}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-400">Ticket</label>
+                    <div className="text-lg">
+                      {Number(currentBroadcast.ticket_price || 0) > 0
+                        ? `Rp ${Number(currentBroadcast.ticket_price).toLocaleString('id-ID')}`
+                        : 'Free'}
                     </div>
                   </div>
 
