@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../config/database.js';
-import { snap } from '../config/midtrans.js';
+import { coreApi, snap } from '../config/midtrans.js';
 import crypto from 'crypto';
 
 // Generate unique order ID
@@ -72,6 +72,70 @@ const grantPaidAccess = async (transaction: any) => {
         },
       });
     }
+  }
+};
+
+const mapMidtransStatus = (
+  transactionStatus?: string,
+  fraudStatus?: string
+): 'PENDING' | 'SETTLEMENT' | 'FAILED' | 'EXPIRED' => {
+  if (transactionStatus === 'capture') {
+    return fraudStatus === 'accept' ? 'SETTLEMENT' : 'PENDING';
+  }
+
+  if (transactionStatus === 'settlement') {
+    return 'SETTLEMENT';
+  }
+
+  if (transactionStatus === 'cancel' || transactionStatus === 'deny') {
+    return 'FAILED';
+  }
+
+  if (transactionStatus === 'expire') {
+    return 'EXPIRED';
+  }
+
+  return 'PENDING';
+};
+
+const syncPendingTransactionWithMidtrans = async (transaction: any) => {
+  if (transaction.status !== 'PENDING') {
+    return transaction;
+  }
+
+  if (!transaction.midtrans_transaction_id && !transaction.order_id) {
+    return transaction;
+  }
+
+  try {
+    const midtransStatus = await coreApi.transaction.status(
+      transaction.midtrans_transaction_id || transaction.order_id
+    );
+    const paymentStatus = mapMidtransStatus(
+      midtransStatus.transaction_status,
+      midtransStatus.fraud_status
+    );
+
+    if (paymentStatus === 'PENDING') {
+      return transaction;
+    }
+
+    const updatedTransaction = await prisma.transaction.update({
+      where: { id: transaction.id },
+      data: {
+        status: paymentStatus,
+        payment_method: midtransStatus.payment_type || transaction.payment_method,
+      },
+    });
+
+    if (paymentStatus === 'SETTLEMENT') {
+      await grantPaidAccess(updatedTransaction);
+    }
+
+    return updatedTransaction;
+  } catch (error) {
+    console.error('Error syncing transaction with Midtrans:', error);
+    return transaction;
   }
 };
 
@@ -674,24 +738,7 @@ export const handleWebhook = async (
       return reply.status(404).send({ success: false, error: 'Transaction not found' });
     }
 
-    let paymentStatus: 'PENDING' | 'SETTLEMENT' | 'FAILED' | 'EXPIRED' = 'PENDING';
-
-    // Handle payment status
-    if (transactionStatus === 'capture') {
-      if (fraudStatus === 'accept') {
-        paymentStatus = 'SETTLEMENT';
-      }
-    } else if (transactionStatus === 'settlement') {
-      paymentStatus = 'SETTLEMENT';
-    } else if (
-      transactionStatus === 'cancel' ||
-      transactionStatus === 'deny' ||
-      transactionStatus === 'expire'
-    ) {
-      paymentStatus = transactionStatus === 'expire' ? 'EXPIRED' : 'FAILED';
-    } else if (transactionStatus === 'pending') {
-      paymentStatus = 'PENDING';
-    }
+    const paymentStatus = mapMidtransStatus(transactionStatus, fraudStatus);
 
     // Update transaction
     await prisma.transaction.update({
@@ -724,7 +771,7 @@ export const getTransactionStatus = async (
     const { orderId } = request.params;
     const userId = (request.user as any).userId;
 
-    const transaction = await prisma.transaction.findUnique({
+    let transaction = await prisma.transaction.findUnique({
       where: { order_id: orderId },
       include: {
         subscription: {
@@ -749,6 +796,27 @@ export const getTransactionStatus = async (
     // Check ownership
     if (transaction.user_id !== userId) {
       return reply.status(403).send({ success: false, error: 'Unauthorized' });
+    }
+
+    if (transaction.status === 'PENDING') {
+      await syncPendingTransactionWithMidtrans(transaction);
+      transaction = await prisma.transaction.findUnique({
+        where: { order_id: orderId },
+        include: {
+          subscription: {
+            include: { plan: true },
+          },
+          rental: {
+            include: { content: true },
+          },
+          event_ticket: {
+            include: { event: true },
+          },
+          broadcast_ticket: {
+            include: { broadcast: true },
+          },
+        },
+      });
     }
 
     return reply.send({ success: true, data: transaction });
