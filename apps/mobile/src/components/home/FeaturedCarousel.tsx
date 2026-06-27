@@ -5,8 +5,8 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   Animated,
+  useWindowDimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeIcon } from '../ui';
@@ -19,16 +19,17 @@ interface FeaturedCarouselProps {
   onInfoPress?: (content: Content) => void;
 }
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.70; // 70% of screen height
-
 const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
   contents,
   onPlayPress,
   onInfoPress,
 }) => {
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const isLandscape = screenWidth > screenHeight;
+  const carouselHeight = Math.round(screenHeight * (isLandscape ? 0.68 : 0.70));
+  const contentMaxWidth = isLandscape ? Math.min(screenWidth * 0.58, 760) : screenWidth;
 
   // Auto-rotate carousel every 5 seconds
   useEffect(() => {
@@ -60,7 +61,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
   const currentContent = contents[currentIndex];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { width: screenWidth, height: carouselHeight }]}>
       {/* Background Image - Use backdrop_url for landscape */}
       <Animated.View style={[styles.imageContainer, { opacity: fadeAnim }]}>
         <Image
@@ -82,7 +83,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
       />
 
       {/* Content */}
-      <View style={styles.contentContainer}>
+      <View style={[styles.contentContainer, { maxWidth: contentMaxWidth }]}>
         {/* Badge */}
         <View style={styles.badge}>
           <Text style={styles.badgeText}>Pilihan Untuk Anda</Text>
@@ -168,9 +169,9 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: SCREEN_WIDTH,
-    height: CAROUSEL_HEIGHT,
     position: 'relative',
+    alignSelf: 'stretch',
+    overflow: 'hidden',
   },
   imageContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     left: 0,
-    right: 0,
+    width: '100%',
     paddingHorizontal: THEME.spacing.lg,
     paddingBottom: THEME.spacing.xl,
   },

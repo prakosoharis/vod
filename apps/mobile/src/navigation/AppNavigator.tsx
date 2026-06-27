@@ -1,5 +1,9 @@
-import React, { useEffect } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, { useEffect, useState } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationOptions,
+} from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/authStore';
 import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
@@ -17,13 +21,14 @@ import RentalHistoryScreen from '../screens/rentals/RentalHistoryScreen';
 import LiveEventsScreen from '../screens/live/LiveEventsScreen';
 import UpcomingScreen from '../screens/upcoming/UpcomingScreen';
 import { RootStackParamList } from '../types';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { COLORS } from '../constants';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const mostaraLogo = require('../assets/logo.png');
 
 const AppNavigator = () => {
   const { isAuthenticated, isLoading, hasHydrated, checkAuth } = useAuthStore();
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     if (!hasHydrated) {
@@ -31,20 +36,28 @@ const AppNavigator = () => {
     }
   }, [checkAuth, hasHydrated]);
 
-  if (isLoading || !hasHydrated) {
-    return <LoadingSpinner />;
+  useEffect(() => {
+    const splashTimer = setTimeout(() => setShowSplash(false), 5000);
+    return () => clearTimeout(splashTimer);
+  }, []);
+
+  if (showSplash || isLoading || !hasHydrated) {
+    return (
+      <View style={styles.splashContainer}>
+        <Image source={mostaraLogo} style={styles.splashLogo} resizeMode="contain" />
+      </View>
+    );
   }
 
-  const screenOptions = {
+  const screenOptions: NativeStackNavigationOptions = {
     headerShown: true,
     headerStyle: {
       backgroundColor: COLORS.warmCharcoal[100],
-      borderBottomWidth: 0,
     },
     headerTintColor: COLORS.cream[50],
     headerTitleStyle: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: '600' as const,
     },
     headerBackTitle: 'Kembali',
   };
@@ -53,7 +66,7 @@ const AppNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        cardStyle: { backgroundColor: COLORS.warmCharcoal[100] },
+        contentStyle: { backgroundColor: COLORS.warmCharcoal[100] },
       }}
     >
       {isAuthenticated ? (
@@ -144,5 +157,18 @@ const AppNavigator = () => {
     </Stack.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  splashContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.warmCharcoal[100],
+  },
+  splashLogo: {
+    width: 150,
+    height: 150,
+  },
+});
 
 export default AppNavigator;

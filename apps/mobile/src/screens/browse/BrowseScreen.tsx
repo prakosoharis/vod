@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   StatusBar,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeIcon } from '../../components/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -20,8 +21,18 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const BrowseScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { width } = useWindowDimensions();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
+  const gridGap = THEME.spacing.sm;
+  const gridPadding = THEME.spacing.sm;
+  const columnCount = width >= 900 ? 6 : width >= 700 ? 5 : width >= 520 ? 4 : 3;
+  const availableGridWidth = width - (gridPadding * 2) - (gridGap * (columnCount - 1));
+  const cardWidth = Math.max(108, Math.min(150, Math.floor(availableGridWidth / columnCount)));
+  const cardDimensions = {
+    width: cardWidth,
+    height: Math.round(cardWidth * 1.5),
+  };
 
   const genres = [
     'Semua',
@@ -38,7 +49,9 @@ const BrowseScreen: React.FC = () => {
 
   const { data: searchResults, isLoading: searchLoading } = useQuery({
     queryKey: ['search', searchQuery],
-    queryFn: () => searchQuery ? contentService.searchContent(searchQuery) : { data: [], total: 0 },
+    queryFn: () => searchQuery
+      ? contentService.searchContent(searchQuery)
+      : Promise.resolve({ data: [], total: 0, page: 1, totalPages: 0 }),
     enabled: searchQuery.length > 2,
   });
 
@@ -104,6 +117,7 @@ const BrowseScreen: React.FC = () => {
       onPress={() => navigation.navigate('VideoPlayer', { contentId: item.id })}
       onInfoPress={() => navigation.navigate('ContentDetail', { content: item })}
       size="small"
+      dimensions={cardDimensions}
     />
   );
 
@@ -142,7 +156,8 @@ const BrowseScreen: React.FC = () => {
       {/* Content Grid */}
       <FlatList
         data={displayContent}
-        numColumns={3}
+        key={`browse-grid-${columnCount}`}
+        numColumns={columnCount}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.contentList}
         columnWrapperStyle={styles.contentRow}
@@ -224,7 +239,9 @@ const styles = StyleSheet.create({
     padding: THEME.spacing.sm,
   },
   contentRow: {
-    justifyContent: 'space-between',
+    gap: THEME.spacing.sm,
+    justifyContent: 'flex-start',
+    marginBottom: THEME.spacing.sm,
   },
   emptyContainer: {
     flex: 1,

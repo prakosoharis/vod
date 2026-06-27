@@ -18,6 +18,10 @@ interface ContentCardProps {
   onInfoPress?: (content: Content) => void;
   size?: 'small' | 'medium' | 'large';
   showLock?: boolean;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
 }
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -28,6 +32,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   onInfoPress,
   size = 'medium',
   showLock = false,
+  dimensions: customDimensions,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -45,7 +50,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
     }
   };
 
-  const dimensions = getSizeDimensions();
+  const dimensions = customDimensions || getSizeDimensions();
 
   const handlePress = () => {
     onPress?.(content);
@@ -99,6 +104,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
     <TouchableOpacity
       style={[
         styles.container,
+        !customDimensions && styles.containerSpacing,
         {
           width: dimensions.width,
           height: dimensions.height,
@@ -139,8 +145,10 @@ const styles = StyleSheet.create({
     borderRadius: THEME.borderRadius.md,
     overflow: 'hidden',
     backgroundColor: COLORS.warmCharcoal[50],
-    marginHorizontal: THEME.spacing.xs,
     ...THEME.shadows.small,
+  },
+  containerSpacing: {
+    marginHorizontal: THEME.spacing.xs,
   },
   image: {
     borderRadius: THEME.borderRadius.md,
