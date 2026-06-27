@@ -49,6 +49,10 @@ services:
         max-file: "3"
 
   broadcaster:
+    build:
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.mostara.id}
+        - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-https://api.mostara.id}
     ports:
       - "3010:3010"
     logging:

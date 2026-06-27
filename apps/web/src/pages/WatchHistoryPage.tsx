@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
 import { userService } from '../services/user.service';
 import { ContentCard } from '../components/content/ContentCard';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Layout from '../components/layout/Layout';
 
 const WatchHistoryPage = () => {
