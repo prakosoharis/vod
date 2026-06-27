@@ -1062,8 +1062,10 @@ export const devWebhookSimulator = async (
   reply: FastifyReply
 ) => {
   try {
-    // Only allow when using Midtrans sandbox (not production payment)
-    if (process.env.MIDTRANS_IS_PRODUCTION === 'true') {
+    const allowPaymentSimulator = process.env.ALLOW_PAYMENT_SIMULATOR === 'true';
+
+    // Only allow when using Midtrans sandbox, unless explicitly enabled for pitching/demo.
+    if (process.env.MIDTRANS_IS_PRODUCTION === 'true' && !allowPaymentSimulator) {
       return reply.status(403).send({ success: false, error: 'Dev webhook not available in production' });
     }
 

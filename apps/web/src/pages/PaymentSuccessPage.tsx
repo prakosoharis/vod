@@ -21,26 +21,20 @@ export const PaymentSuccessPage: React.FC = () => {
     },
   });
 
-  // Auto-simulate webhook in development after 3 seconds if still pending
+  // Auto-simulate webhook for sandbox payments after 3 seconds if still pending.
+  // The API rejects this endpoint when MIDTRANS_IS_PRODUCTION=true.
   useEffect(() => {
     if (transaction?.status === 'PENDING' && orderId) {
-      // Check if we're in development (localhost)
-      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const timer = setTimeout(async () => {
+        try {
+          await paymentService.simulateDevWebhook(orderId);
+          refetch();
+        } catch (error) {
+          console.error('Sandbox webhook simulation failed:', error);
+        }
+      }, 3000);
 
-      if (isDevelopment) {
-        const timer = setTimeout(async () => {
-          try {
-            console.log('🔧 Dev mode: Auto-simulating webhook for order:', orderId);
-            await paymentService.simulateDevWebhook(orderId);
-            // Refetch transaction status
-            refetch();
-          } catch (error) {
-            console.error('Dev webhook simulation failed:', error);
-          }
-        }, 3000); // Wait 3 seconds before auto-approving
-
-        return () => clearTimeout(timer);
-      }
+      return () => clearTimeout(timer);
     }
   }, [transaction?.status, orderId, refetch]);
 
@@ -93,8 +87,6 @@ export const PaymentSuccessPage: React.FC = () => {
   }
 
   if (transaction?.status === 'PENDING') {
-    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
     return (
       <div className="min-h-screen bg-warm-charcoal-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-warm-charcoal-50 rounded-2xl p-8 text-center">
@@ -105,13 +97,6 @@ export const PaymentSuccessPage: React.FC = () => {
           <p className="text-cream-100 mb-6">
             Pembayaran Anda sedang diproses. Mohon tunggu beberapa saat.
           </p>
-          {isDevelopment && (
-            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <p className="text-blue-400 text-sm">
-                🔧 <strong>Dev Mode:</strong> Auto-approving dalam 3 detik...
-              </p>
-            </div>
-          )}
           <button
             onClick={() => navigate('/')}
             className="w-full py-3 bg-accent-500 hover:bg-accent-600 text-cream-50 font-semibold rounded-xl transition-colors"
