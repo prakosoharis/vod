@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert, Linking } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import { SafeIcon } from '../../components/ui';
 import LiveChat from '../../components/live/LiveChat';
 import { broadcastService, paymentService } from '../../services';
 import { RootStackParamList } from '../../types';
-import { COLORS, THEME, MIDTRANS_CONFIG } from '../../constants';
+import { COLORS, THEME } from '../../constants';
 import { useAuthStore } from '../../store/authStore';
 import HLSPlayer from '../../components/video/HLSPlayer';
 import { SOCKET_URL } from '../../constants';
-import Midtrans from '../../modules/MidtransModule';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LiveStream'>;
 
@@ -19,25 +18,6 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
   const { isAuthenticated } = useAuthStore();
   const [showChat, setShowChat] = useState(false); // Hidden by default
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
-
-  useEffect(() => {
-    const initMidtrans = async () => {
-      try {
-        await Midtrans.initialize(
-          MIDTRANS_CONFIG.clientKey,
-          MIDTRANS_CONFIG.merchantBaseUrl
-        );
-      } catch (error) {
-        console.error('Failed to initialize Midtrans:', error);
-      }
-    };
-
-    initMidtrans();
-
-    return () => {
-      Midtrans.cleanup();
-    };
-  }, []);
 
   // Fetch broadcast data
   const { data: broadcast, isLoading, error } = useQuery({
@@ -48,13 +28,15 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const ticketPrice = Number(broadcast?.ticket_price || 0);
 
-  const { data: accessInfo, isLoading: isAccessLoading, refetch: refetchAccess } = useQuery({
+  const { data: accessInfo, isLoading: isAccessLoading } = useQuery({
     queryKey: ['broadcast-access', broadcastId],
     queryFn: () => paymentService.checkBroadcastAccess(broadcastId!),
     enabled: !!broadcastId && !!broadcast && ticketPrice > 0 && isAuthenticated,
+    retry: false,
   });
 
   const hasAccess = ticketPrice <= 0 || !!accessInfo?.has_access;
+  const requiresTicket = ticketPrice > 0;
   const {
     data: playerBroadcast,
     isLoading: isPlayerLoading,
@@ -62,7 +44,8 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
   } = useQuery({
     queryKey: ['broadcast-player', broadcastId],
     queryFn: () => broadcastService.getBroadcastPlayerById(broadcastId!),
-    enabled: !!broadcastId && !!broadcast && hasAccess && ticketPrice > 0,
+    enabled: !!broadcastId && !!broadcast && requiresTicket && hasAccess,
+    retry: false,
   });
   const playbackBroadcast = playerBroadcast || broadcast;
 
@@ -84,18 +67,16 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
     setIsPaymentProcessing(true);
     try {
       const paymentResponse = await paymentService.buyBroadcastTicket(broadcastId);
-      const result = await Midtrans.startPayment(paymentResponse.snap_token);
 
-      if (result.status === 'success') {
-        await refetchAccess();
-        Alert.alert('Berhasil', 'Tiket berhasil dibeli. Anda dapat menonton live event ini.');
-      } else if (result.status === 'pending') {
-        Alert.alert('Pending', 'Pembayaran sedang diproses. Coba buka kembali event ini setelah pembayaran selesai.');
-      } else if (result.status === 'canceled') {
-        Alert.alert('Dibatalkan', 'Pembayaran dibatalkan.');
-      } else {
-        Alert.alert('Gagal', 'Pembayaran gagal. Silakan coba lagi.');
+      if (!paymentResponse.redirect_url) {
+        throw new Error('Link pembayaran Midtrans tidak tersedia.');
       }
+
+      await Linking.openURL(paymentResponse.redirect_url);
+      Alert.alert(
+        'Selesaikan Pembayaran',
+        'Setelah pembayaran berhasil, kembali ke aplikasi lalu buka event ini lagi.'
+      );
     } catch (err: any) {
       console.error('Ticket payment error:', err);
       Alert.alert('Error', err.response?.data?.error || err.message || 'Gagal membuat pembayaran tiket.');
@@ -105,7 +86,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   // Loading state
-  if (isLoading || isAccessLoading || isPlayerLoading) {
+  if (isLoading || (hasAccess && isPlayerLoading)) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.accent[500]} />
@@ -115,7 +96,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
   }
 
   // Error state
-  if (error || (ticketPrice > 0 && hasAccess && playerError)) {
+  if (error || (requiresTicket && hasAccess && playerError)) {
     return (
       <View style={styles.errorContainer}>
         <SafeIcon name="error-outline" size={48} color={COLORS.red[500]} />
@@ -127,19 +108,11 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   }
 
-  // Broadcast not found or ended
-  if (!broadcast || broadcast.status !== 'LIVE') {
+  if (!broadcast) {
     return (
       <View style={styles.errorContainer}>
-        <SafeIcon
-          name={broadcast?.status === 'ENDED' ? 'video-library' : 'event-busy'}
-          size={48}
-          color={COLORS.cream[200]}
-        />
-        <Text style={styles.errorText}>
-          {broadcast?.status === 'ENDED' ? 'Stream has ended' : 'Stream not found'}
-        </Text>
-        <Text style={styles.errorSubtext}>{broadcast?.title || ''}</Text>
+        <SafeIcon name="event-busy" size={48} color={COLORS.cream[200]} />
+        <Text style={styles.errorText}>Stream not found</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
@@ -147,7 +120,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   }
 
-  if (!hasAccess) {
+  if (requiresTicket && !hasAccess) {
     return (
       <View style={styles.errorContainer}>
         <SafeIcon name="lock" size={48} color={COLORS.accent[500]} />
@@ -158,6 +131,9 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
         <Text style={styles.ticketPrice}>
           Rp {ticketPrice.toLocaleString('id-ID')}
         </Text>
+        {isAccessLoading && (
+          <Text style={styles.checkingAccessText}>Memeriksa tiket...</Text>
+        )}
         <TouchableOpacity
           style={[styles.backButton, isPaymentProcessing && styles.buttonDisabled]}
           onPress={handleBuyTicket}
@@ -174,11 +150,28 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   }
 
+  if (broadcast.status === 'ENDED' || broadcast.status === 'CANCELLED') {
+    return (
+      <View style={styles.errorContainer}>
+        <SafeIcon name="video-library" size={48} color={COLORS.cream[200]} />
+        <Text style={styles.errorText}>
+          {broadcast.status === 'ENDED' ? 'Stream has ended' : 'Stream cancelled'}
+        </Text>
+        <Text style={styles.errorSubtext}>{broadcast.title}</Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (!playbackBroadcast?.playback_url) {
     return (
       <View style={styles.errorContainer}>
         <SafeIcon name="event-busy" size={48} color={COLORS.cream[200]} />
-        <Text style={styles.errorText}>Stream belum tersedia</Text>
+        <Text style={styles.errorText}>
+          {broadcast.status === 'SCHEDULED' ? 'Live belum dimulai' : 'Stream belum tersedia'}
+        </Text>
         <Text style={styles.errorSubtext}>{broadcast.title}</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Go Back</Text>
@@ -304,6 +297,11 @@ const styles = StyleSheet.create({
     color: COLORS.accent[400],
     fontWeight: THEME.typography.fontWeight.bold,
     marginBottom: THEME.spacing.xl,
+  },
+  checkingAccessText: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.cream[200],
+    marginBottom: THEME.spacing.md,
   },
   videoContainer: {
     flex: 1,

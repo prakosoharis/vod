@@ -10,6 +10,14 @@ const generateOrderId = (): string => {
   return `ORD-${timestamp}-${random}`;
 };
 
+const getMidtransRedirectUrl = (token: string): string => {
+  const snapHost = process.env.MIDTRANS_IS_PRODUCTION === 'true'
+    ? 'https://app.midtrans.com'
+    : 'https://app.sandbox.midtrans.com';
+
+  return `${snapHost}/snap/v2/vtweb/${token}`;
+};
+
 const grantPaidAccess = async (transaction: any) => {
   if (transaction.payment_type === 'SUBSCRIPTION') {
     const metadata = transaction.metadata as any;
@@ -603,7 +611,7 @@ export const buyBroadcastTicket = async (
         data: {
           token: existingPending.midtrans_token,
           snap_token: existingPending.midtrans_token,
-          redirect_url: null,
+          redirect_url: getMidtransRedirectUrl(existingPending.midtrans_token),
           order_id: existingPending.order_id,
           transaction_id: existingPending.order_id,
           gross_amount: Number(existingPending.amount),
@@ -674,7 +682,7 @@ export const buyBroadcastTicket = async (
       data: {
         token: snapTransaction.token,
         snap_token: snapTransaction.token,
-        redirect_url: snapTransaction.redirect_url,
+        redirect_url: snapTransaction.redirect_url || getMidtransRedirectUrl(snapTransaction.token),
         order_id: orderId,
         transaction_id: orderId,
         gross_amount: ticketPrice,

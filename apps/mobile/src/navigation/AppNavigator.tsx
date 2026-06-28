@@ -25,10 +25,11 @@ import { COLORS } from '../constants';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const mostaraLogo = require('../assets/logo.png');
+let hasShownInitialSplash = false;
 
 const AppNavigator = () => {
   const { isAuthenticated, isLoading, hasHydrated, checkAuth } = useAuthStore();
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(!hasShownInitialSplash);
 
   useEffect(() => {
     if (!hasHydrated) {
@@ -37,9 +38,16 @@ const AppNavigator = () => {
   }, [checkAuth, hasHydrated]);
 
   useEffect(() => {
-    const splashTimer = setTimeout(() => setShowSplash(false), 5000);
+    if (!showSplash) {
+      return;
+    }
+
+    const splashTimer = setTimeout(() => {
+      hasShownInitialSplash = true;
+      setShowSplash(false);
+    }, 5000);
     return () => clearTimeout(splashTimer);
-  }, []);
+  }, [showSplash]);
 
   if (showSplash || isLoading || !hasHydrated) {
     return (
@@ -93,7 +101,6 @@ const AppNavigator = () => {
             component={LiveStreamScreen}
             options={{
               headerShown: false,
-              orientation: 'landscape',
             }}
           />
           <Stack.Screen

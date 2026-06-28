@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, MIDTRANS_CONFIG } from '../constants';
 
 export interface SubscriptionPlan {
   id: string;
@@ -31,11 +31,17 @@ export interface AccessCheckResponse {
 
 const unwrapPaymentResponse = (response: any): PaymentResponse => {
   const data = response.data?.data || response.data;
+  const snapToken = data.snap_token || data.token;
+  const snapHost = MIDTRANS_CONFIG.isProduction
+    ? 'https://app.midtrans.com'
+    : 'https://app.sandbox.midtrans.com';
+
   return {
     ...data,
-    snap_token: data.snap_token || data.token,
+    snap_token: snapToken,
     transaction_id: data.transaction_id || data.order_id,
     gross_amount: data.gross_amount || data.amount || 0,
+    redirect_url: data.redirect_url || (snapToken ? `${snapHost}/snap/v2/vtweb/${snapToken}` : undefined),
   };
 };
 
@@ -145,6 +151,10 @@ class PaymentService {
   async checkBroadcastAccess(broadcastId: string): Promise<AccessCheckResponse> {
     const response = await this.client.get(`/payment/broadcast/${broadcastId}/access`);
     return response.data?.data || response.data;
+  }
+
+  async simulateDevWebhook(orderId: string): Promise<void> {
+    await this.client.post(`/payment/dev-webhook/${orderId}`);
   }
 
   // Access Check
