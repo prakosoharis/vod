@@ -28,6 +28,20 @@ interface ChatMessage {
   created_at: string;
 }
 
+interface BroadcastEditForm {
+  title: string;
+  description: string;
+  category: string;
+  scheduled_time: string;
+  chat_enabled: boolean;
+  ticket_price: string;
+  stream_key: string;
+  rtmp_url: string;
+  playback_url: string;
+  thumbnail_url: string;
+  backdrop_url: string;
+}
+
 export default function BroadcasterPage() {
   const [broadcasts, setBroadcasts] = useState<BroadcastEvent[]>([]);
   const [currentBroadcast, setCurrentBroadcast] = useState<BroadcastEvent | null>(null);
@@ -42,6 +56,21 @@ export default function BroadcasterPage() {
   const [eventImage, setEventImage] = useState<File | null>(null);
   const [eventImagePreview, setEventImagePreview] = useState('');
   const [ticketPrice, setTicketPrice] = useState('0');
+  const [editEventImage, setEditEventImage] = useState<File | null>(null);
+  const [editEventImagePreview, setEditEventImagePreview] = useState('');
+  const [editForm, setEditForm] = useState<BroadcastEditForm>({
+    title: '',
+    description: '',
+    category: '',
+    scheduled_time: '',
+    chat_enabled: true,
+    ticket_price: '0',
+    stream_key: '',
+    rtmp_url: '',
+    playback_url: '',
+    thumbnail_url: '',
+    backdrop_url: '',
+  });
 
   // Chat state
   const [chatInput, setChatInput] = useState('');
@@ -59,10 +88,39 @@ export default function BroadcasterPage() {
     return `${apiOrigin}${url.startsWith('/') ? url : `/${url}`}`;
   };
 
+  const formatDateTimeLocal = (date?: string) => {
+    if (!date) return '';
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const offset = parsed.getTimezoneOffset();
+    const localDate = new Date(parsed.getTime() - offset * 60000);
+    return localDate.toISOString().slice(0, 16);
+  };
+
   // Fetch broadcasts on load
   useEffect(() => {
     fetchBroadcasts();
   }, []);
+
+  useEffect(() => {
+    if (!currentBroadcast) return;
+
+    setEditForm({
+      title: currentBroadcast.title || '',
+      description: currentBroadcast.description || '',
+      category: currentBroadcast.category || '',
+      scheduled_time: formatDateTimeLocal(currentBroadcast.scheduled_time),
+      chat_enabled: currentBroadcast.chat_enabled,
+      ticket_price: String(Number(currentBroadcast.ticket_price || 0)),
+      stream_key: currentBroadcast.stream_key || '',
+      rtmp_url: currentBroadcast.rtmp_url || '',
+      playback_url: currentBroadcast.playback_url || '',
+      thumbnail_url: currentBroadcast.thumbnail_url || '',
+      backdrop_url: currentBroadcast.backdrop_url || '',
+    });
+    setEditEventImage(null);
+    setEditEventImagePreview('');
+  }, [currentBroadcast]);
 
   // WebSocket connection
   useEffect(() => {
@@ -116,11 +174,11 @@ export default function BroadcasterPage() {
     }
   };
 
-  const uploadEventImage = async () => {
-    if (!eventImage) return undefined;
+  const uploadEventImage = async (file: File | null) => {
+    if (!file) return undefined;
 
     const formData = new FormData();
-    formData.append('file', eventImage);
+    formData.append('file', file);
 
     const response = await fetch(`${API_URL}/api/upload?type=broadcast`, {
       method: 'POST',
@@ -140,7 +198,7 @@ export default function BroadcasterPage() {
     setLoading(true);
 
     try {
-      const uploadedImageUrl = await uploadEventImage();
+      const uploadedImageUrl = await uploadEventImage(eventImage);
 
       const response = await fetch(`${API_URL}/api/broadcasts`, {
         method: 'POST',
@@ -177,6 +235,55 @@ export default function BroadcasterPage() {
     } catch (error) {
       console.error('Error creating broadcast:', error);
       alert('Error creating broadcast');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentBroadcast) return;
+
+    setLoading(true);
+
+    try {
+      const uploadedImageUrl = await uploadEventImage(editEventImage);
+      const thumbnailUrl = uploadedImageUrl || editForm.thumbnail_url || undefined;
+      const backdropUrl = uploadedImageUrl || editForm.backdrop_url || thumbnailUrl;
+
+      const response = await fetch(`${API_URL}/api/broadcasts/${currentBroadcast.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editForm.title,
+          description: editForm.description,
+          category: editForm.category,
+          scheduled_time: editForm.scheduled_time
+            ? new Date(editForm.scheduled_time).toISOString()
+            : undefined,
+          chat_enabled: editForm.chat_enabled,
+          ticket_price: Math.max(0, Number(editForm.ticket_price) || 0),
+          stream_key: editForm.stream_key,
+          rtmp_url: editForm.rtmp_url,
+          playback_url: editForm.playback_url,
+          thumbnail_url: thumbnailUrl,
+          backdrop_url: backdropUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update broadcast');
+      }
+
+      const updated = await response.json();
+      setCurrentBroadcast(updated);
+      setBroadcasts((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+      setEditEventImage(null);
+      setEditEventImagePreview('');
+      alert('Broadcast updated successfully!');
+    } catch (error) {
+      console.error('Error updating broadcast:', error);
+      alert('Error updating broadcast');
     } finally {
       setLoading(false);
     }
@@ -425,21 +532,16 @@ export default function BroadcasterPage() {
           <div className="lg:col-span-1">
             {currentBroadcast ? (
               <div className="bg-gray-800 rounded-lg p-6">
-                <h2 className="text-xl font-semibold mb-4">Stream Info</h2>
+                <h2 className="text-xl font-semibold mb-4">Broadcast Detail & Edit</h2>
 
-                <div className="space-y-4">
-                  {currentBroadcast.thumbnail_url && (
+                <form onSubmit={updateBroadcast} className="space-y-4">
+                  {(editEventImagePreview || currentBroadcast.thumbnail_url) && (
                     <img
-                      src={resolveAssetUrl(currentBroadcast.thumbnail_url)}
+                      src={editEventImagePreview || resolveAssetUrl(currentBroadcast.thumbnail_url)}
                       alt={currentBroadcast.title}
                       className="h-44 w-full rounded-lg object-cover border border-gray-700"
                     />
                   )}
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-400">Title</label>
-                    <div className="text-lg">{currentBroadcast.title}</div>
-                  </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-1 text-gray-400">Status</label>
@@ -453,21 +555,103 @@ export default function BroadcasterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-400">Ticket</label>
-                    <div className="text-lg">
-                      {Number(currentBroadcast.ticket_price || 0) > 0
-                        ? `Rp ${Number(currentBroadcast.ticket_price).toLocaleString('id-ID')}`
-                        : 'Free'}
-                    </div>
+                    <label className="block text-sm font-medium mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Category</label>
+                    <select
+                      value={editForm.category}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                      required
+                    >
+                      <option value="">Select category</option>
+                      <option value="Sports">Sports</option>
+                      <option value="Music">Music</option>
+                      <option value="Education">Education</option>
+                      <option value="Gaming">Gaming</option>
+                      <option value="News">News</option>
+                      <option value="Entertainment">Entertainment</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Scheduled Time</label>
+                    <input
+                      type="datetime-local"
+                      value={editForm.scheduled_time}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, scheduled_time: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Event Image</label>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setEditEventImage(file);
+                        setEditEventImagePreview(file ? URL.createObjectURL(file) : '');
+                      }}
+                      className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:outline-none text-sm"
+                    />
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="editChatEnabled"
+                      checked={editForm.chat_enabled}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, chat_enabled: e.target.checked }))}
+                      className="mr-2"
+                    />
+                    <label htmlFor="editChatEnabled" className="text-sm">Enable Live Chat</label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Ticket Price (Rp)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={editForm.ticket_price}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, ticket_price: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-1 text-gray-400">RTMP URL</label>
-                    <div className="bg-gray-900 p-3 rounded font-mono text-sm break-all">
-                      {currentBroadcast.rtmp_url}
-                    </div>
+                    <textarea
+                      value={editForm.rtmp_url}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, rtmp_url: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-900 rounded border border-gray-600 focus:border-blue-500 focus:outline-none font-mono text-sm"
+                      rows={3}
+                    />
                     <button
-                      onClick={() => copyToClipboard(currentBroadcast.rtmp_url)}
+                      type="button"
+                      onClick={() => copyToClipboard(editForm.rtmp_url)}
                       className="mt-2 text-sm text-blue-400 hover:text-blue-300"
                     >
                       📋 Copy RTMP URL
@@ -475,25 +659,63 @@ export default function BroadcasterPage() {
                   </div>
 
                   <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-400">Playback URL</label>
+                    <textarea
+                      value={editForm.playback_url}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, playback_url: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-900 rounded border border-gray-600 focus:border-blue-500 focus:outline-none font-mono text-sm"
+                      rows={3}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(editForm.playback_url)}
+                      className="mt-2 text-sm text-blue-400 hover:text-blue-300"
+                    >
+                      📋 Copy Playback URL
+                    </button>
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium mb-1 text-gray-400">Stream Key</label>
-                    <div className="bg-gray-900 p-3 rounded font-mono text-sm break-all">
-                      {showStreamKey ? currentBroadcast.stream_key : '•••••••••••••••••••••••••••••••••••••••••'}
-                      <button
-                        onClick={() => setShowStreamKey(!showStreamKey)}
-                        className="text-blue-400 hover:text-blue-300 ml-2"
-                      >
-                        {showStreamKey ? '🙈 Hide' : '👁️ Show'}
-                      </button>
-                      {showStreamKey && (
+                    <div className="bg-gray-900 p-3 rounded border border-gray-600">
+                      <textarea
+                        value={showStreamKey ? editForm.stream_key : '•••••••••••••••••••••••••••••••••••••••••'}
+                        onChange={(e) => {
+                          if (!showStreamKey) return;
+                          setEditForm((prev) => ({ ...prev, stream_key: e.target.value }));
+                        }}
+                        readOnly={!showStreamKey}
+                        className="w-full bg-transparent focus:outline-none font-mono text-sm resize-none"
+                        rows={3}
+                      />
+                      <div className="mt-2 flex gap-3 text-sm">
                         <button
-                          onClick={() => copyToClipboard(currentBroadcast.stream_key)}
-                          className="text-blue-400 hover:text-blue-300 ml-2"
+                          type="button"
+                          onClick={() => setShowStreamKey(!showStreamKey)}
+                          className="text-blue-400 hover:text-blue-300"
                         >
-                          📋 Copy
+                          {showStreamKey ? '🙈 Hide' : '👁️ Show'}
                         </button>
-                      )}
+                        {showStreamKey && (
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(editForm.stream_key)}
+                            className="text-blue-400 hover:text-blue-300"
+                          >
+                            📋 Copy
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 py-2 px-4 rounded font-medium"
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
 
                   <div className="border-t border-gray-700 pt-4">
                     <h3 className="font-medium mb-2">⚡ Quick Start with OBS:</h3>
@@ -511,6 +733,7 @@ export default function BroadcasterPage() {
                   <div className="flex gap-2">
                     {currentBroadcast.status !== 'LIVE' && (
                       <button
+                        type="button"
                         onClick={() => updateStatus('LIVE')}
                         className="flex-1 bg-red-600 hover:bg-red-700 py-2 px-4 rounded font-medium"
                       >
@@ -519,6 +742,7 @@ export default function BroadcasterPage() {
                     )}
                     {currentBroadcast.status === 'LIVE' && (
                       <button
+                        type="button"
                         onClick={() => updateStatus('ENDED')}
                         className="flex-1 bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded font-medium"
                       >
@@ -526,7 +750,7 @@ export default function BroadcasterPage() {
                       </button>
                     )}
                   </div>
-                </div>
+                </form>
               </div>
             ) : (
               <div className="bg-gray-800 rounded-lg p-6 text-center text-gray-400">

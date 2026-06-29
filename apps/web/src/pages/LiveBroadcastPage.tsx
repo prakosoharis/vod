@@ -64,6 +64,7 @@ const LiveBroadcastPage: React.FC = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [streamMessage, setStreamMessage] = useState<string | null>(null);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -88,9 +89,25 @@ const LiveBroadcastPage: React.FC = () => {
     checkAccess();
   }, [id, isAuthenticated]);
 
-  const fetchBroadcast = async () => {
+  useEffect(() => {
+    if (!id) return;
+
+    const interval = window.setInterval(async () => {
+      await fetchBroadcast(false);
+
+      if (hasAccess) {
+        await fetchPlayerBroadcast(false);
+      }
+    }, 10000);
+
+    return () => window.clearInterval(interval);
+  }, [id, hasAccess, token]);
+
+  const fetchBroadcast = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       setError(null);
       const response = await fetch(`${API_URL}/broadcasts/${id}`);
       if (!response.ok) {
@@ -98,6 +115,7 @@ const LiveBroadcastPage: React.FC = () => {
       }
       const data = await response.json();
       setBroadcast(data);
+      setStreamMessage(null);
       if (Number(data.ticket_price || 0) <= 0) {
         setHasAccess(true);
         setAccessLoading(false);
@@ -105,7 +123,9 @@ const LiveBroadcastPage: React.FC = () => {
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
@@ -131,7 +151,7 @@ const LiveBroadcastPage: React.FC = () => {
     }
   };
 
-  const fetchPlayerBroadcast = async () => {
+  const fetchPlayerBroadcast = async (updateState = true) => {
     if (!id) return null;
 
     const response = await fetch(`${API_URL}/broadcasts/${id}/player`, {
@@ -143,7 +163,10 @@ const LiveBroadcastPage: React.FC = () => {
     }
 
     const data = await response.json();
-    setBroadcast(data);
+    if (updateState) {
+      setBroadcast(data);
+      setStreamMessage(null);
+    }
     return data;
   };
 
@@ -210,17 +233,30 @@ const LiveBroadcastPage: React.FC = () => {
       hls.attachMedia(videoRef.current);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setStreamMessage(null);
         videoRef.current?.play().catch(() => {});
       });
 
       hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (
-          data.type === Hls.ErrorTypes.NETWORK_ERROR ||
-          data.type === Hls.ErrorTypes.MEDIA_ERROR
-        ) {
+        if (!data.fatal) {
           return;
         }
+
         console.warn('HLS Error:', data.details);
+
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          setStreamMessage('Stream belum siap atau manifest belum tersedia. Halaman akan mencoba memuat ulang otomatis.');
+          hls.startLoad();
+          return;
+        }
+
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          setStreamMessage('Stream sedang dipulihkan. Mohon tunggu sebentar.');
+          hls.recoverMediaError();
+          return;
+        }
+
+        setStreamMessage('Player tidak bisa memuat stream saat ini. Coba refresh halaman setelah stream benar-benar LIVE.');
       });
     } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
       // Safari native HLS
@@ -268,6 +304,21 @@ const LiveBroadcastPage: React.FC = () => {
 
     socket.on('chat-message', (message: ChatMessage) => {
       setChatMessages((prev) => [...prev, message]);
+    });
+
+    socket.on('broadcast-status-update', async (data: { broadcast_id: string; status: BroadcastEvent['status'] }) => {
+      if (data.broadcast_id !== id) return;
+
+      setBroadcast((prev) => (prev ? { ...prev, status: data.status } : prev));
+
+      try {
+        await fetchBroadcast(false);
+        if (data.status === 'LIVE' || data.status === 'ENDED') {
+          await fetchPlayerBroadcast(true);
+        }
+      } catch (error) {
+        console.warn('Failed to refresh broadcast after status update:', error);
+      }
     });
 
     socket.on('user-typing', (data: { username: string }) => {
@@ -503,6 +554,12 @@ const LiveBroadcastPage: React.FC = () => {
                   playsInline
                   muted={isMuted}
                 />
+
+                {streamMessage && (
+                  <div className="absolute inset-x-6 bottom-20 z-10 rounded-xl border border-yellow-500/30 bg-black/75 px-4 py-3 text-sm text-yellow-100">
+                    {streamMessage}
+                  </div>
+                )}
 
                 {/* Video controls */}
                 {(broadcast.status === 'LIVE' || broadcast.status === 'ENDED') && (

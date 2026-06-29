@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { broadcastService } from '../services/broadcastService';
 import { prisma } from '../config/database';
 import { verifyToken } from '../utils/jwt.js';
+import { getChatWebSocket } from '../websocket/chatWebSocket.js';
 
 export class BroadcastController {
   // Create new broadcast
@@ -114,6 +115,7 @@ export class BroadcastController {
       const { id } = req.params as any;
       const { status } = req.body as any;
       const broadcast = await broadcastService.updateStatus(id, status);
+      getChatWebSocket().notifyBroadcastStatus(id, status);
       return reply.send(broadcast);
     } catch (error: any) {
       if (error.message === 'Broadcast not found') {

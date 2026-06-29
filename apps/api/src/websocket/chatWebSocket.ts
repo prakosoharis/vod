@@ -33,12 +33,18 @@ export class ChatWebSocket {
       console.log('⚡ Client connected to chat WebSocket:', socket.id);
 
       // Join broadcast room
-      socket.on('join-broadcast', (broadcastId: string) => {
-        socket.join(`broadcast:${broadcastId}`);
-        console.log(`📺 Socket ${socket.id} joined broadcast: ${broadcastId}`);
+      socket.on('join-broadcast', async (broadcastId: string) => {
+        try {
+          await broadcastService.getById(broadcastId);
+          socket.join(`broadcast:${broadcastId}`);
+          console.log(`📺 Socket ${socket.id} joined broadcast: ${broadcastId}`);
 
-        // Send recent chat messages
-        this.loadRecentMessages(broadcastId, socket);
+          // Send recent chat messages
+          this.loadRecentMessages(broadcastId, socket);
+        } catch (error: any) {
+          console.error('Error joining broadcast room:', error);
+          socket.emit('chat-error', { error: 'Broadcast room not found' });
+        }
       });
 
       // Leave broadcast room
@@ -59,6 +65,8 @@ export class ChatWebSocket {
         });
 
         try {
+          await broadcastService.getById(data.broadcast_id);
+
           // Save to database
           const chatMessage = await broadcastService.createChatMessage(
             data.broadcast_id,
@@ -104,10 +112,12 @@ export class ChatWebSocket {
 
   private async loadRecentMessages(broadcastId: string, socket: any) {
     try {
+      await broadcastService.getById(broadcastId);
       const messages = await broadcastService.getChatMessages(broadcastId, 20);
       socket.emit('recent-messages', messages);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading recent messages:', error);
+      socket.emit('chat-error', { error: error.message || 'Failed to load recent messages' });
     }
   }
 
