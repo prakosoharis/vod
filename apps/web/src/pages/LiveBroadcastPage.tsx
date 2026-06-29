@@ -207,6 +207,20 @@ const LiveBroadcastPage: React.FC = () => {
 
     const playbackUrl = broadcast.playback_url;
     if (!playbackUrl) return;
+    const video = videoRef.current;
+
+    const attemptPlayback = () => {
+      video.defaultMuted = true;
+      video.muted = true;
+      video.playsInline = true;
+      const playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch((err) => {
+          console.warn('Video autoplay blocked or delayed:', err);
+          setStreamMessage('Stream sudah tersedia. Tekan video atau tombol refresh jika playback belum mulai otomatis.');
+        });
+      }
+    };
 
     // Only play if LIVE or ENDED
     if (broadcast.status !== 'LIVE' && broadcast.status !== 'ENDED') return;
@@ -230,11 +244,11 @@ const LiveBroadcastPage: React.FC = () => {
       hlsRef.current = hls;
 
       hls.loadSource(playbackUrl);
-      hls.attachMedia(videoRef.current);
+      hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setStreamMessage(null);
-        videoRef.current?.play().catch(() => {});
+        attemptPlayback();
       });
 
       hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -260,11 +274,16 @@ const LiveBroadcastPage: React.FC = () => {
       });
     } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
       // Safari native HLS
-      videoRef.current.src = playbackUrl;
-      videoRef.current.play().catch(() => {});
+      video.src = playbackUrl;
+      attemptPlayback();
     }
 
+    video.addEventListener('loadedmetadata', attemptPlayback);
+    video.addEventListener('canplay', attemptPlayback);
+
     return () => {
+      video.removeEventListener('loadedmetadata', attemptPlayback);
+      video.removeEventListener('canplay', attemptPlayback);
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
@@ -553,6 +572,8 @@ const LiveBroadcastPage: React.FC = () => {
                   className="w-full h-full object-contain"
                   playsInline
                   muted={isMuted}
+                  autoPlay
+                  controls
                 />
 
                 {streamMessage && (
