@@ -325,11 +325,30 @@ const LiveBroadcastPage: React.FC = () => {
 
   // Initialize HLS player
   useEffect(() => {
-    if (!broadcast || !videoRef.current || !hasAccess) return;
+    if (!broadcast) {
+      pushDebugLog('HLS effect skipped: no broadcast');
+      return;
+    }
+
+    if (!videoRef.current) {
+      pushDebugLog('HLS effect skipped: videoRef not ready');
+      return;
+    }
+
+    if (!hasAccess) {
+      pushDebugLog('HLS effect skipped: hasAccess=false');
+      return;
+    }
 
     const playbackUrl = broadcast.playback_url;
-    if (!playbackUrl) return;
+    if (!playbackUrl) {
+      pushDebugLog('HLS effect skipped: empty playback URL');
+      return;
+    }
     const video = videoRef.current;
+    pushDebugLog(
+      `HLS effect start: status=${broadcast.status}, playbackStatus=${playbackStatus?.available ?? 'unknown'}, readyState=${video.readyState}`
+    );
 
     const attemptPlayback = () => {
       video.defaultMuted = true;
@@ -346,7 +365,10 @@ const LiveBroadcastPage: React.FC = () => {
     };
 
     // Only play if LIVE or ENDED
-    if (broadcast.status !== 'LIVE' && broadcast.status !== 'ENDED') return;
+    if (broadcast.status !== 'LIVE' && broadcast.status !== 'ENDED') {
+      pushDebugLog(`HLS effect skipped: status=${broadcast.status}`);
+      return;
+    }
 
     // Clean up previous instance
     if (hlsRef.current) {
@@ -355,6 +377,7 @@ const LiveBroadcastPage: React.FC = () => {
     }
 
     if (Hls.isSupported()) {
+      pushDebugLog('HLS.js supported, attaching source');
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: broadcast.status === 'LIVE',
@@ -409,8 +432,11 @@ const LiveBroadcastPage: React.FC = () => {
       });
     } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
       // Safari native HLS
+      pushDebugLog('Native HLS branch used');
       video.src = playbackUrl;
       attemptPlayback();
+    } else {
+      pushDebugLog('No supported HLS playback path found');
     }
 
     video.addEventListener('loadedmetadata', attemptPlayback);
@@ -421,6 +447,7 @@ const LiveBroadcastPage: React.FC = () => {
     });
 
     return () => {
+      pushDebugLog('HLS effect cleanup');
       video.removeEventListener('loadedmetadata', attemptPlayback);
       video.removeEventListener('canplay', attemptPlayback);
       if (hlsRef.current) {
