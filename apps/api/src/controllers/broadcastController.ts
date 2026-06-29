@@ -139,6 +139,19 @@ export class BroadcastController {
     }
   }
 
+  async getPlaybackStatus(req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { id } = req.params as any;
+      const playbackStatus = await broadcastService.getPlaybackAvailability(id);
+      return reply.send(playbackStatus);
+    } catch (error: any) {
+      if (error.message === 'Broadcast not found') {
+        return reply.code(404).send({ error: error.message });
+      }
+      return reply.code(500).send({ error: error.message });
+    }
+  }
+
   // Get chat messages
   async getChatMessages(req: FastifyRequest, reply: FastifyReply) {
     try {

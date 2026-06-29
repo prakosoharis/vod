@@ -30,6 +30,14 @@ export interface UpdateBroadcastInput {
   playback_url?: string;
 }
 
+export interface PlaybackAvailabilityResult {
+  available: boolean;
+  http_status: number | null;
+  checked_at: string;
+  message: string;
+  playback_url: string;
+}
+
 export class BroadcastService {
   // Get IVS credentials from environment
   private getIVSCredentials() {
@@ -158,6 +166,63 @@ export class BroadcastService {
     }
 
     return broadcast;
+  }
+
+  async getPlaybackAvailability(id: string): Promise<PlaybackAvailabilityResult> {
+    const broadcast = await prisma.broadcastEvent.findUnique({
+      where: { id },
+      select: {
+        playback_url: true,
+      },
+    });
+
+    if (!broadcast) {
+      throw new Error('Broadcast not found');
+    }
+
+    const checked_at = new Date().toISOString();
+    const playback_url = broadcast.playback_url || '';
+
+    if (!playback_url) {
+      return {
+        available: false,
+        http_status: null,
+        checked_at,
+        playback_url,
+        message: 'Playback URL belum diisi.',
+      };
+    }
+
+    try {
+      const response = await fetch(playback_url, {
+        method: 'GET',
+        headers: {
+          accept: 'application/vnd.apple.mpegurl,text/plain,*/*',
+        },
+        signal: AbortSignal.timeout(5000),
+      });
+
+      const body = await response.text();
+      const hasManifest = response.ok && body.includes('#EXTM3U');
+
+      return {
+        available: hasManifest,
+        http_status: response.status,
+        checked_at,
+        playback_url,
+        message: hasManifest
+          ? 'Manifest HLS IVS sudah aktif.'
+          : `Manifest IVS belum tersedia${response.status ? ` (HTTP ${response.status})` : ''}.`,
+      };
+    } catch (error: any) {
+      return {
+        available: false,
+        http_status: null,
+        checked_at,
+        playback_url,
+        message: error?.message || 'Gagal menghubungi playback URL.',
+      };
+    }
   }
 
   // Add viewer count (manually updated for now)

@@ -42,11 +42,20 @@ interface BroadcastEditForm {
   backdrop_url: string;
 }
 
+interface PlaybackStatus {
+  available: boolean;
+  http_status: number | null;
+  checked_at: string;
+  message: string;
+  playback_url: string;
+}
+
 export default function BroadcasterPage() {
   const [broadcasts, setBroadcasts] = useState<BroadcastEvent[]>([]);
   const [currentBroadcast, setCurrentBroadcast] = useState<BroadcastEvent | null>(null);
   const [loading, setLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [playbackStatus, setPlaybackStatus] = useState<PlaybackStatus | null>(null);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -121,6 +130,33 @@ export default function BroadcasterPage() {
     setEditEventImage(null);
     setEditEventImagePreview('');
   }, [currentBroadcast]);
+
+  useEffect(() => {
+    if (!currentBroadcast) {
+      setPlaybackStatus(null);
+      return;
+    }
+
+    const loadPlaybackStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/broadcasts/${currentBroadcast.id}/playback-status`);
+        if (!response.ok) {
+          setPlaybackStatus(null);
+          return;
+        }
+
+        const data = await response.json();
+        setPlaybackStatus(data);
+      } catch (error) {
+        console.error('Error checking playback status:', error);
+      }
+    };
+
+    loadPlaybackStatus();
+    const interval = window.setInterval(loadPlaybackStatus, 10000);
+
+    return () => window.clearInterval(interval);
+  }, [API_URL, currentBroadcast?.id]);
 
   // WebSocket connection
   useEffect(() => {
@@ -552,6 +588,20 @@ export default function BroadcasterPage() {
                     }`}>
                       {currentBroadcast.status}
                     </div>
+                  </div>
+
+                  <div className={`rounded-lg border px-4 py-3 text-sm ${
+                    playbackStatus?.available
+                      ? 'border-green-500/40 bg-green-500/10 text-green-200'
+                      : 'border-yellow-500/40 bg-yellow-500/10 text-yellow-100'
+                  }`}>
+                    <div className="font-medium mb-1">
+                      {playbackStatus?.available ? 'Playback IVS aktif' : 'Playback IVS belum aktif'}
+                    </div>
+                    <div>{playbackStatus?.message || 'Belum ada hasil pengecekan playback.'}</div>
+                    {playbackStatus?.http_status && (
+                      <div className="mt-1 text-xs opacity-80">HTTP {playbackStatus.http_status}</div>
+                    )}
                   </div>
 
                   <div>

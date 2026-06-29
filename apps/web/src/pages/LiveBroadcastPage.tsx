@@ -50,6 +50,14 @@ interface ChatMessage {
   created_at: string;
 }
 
+interface PlaybackStatus {
+  available: boolean;
+  http_status: number | null;
+  checked_at: string;
+  message: string;
+  playback_url: string;
+}
+
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3002';
 
@@ -65,6 +73,7 @@ const LiveBroadcastPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [streamMessage, setStreamMessage] = useState<string | null>(null);
+  const [playbackStatus, setPlaybackStatus] = useState<PlaybackStatus | null>(null);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -98,6 +107,8 @@ const LiveBroadcastPage: React.FC = () => {
       if (hasAccess) {
         await fetchPlayerBroadcast(false);
       }
+
+      await fetchPlaybackStatus(false);
     }, 10000);
 
     return () => window.clearInterval(interval);
@@ -119,6 +130,9 @@ const LiveBroadcastPage: React.FC = () => {
       if (Number(data.ticket_price || 0) <= 0) {
         setHasAccess(true);
         setAccessLoading(false);
+      }
+      if (data.status === 'LIVE' || data.status === 'ENDED') {
+        await fetchPlaybackStatus();
       }
     } catch (err: any) {
       setError(err.message);
@@ -143,6 +157,7 @@ const LiveBroadcastPage: React.FC = () => {
       setHasAccess(response.data.has_access);
       if (response.data.has_access) {
         await fetchPlayerBroadcast();
+        await fetchPlaybackStatus();
       }
     } catch {
       setHasAccess(false);
@@ -168,6 +183,35 @@ const LiveBroadcastPage: React.FC = () => {
       setStreamMessage(null);
     }
     return data;
+  };
+
+  const fetchPlaybackStatus = async (updateMessage = true) => {
+    if (!id) return null;
+
+    try {
+      const response = await fetch(`${API_URL}/broadcasts/${id}/playback-status`);
+      if (!response.ok) {
+        return null;
+      }
+
+      const data: PlaybackStatus = await response.json();
+      setPlaybackStatus(data);
+
+      if (
+        updateMessage &&
+        broadcast &&
+        (broadcast.status === 'LIVE' || broadcast.status === 'ENDED') &&
+        !data.available
+      ) {
+        setStreamMessage(
+          `Sumber video IVS belum aktif. ${data.message} Pastikan encoder/OBS sedang push ke RTMP URL dan stream key event ini.`
+        );
+      }
+
+      return data;
+    } catch {
+      return null;
+    }
   };
 
   const handleBuyTicket = async () => {
@@ -259,7 +303,11 @@ const LiveBroadcastPage: React.FC = () => {
         console.warn('HLS Error:', data.details);
 
         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-          setStreamMessage('Stream belum siap atau manifest belum tersedia. Halaman akan mencoba memuat ulang otomatis.');
+          setStreamMessage(
+            playbackStatus?.available === false
+              ? `Sumber video IVS belum aktif. ${playbackStatus.message} Pastikan encoder/OBS sedang push ke RTMP URL dan stream key event ini.`
+              : 'Stream belum siap atau manifest belum tersedia. Halaman akan mencoba memuat ulang otomatis.'
+          );
           hls.startLoad();
           return;
         }
@@ -289,7 +337,7 @@ const LiveBroadcastPage: React.FC = () => {
         hlsRef.current = null;
       }
     };
-  }, [broadcast?.id, broadcast?.status, broadcast?.playback_url, hasAccess]);
+  }, [broadcast?.id, broadcast?.status, broadcast?.playback_url, hasAccess, playbackStatus?.available, playbackStatus?.message]);
 
   // WebSocket chat connection
   useEffect(() => {
@@ -334,6 +382,7 @@ const LiveBroadcastPage: React.FC = () => {
         await fetchBroadcast(false);
         if (data.status === 'LIVE' || data.status === 'ENDED') {
           await fetchPlayerBroadcast(true);
+          await fetchPlaybackStatus();
         }
       } catch (error) {
         console.warn('Failed to refresh broadcast after status update:', error);

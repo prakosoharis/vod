@@ -110,6 +110,14 @@ export async function broadcastRoutes(fastify: FastifyInstance) {
     },
   }, broadcastController.getStreamInfo);
 
+  fastify.get('/broadcasts/:id/playback-status', {
+    schema: {
+      params: {
+        id: { type: 'string' },
+      },
+    },
+  }, broadcastController.getPlaybackStatus);
+
   // Get chat messages
   fastify.get('/broadcasts/:id/chat', {
     schema: {
