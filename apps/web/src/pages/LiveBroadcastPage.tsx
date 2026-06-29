@@ -94,9 +94,10 @@ const LiveBroadcastPage: React.FC = () => {
 
   // Video state
   const [isMuted, setIsMuted] = useState(true);
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
 
   // Refs
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -113,6 +114,11 @@ const LiveBroadcastPage: React.FC = () => {
       ...prev,
       [entry.name]: entry,
     }));
+  }, []);
+
+  const setVideoNode = useCallback((node: HTMLVideoElement | null) => {
+    videoRef.current = node;
+    setVideoElement(node);
   }, []);
 
   // Fetch broadcast data
@@ -330,7 +336,7 @@ const LiveBroadcastPage: React.FC = () => {
       return;
     }
 
-    if (!videoRef.current) {
+    if (!videoElement) {
       pushDebugLog('HLS effect skipped: videoRef not ready');
       return;
     }
@@ -345,7 +351,7 @@ const LiveBroadcastPage: React.FC = () => {
       pushDebugLog('HLS effect skipped: empty playback URL');
       return;
     }
-    const video = videoRef.current;
+    const video = videoElement;
     pushDebugLog(
       `HLS effect start: status=${broadcast.status}, playbackStatus=${playbackStatus?.available ?? 'unknown'}, readyState=${video.readyState}`
     );
@@ -430,7 +436,7 @@ const LiveBroadcastPage: React.FC = () => {
 
         setStreamMessage('Player tidak bisa memuat stream saat ini. Coba refresh halaman setelah stream benar-benar LIVE.');
       });
-    } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Safari native HLS
       pushDebugLog('Native HLS branch used');
       video.src = playbackUrl;
@@ -455,7 +461,7 @@ const LiveBroadcastPage: React.FC = () => {
         hlsRef.current = null;
       }
     };
-  }, [broadcast?.id, broadcast?.status, broadcast?.playback_url, hasAccess, playbackStatus?.available, playbackStatus?.message, pushDebugLog]);
+  }, [broadcast?.id, broadcast?.status, broadcast?.playback_url, hasAccess, playbackStatus?.available, playbackStatus?.message, pushDebugLog, videoElement]);
 
   // WebSocket chat connection
   useEffect(() => {
@@ -775,7 +781,7 @@ const LiveBroadcastPage: React.FC = () => {
                 )}
 
                 <video
-                  ref={videoRef}
+                  ref={setVideoNode}
                   className="w-full h-full object-contain"
                   playsInline
                   muted={isMuted}
