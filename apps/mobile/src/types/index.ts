@@ -52,12 +52,19 @@ export interface RegisterRequest {
 // Navigation types
 export type RootStackParamList = {
   Auth: undefined;
-  Main: undefined;
+  Main: { screen?: keyof MainTabParamList } | undefined;
   Search: undefined;
   VideoPlayer: { contentId: string };
   LiveStream: { broadcastId?: string } | undefined;
   ContentDetail: { content: Content };
   Pricing: undefined;
+  PaymentWebView: {
+    url: string;
+    orderId: string;
+    broadcastId?: string;
+    contentId?: string;
+    type: 'subscription' | 'rental' | 'event';
+  };
   PaymentSuccess: { transactionId: string; amount: number; type: 'subscription' | 'rental' | 'event' };
   PaymentError: { errorMessage?: string };
   MyList: undefined;

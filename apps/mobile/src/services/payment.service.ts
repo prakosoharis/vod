@@ -56,6 +56,36 @@ export interface Subscription {
   auto_renew: boolean;
 }
 
+const normalizeFeatures = (features: unknown): string[] => {
+  if (Array.isArray(features)) {
+    return features.map(String);
+  }
+
+  if (typeof features === 'string') {
+    try {
+      const parsed = JSON.parse(features);
+      if (Array.isArray(parsed)) {
+        return parsed.map(String);
+      }
+    } catch {
+      return features
+        .split(',')
+        .map((feature) => feature.trim())
+        .filter(Boolean);
+    }
+  }
+
+  return [];
+};
+
+const normalizePlan = (plan: any): SubscriptionPlan => ({
+  ...plan,
+  price: Number(plan.price || 0),
+  duration_days: Number(plan.duration_days || 0),
+  features: normalizeFeatures(plan.features),
+  is_active: Boolean(plan.is_active),
+});
+
 class PaymentService {
   private client: AxiosInstance;
 
@@ -95,7 +125,8 @@ class PaymentService {
   // Subscription Plans
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     const response = await this.client.get('/payment/subscription/plans');
-    return response.data;
+    const plans = response.data?.data || response.data || [];
+    return Array.isArray(plans) ? plans.map(normalizePlan) : [];
   }
 
   async getMySubscription(): Promise<Subscription | null> {
@@ -132,7 +163,7 @@ class PaymentService {
 
   async getMyRentals(): Promise<any[]> {
     const response = await this.client.get('/payment/rental/me');
-    return response.data;
+    return response.data?.data || response.data || [];
   }
 
   // Event Tickets

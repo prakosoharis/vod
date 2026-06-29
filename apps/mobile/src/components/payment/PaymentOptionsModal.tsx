@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,8 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeIcon } from '../ui';
-import { COLORS, THEME, MIDTRANS_CONFIG } from '../../constants';
-import { paymentService } from '../../services';
-import MidtransModule from '../../modules/MidtransModule';
+import { COLORS, THEME } from '../../constants';
+import { paymentService, PaymentResponse } from '../../services';
 
 interface PaymentOptionsModalProps {
   visible: boolean;
@@ -21,6 +20,7 @@ interface PaymentOptionsModalProps {
   contentTitle: string;
   onPaymentSuccess: () => void;
   onNavigateToSubscription: () => void;
+  onRentalPaymentCreated?: (paymentResponse: PaymentResponse) => void;
 }
 
 const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
@@ -30,39 +30,12 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
   contentTitle,
   onPaymentSuccess,
   onNavigateToSubscription,
+  onRentalPaymentCreated,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingType, setProcessingType] = useState<'rent' | 'subscribe' | null>(null);
-  const [isMidtransInitialized, setIsMidtransInitialized] = useState(false);
-
-  // Initialize Midtrans SDK when modal becomes visible
-  useEffect(() => {
-    if (visible && !isMidtransInitialized) {
-      initializeMidtrans();
-    }
-  }, [visible, isMidtransInitialized]);
-
-  const initializeMidtrans = async () => {
-    try {
-      await MidtransModule.initialize(
-        MIDTRANS_CONFIG.clientKey,
-        MIDTRANS_CONFIG.merchantBaseUrl
-      );
-      setIsMidtransInitialized(true);
-      console.log('Midtrans initialized in PaymentOptionsModal');
-    } catch (error) {
-      console.error('Failed to initialize Midtrans:', error);
-      // Continue anyway - initialization might have been done elsewhere
-      setIsMidtransInitialized(true);
-    }
-  };
 
   const handleRentContent = async () => {
-    if (!isMidtransInitialized) {
-      Alert.alert('Error', 'Sistem pembayaran belum siap. Silakan coba lagi.');
-      return;
-    }
-
     try {
       setIsProcessing(true);
       setProcessingType('rent');
@@ -70,40 +43,25 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
       // Call backend to create rental payment session
       const paymentResponse = await paymentService.rentContent(contentId);
 
-      // Launch Midtrans native SDK with snap token
-      const result = await MidtransModule.startPayment(paymentResponse.snap_token);
-
-      if (result.status === 'success') {
-        // Payment successful
-        Alert.alert(
-          'Pembayaran Berhasil',
-          `Anda telah berhasil menyewa "${contentTitle}" selama 24 jam.`,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                onPaymentSuccess();
-                onClose();
-              },
-            },
-          ]
-        );
-      } else if (result.status === 'pending') {
-        Alert.alert(
-          'Pembayaran Pending',
-          'Pembayaran Anda sedang diproses. Kami akan memberitahu jika pembayaran berhasil.',
-          [{ text: 'OK', onPress: onClose }]
-        );
-      } else if (result.status === 'canceled') {
-        Alert.alert('Pembayaran Dibatalkan', 'Anda membatalkan pembayaran.');
-      } else {
-        Alert.alert('Pembayaran Gagal', result.message || 'Pembayaran gagal. Silakan coba lagi.');
+      if (!paymentResponse.redirect_url) {
+        throw new Error('Link pembayaran Midtrans tidak tersedia.');
       }
+
+      onClose();
+      onRentalPaymentCreated?.(paymentResponse);
     } catch (error: any) {
       console.error('Rental payment error:', error);
+      const errorMessage = error.response?.data?.error || error.message || '';
+
+      if (errorMessage.toLowerCase().includes('already have')) {
+        onClose();
+        onPaymentSuccess();
+        return;
+      }
+
       Alert.alert(
         'Error',
-        error.response?.data?.error || error.message || 'Terjadi kesalahan saat memproses pembayaran'
+        errorMessage || 'Terjadi kesalahan saat memproses pembayaran'
       );
     } finally {
       setIsProcessing(false);

@@ -538,7 +538,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
                 style={styles.backButton}
                 onPress={() => {
                   // Unlock orientation before going back
-                  Orientation.unlockAll();
+                  (Orientation as any).unlockAllOrientations?.();
                   Orientation.lockToPortrait();
                   StatusBar.setHidden(false);
                   onBack();

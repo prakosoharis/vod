@@ -58,8 +58,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ chatServer, broadcastId }) => {
 
   const initializeChat = () => {
     try {
-      // Path socket.io di backend (api.mostara.id) adalah /ws/socket.io/
-      const wsPath = '/ws/socket.io/';
+      const wsPath = '/socket.io/';
 
       // Handle URL properly
       let wsUrl = chatServer;

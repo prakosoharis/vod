@@ -59,13 +59,7 @@ const LiveScreen: React.FC<Props> = ({ navigation }) => {
   const renderBroadcastItem = ({ item }: { item: BroadcastEvent }) => (
     <TouchableOpacity
       style={styles.streamItem}
-      onPress={() => {
-        if (item.status === 'LIVE') {
-          navigation.navigate('LiveStream', { broadcastId: item.id });
-        } else {
-          navigation.navigate('LiveEvents');
-        }
-      }}
+      onPress={() => navigation.navigate('LiveStream', { broadcastId: item.id })}
       activeOpacity={0.7}
     >
       <View style={styles.thumbnailContainer}>

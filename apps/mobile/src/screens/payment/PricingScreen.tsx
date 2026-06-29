@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,9 +14,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { SafeIcon } from '../../components/ui';
 import { paymentService, SubscriptionPlan } from '../../services';
-import { COLORS, THEME, MIDTRANS_CONFIG } from '../../constants';
+import { COLORS, THEME } from '../../constants';
 import { RootStackParamList } from '../../types';
-import Midtrans from '../../modules/MidtransModule';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Pricing'>;
@@ -33,32 +32,6 @@ const PricingScreen: React.FC<Props> = ({ navigation }) => {
     queryFn: () => paymentService.getSubscriptionPlans(),
   });
 
-  // Initialize Midtrans on mount
-  useEffect(() => {
-    const initMidtrans = async () => {
-      try {
-        console.log('Initializing Midtrans with config:', {
-          clientKey: MIDTRANS_CONFIG.clientKey,
-          merchantUrl: MIDTRANS_CONFIG.merchantBaseUrl,
-          isProduction: MIDTRANS_CONFIG.isProduction,
-        });
-        await Midtrans.initialize(
-          MIDTRANS_CONFIG.clientKey,
-          MIDTRANS_CONFIG.merchantBaseUrl
-        );
-        console.log('Midtrans initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize Midtrans:', error);
-      }
-    };
-
-    initMidtrans();
-
-    return () => {
-      Midtrans.cleanup();
-    };
-  }, []);
-
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     setIsProcessing(true);
     setSelectedPlan(plan.id);
@@ -67,41 +40,15 @@ const PricingScreen: React.FC<Props> = ({ navigation }) => {
       // 1. Create payment session on backend
       const paymentResponse = await paymentService.subscribe(plan.id);
 
-      // 2. Launch Midtrans payment UI
-      const result = await Midtrans.startPayment(paymentResponse.snap_token);
-
-      // 3. Handle payment result
-      if (result.status === 'success') {
-        // Verify payment with backend
-        await paymentService.verifyPaymentStatus(paymentResponse.transaction_id);
-
-        Alert.alert(
-          'Berhasil!',
-          'Pembayaran berhasil! Langganan Anda sudah aktif.',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                navigation.navigate('PaymentSuccess', {
-                  transactionId: paymentResponse.transaction_id,
-                  amount: paymentResponse.gross_amount,
-                  type: 'subscription',
-                });
-              },
-            },
-          ]
-        );
-      } else if (result.status === 'pending') {
-        Alert.alert(
-          'Pending',
-          'Pembayaran Anda sedang diproses. Kami akan memberitahu Anda setelah dikonfirmasi.',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        );
-      } else if (result.status === 'canceled') {
-        Alert.alert('Dibatalkan', 'Pembayaran dibatalkan.', [{ text: 'OK' }]);
-      } else {
-        Alert.alert('Gagal', 'Pembayaran gagal. Silakan coba lagi.', [{ text: 'OK' }]);
+      if (!paymentResponse.redirect_url) {
+        throw new Error('Link pembayaran Midtrans tidak tersedia.');
       }
+
+      navigation.navigate('PaymentWebView', {
+        url: paymentResponse.redirect_url,
+        orderId: paymentResponse.order_id,
+        type: 'subscription',
+      });
     } catch (error: any) {
       console.error('Payment error:', error);
       Alert.alert('Error', error.message || 'Terjadi kesalahan. Silakan coba lagi.', [
@@ -119,6 +66,10 @@ const PricingScreen: React.FC<Props> = ({ navigation }) => {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(price);
+  };
+
+  const getPlanFeatures = (features: unknown): string[] => {
+    return Array.isArray(features) ? features.map(String) : [];
   };
 
   if (isLoading) {
@@ -157,7 +108,7 @@ const PricingScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Plans */}
         <View style={styles.plansContainer}>
-          {plans?.map((plan) => (
+          {(plans || []).map((plan) => (
             <View key={plan.id} style={styles.planCard}>
               <View style={styles.planHeader}>
                 <Text style={styles.planName}>{plan.name}</Text>
@@ -169,7 +120,7 @@ const PricingScreen: React.FC<Props> = ({ navigation }) => {
 
               {/* Features */}
               <View style={styles.featuresContainer}>
-                {plan.features.map((feature, index) => (
+                {getPlanFeatures(plan.features).map((feature, index) => (
                   <View key={index} style={styles.featureItem}>
                     <SafeIcon name="check-circle" size={20} color={COLORS.accent[500]} />
                     <Text style={styles.featureText}>{feature}</Text>

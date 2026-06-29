@@ -12,6 +12,7 @@ import VideoPlayerScreen from '../screens/player/VideoPlayerScreen';
 import LiveStreamScreen from '../screens/live/LiveStreamScreen';
 import ContentDetailScreen from '../screens/content/ContentDetailScreen';
 import PricingScreen from '../screens/payment/PricingScreen';
+import PaymentWebViewScreen from '../screens/payment/PaymentWebViewScreen';
 import PaymentSuccessScreen from '../screens/payment/PaymentSuccessScreen';
 import PaymentErrorScreen from '../screens/payment/PaymentErrorScreen';
 import MyListScreen from '../screens/mylist/MyListScreen';
@@ -116,6 +117,14 @@ const AppNavigator = () => {
             name="Pricing"
             component={PricingScreen}
             options={screenOptions}
+          />
+          <Stack.Screen
+            name="PaymentWebView"
+            component={PaymentWebViewScreen}
+            options={{
+              headerShown: false,
+              presentation: 'modal',
+            }}
           />
           <Stack.Screen
             name="PaymentSuccess"

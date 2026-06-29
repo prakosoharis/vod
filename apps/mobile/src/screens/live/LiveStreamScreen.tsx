@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert, Linking } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert, BackHandler } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useQuery } from '@tanstack/react-query';
+import { CommonActions, useFocusEffect } from '@react-navigation/native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeIcon } from '../../components/ui';
 import LiveChat from '../../components/live/LiveChat';
 import { broadcastService, paymentService } from '../../services';
@@ -10,14 +11,37 @@ import { COLORS, THEME } from '../../constants';
 import { useAuthStore } from '../../store/authStore';
 import HLSPlayer from '../../components/video/HLSPlayer';
 import { SOCKET_URL } from '../../constants';
+import Orientation from 'react-native-orientation-locker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LiveStream'>;
 
 const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
   const { broadcastId } = route.params || {};
   const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
   const [showChat, setShowChat] = useState(false); // Hidden by default
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+
+  const goBackToLiveList = useCallback(() => {
+    (Orientation as any).unlockAllOrientations?.();
+    Orientation.lockToPortrait();
+
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Main', params: { screen: 'Live' } }],
+      })
+    );
+  }, [navigation]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      goBackToLiveList();
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [goBackToLiveList]);
 
   // Fetch broadcast data
   const { data: broadcast, isLoading, error } = useQuery({
@@ -28,7 +52,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const ticketPrice = Number(broadcast?.ticket_price || 0);
 
-  const { data: accessInfo, isLoading: isAccessLoading } = useQuery({
+  const { data: accessInfo, isLoading: isAccessLoading, refetch: refetchAccess } = useQuery({
     queryKey: ['broadcast-access', broadcastId],
     queryFn: () => paymentService.checkBroadcastAccess(broadcastId!),
     enabled: !!broadcastId && !!broadcast && ticketPrice > 0 && isAuthenticated,
@@ -48,6 +72,15 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
     retry: false,
   });
   const playbackBroadcast = playerBroadcast || broadcast;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (broadcastId && requiresTicket && isAuthenticated) {
+        queryClient.invalidateQueries({ queryKey: ['broadcast-access', broadcastId] });
+        refetchAccess();
+      }
+    }, [broadcastId, isAuthenticated, queryClient, refetchAccess, requiresTicket])
+  );
 
   const handleBuyTicket = async () => {
     if (!broadcastId || !broadcast) return;
@@ -72,14 +105,24 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
         throw new Error('Link pembayaran Midtrans tidak tersedia.');
       }
 
-      await Linking.openURL(paymentResponse.redirect_url);
-      Alert.alert(
-        'Selesaikan Pembayaran',
-        'Setelah pembayaran berhasil, kembali ke aplikasi lalu buka event ini lagi.'
-      );
+      navigation.navigate('PaymentWebView', {
+        url: paymentResponse.redirect_url,
+        orderId: paymentResponse.order_id,
+        broadcastId,
+        type: 'event',
+      });
     } catch (err: any) {
       console.error('Ticket payment error:', err);
-      Alert.alert('Error', err.response?.data?.error || err.message || 'Gagal membuat pembayaran tiket.');
+      const errorMessage = err.response?.data?.error || err.message || '';
+
+      if (errorMessage.toLowerCase().includes('already have a ticket')) {
+        await queryClient.invalidateQueries({ queryKey: ['broadcast-access', broadcastId] });
+        await refetchAccess();
+        Alert.alert('Tiket Sudah Aktif', 'Tiket Anda sudah aktif. Membuka ulang akses live event.');
+        return;
+      }
+
+      Alert.alert('Error', errorMessage || 'Gagal membuat pembayaran tiket.');
     } finally {
       setIsPaymentProcessing(false);
     }
@@ -101,7 +144,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
       <View style={styles.errorContainer}>
         <SafeIcon name="error-outline" size={48} color={COLORS.red[500]} />
         <Text style={styles.errorText}>Failed to load stream</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backButton} onPress={goBackToLiveList}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -113,7 +156,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
       <View style={styles.errorContainer}>
         <SafeIcon name="event-busy" size={48} color={COLORS.cream[200]} />
         <Text style={styles.errorText}>Stream not found</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backButton} onPress={goBackToLiveList}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -143,7 +186,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
             {isPaymentProcessing ? 'Memproses...' : 'Beli Tiket'}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.secondaryButton} onPress={goBackToLiveList}>
           <Text style={styles.secondaryButtonText}>Kembali</Text>
         </TouchableOpacity>
       </View>
@@ -158,7 +201,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
           {broadcast.status === 'ENDED' ? 'Stream has ended' : 'Stream cancelled'}
         </Text>
         <Text style={styles.errorSubtext}>{broadcast.title}</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backButton} onPress={goBackToLiveList}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -173,7 +216,7 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
           {broadcast.status === 'SCHEDULED' ? 'Live belum dimulai' : 'Stream belum tersedia'}
         </Text>
         <Text style={styles.errorSubtext}>{broadcast.title}</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backButton} onPress={goBackToLiveList}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -189,10 +232,17 @@ const LiveStreamScreen: React.FC<Props> = ({ route, navigation }) => {
       <View style={styles.videoContainer}>
         <HLSPlayer
           source={streamUrl}
-          onBack={() => navigation.goBack()}
+          onBack={goBackToLiveList}
           title={playbackBroadcast.title}
           contentId={activeBroadcastId}
         />
+
+        <TouchableOpacity
+          style={styles.alwaysBackButton}
+          onPress={goBackToLiveList}
+        >
+          <SafeIcon name="arrow-back" size={24} color={COLORS.cream[50]} />
+        </TouchableOpacity>
 
         {/* Stream Info Overlay */}
         <View style={styles.streamInfo}>
@@ -308,10 +358,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     position: 'relative',
   },
-  streamInfo: {
+  alwaysBackButton: {
     position: 'absolute',
     top: THEME.spacing.md,
     left: THEME.spacing.md,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: `${COLORS.warmCharcoal[100]}CC`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 30,
+  },
+  streamInfo: {
+    position: 'absolute',
+    top: THEME.spacing.md,
+    left: 72,
     flexDirection: 'row',
     alignItems: 'center',
     gap: THEME.spacing.md,

@@ -18,16 +18,38 @@ import { SafeIcon } from '../../components/ui';
 import PaymentOptionsModal from '../../components/payment/PaymentOptionsModal';
 import { RootStackParamList } from '../../types';
 import { COLORS, THEME } from '../../constants';
-import { paymentService, userService } from '../../services';
+import { paymentService, userService, PaymentResponse } from '../../services';
 import { useAuthStore } from '../../store/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ContentDetail'>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const hasActiveSubscription = (subscription: any): boolean => {
+  if (!subscription) {
+    return false;
+  }
+
+  const status = String(subscription.status || '').toUpperCase();
+  const expiry = subscription.expired_at || subscription.end_date;
+
+  if (status !== 'ACTIVE' || !expiry) {
+    return false;
+  }
+
+  return new Date(expiry).getTime() > Date.now();
+};
+
+const hasActiveRentalForContent = (rentals: any[], contentId: string): boolean => {
+  return rentals.some((rental) => {
+    const expiry = rental.expired_at;
+    return rental.content_id === contentId && expiry && new Date(expiry).getTime() > Date.now();
+  });
+};
+
 const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { content } = route.params;
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const queryClient = useQueryClient();
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -97,41 +119,13 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       console.log('=== ACCESS CHECK START ===');
       console.log('Content ID:', content.id);
       console.log('User authenticated:', isAuthenticated);
+      console.log('Mobile user:', JSON.stringify({
+        id: user?.id,
+        email: user?.email,
+      }, null, 2));
 
-      // First, try to check user's subscription status directly
-      try {
-        const mySubscription = await paymentService.getMySubscription();
-        console.log('=== SUBSCRIPTION CHECK ===');
-        console.log('Raw subscription data:', JSON.stringify(mySubscription, null, 2));
+      let contentAccessError: any = null;
 
-        // If user has active subscription, grant access directly
-        if (mySubscription && (mySubscription.status === 'active' || mySubscription.status === 'ACTIVE')) {
-          const now = new Date();
-          // Handle both end_date and expired_at field names
-          const endDateStr = mySubscription.expired_at || mySubscription.end_date;
-          const endDate = new Date(endDateStr);
-
-          console.log('Subscription status:', mySubscription.status);
-          console.log('End date:', endDateStr);
-          console.log('Current date:', now.toISOString());
-          console.log('Is valid:', endDate > now);
-
-          if (endDate > now) {
-            console.log('✅ User has active subscription, granting access');
-            navigation.navigate('VideoPlayer', { contentId: content.id });
-            return;
-          } else {
-            console.log('⚠️ Subscription expired');
-          }
-        } else {
-          console.log('⚠️ No active subscription found');
-        }
-      } catch (subError: any) {
-        console.log('❌ Subscription check failed:', subError.message);
-        console.log('Falling back to content access check');
-      }
-
-      // Fallback: Check if user has access to this specific content
       try {
         const accessInfo = await paymentService.checkContentAccess(content.id);
 
@@ -149,6 +143,36 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         }
       } catch (accessError: any) {
         console.log('❌ Content access check failed:', accessError.message);
+        contentAccessError = accessError;
+      }
+
+      const subscription = await paymentService.getMySubscription();
+      console.log('=== SUBSCRIPTION FALLBACK CHECK ===');
+      console.log('Raw subscription data:', JSON.stringify(subscription, null, 2));
+
+      if (hasActiveSubscription(subscription)) {
+        console.log('✅ Content access granted via active subscription fallback');
+        navigation.navigate('VideoPlayer', { contentId: content.id });
+        return;
+      }
+
+      const rentals = await paymentService.getMyRentals();
+      console.log('=== RENTAL FALLBACK CHECK ===');
+      console.log('Rental count:', rentals.length);
+      console.log('Matching rental:', JSON.stringify(
+        rentals.find((rental) => rental.content_id === content.id) || null,
+        null,
+        2
+      ));
+
+      if (hasActiveRentalForContent(rentals, content.id)) {
+        console.log('✅ Content access granted via active rental fallback');
+        navigation.navigate('VideoPlayer', { contentId: content.id });
+        return;
+      }
+
+      if (contentAccessError) {
+        throw contentAccessError;
       }
 
       // If we reach here, user doesn't have access - show payment modal
@@ -161,10 +185,9 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       console.error('Error:', error.message);
       console.error('Details:', error);
 
-      // Show detailed error to help debugging
       Alert.alert(
-        'Access Check Error',
-        `Error: ${error.message}\n\nPlease check console logs for details.`,
+        'Gagal Memeriksa Akses',
+        'Kami belum bisa memeriksa akses akun Anda. Silakan coba lagi.',
         [
           {
             text: 'Batal',
@@ -185,6 +208,15 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const handlePaymentSuccess = () => {
     // After successful payment, navigate to video player
     navigation.navigate('VideoPlayer', { contentId: content.id });
+  };
+
+  const handleRentalPaymentCreated = (paymentResponse: PaymentResponse) => {
+    navigation.navigate('PaymentWebView', {
+      url: paymentResponse.redirect_url!,
+      orderId: paymentResponse.order_id,
+      contentId: content.id,
+      type: 'rental',
+    });
   };
 
   const handleNavigateToSubscription = () => {
@@ -403,6 +435,7 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         contentTitle={content.title}
         onPaymentSuccess={handlePaymentSuccess}
         onNavigateToSubscription={handleNavigateToSubscription}
+        onRentalPaymentCreated={handleRentalPaymentCreated}
       />
     </>
   );
