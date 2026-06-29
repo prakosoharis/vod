@@ -34,6 +34,8 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title, contentId }) => {
   const videoRef = useRef<Video>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasLoadedRef = useRef(false);
+  const lastErrorSignatureRef = useRef<string | null>(null);
   const lastTapRef = useRef<{ time: number; side: 'left' | 'right' | null }>({
     time: 0,
     side: null,
@@ -259,7 +261,9 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title, co
   // Video event handlers
   const onLoad = (data: any) => {
     console.log('Video loaded, duration:', data.duration);
-    setDuration(data.duration);
+    hasLoadedRef.current = true;
+    lastErrorSignatureRef.current = null;
+    setDuration(Number.isFinite(data.duration) && data.duration > 0 ? data.duration : 0);
     setIsLoading(false);
   };
 
@@ -276,6 +280,26 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title, co
   };
 
   const onError = (error: any) => {
+    const errorData = error?.error || {};
+    const errorSignature = `${errorData.what ?? 'unknown'}:${errorData.extra ?? 'unknown'}`;
+    const isTransientPlaybackError = hasLoadedRef.current
+      && (
+        errorSignature === '1:-1004'
+        || errorSignature === '-2147483648:0'
+        || errorSignature === '-38:0'
+      );
+
+    if (lastErrorSignatureRef.current === errorSignature) {
+      return;
+    }
+
+    lastErrorSignatureRef.current = errorSignature;
+
+    if (isTransientPlaybackError) {
+      console.log('Video player recovered from transient playback warning:', errorSignature);
+      return;
+    }
+
     console.error('Video error:', error);
     setIsLoading(false);
   };
@@ -313,6 +337,10 @@ const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title, co
   };
 
   const formatTime = (seconds: number): string => {
+    if (!Number.isFinite(seconds) || seconds < 0) {
+      return '--:--';
+    }
+
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);

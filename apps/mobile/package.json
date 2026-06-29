@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "android:debug-local": "adb -s 127.0.0.1:5555 reverse tcp:3001 tcp:3001 && adb -s 127.0.0.1:5555 reverse tcp:3002 tcp:3002 && adb -s 127.0.0.1:5555 reverse tcp:8089 tcp:8089 && react-native run-android --deviceId 127.0.0.1:5555",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",

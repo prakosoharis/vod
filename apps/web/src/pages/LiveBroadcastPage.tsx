@@ -58,14 +58,6 @@ interface PlaybackStatus {
   playback_url: string;
 }
 
-interface RequestDebugEntry {
-  name: string;
-  ok: boolean;
-  status: number | null;
-  detail: string;
-  at: string;
-}
-
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3002';
 
@@ -73,7 +65,6 @@ const LiveBroadcastPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, token, isAuthenticated } = useAuthStore();
-  const debugEnabled = new URLSearchParams(window.location.search).get('debug') === '1';
 
   const [broadcast, setBroadcast] = useState<BroadcastEvent | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
@@ -89,8 +80,6 @@ const LiveBroadcastPage: React.FC = () => {
   const [chatInput, setChatInput] = useState('');
   const [isChatConnected, setIsChatConnected] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
-  const [debugLog, setDebugLog] = useState<string[]>([]);
-  const [requestDebug, setRequestDebug] = useState<Record<string, RequestDebugEntry>>({});
 
   // Video state
   const [isMuted, setIsMuted] = useState(true);
@@ -103,19 +92,6 @@ const LiveBroadcastPage: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const pushDebugLog = useCallback((message: string) => {
-    const line = `${new Date().toLocaleTimeString('id-ID')} - ${message}`;
-    console.log(`[LiveDebug] ${line}`);
-    setDebugLog((prev) => [line, ...prev].slice(0, 40));
-  }, []);
-
-  const recordRequestDebug = useCallback((entry: RequestDebugEntry) => {
-    setRequestDebug((prev) => ({
-      ...prev,
-      [entry.name]: entry,
-    }));
-  }, []);
-
   const setVideoNode = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node;
     setVideoElement(node);
@@ -124,10 +100,9 @@ const LiveBroadcastPage: React.FC = () => {
   // Fetch broadcast data
   useEffect(() => {
     if (!id) return;
-    pushDebugLog(`Init live page for broadcast ${id}`);
     fetchBroadcast();
     checkAccess();
-  }, [id, isAuthenticated, pushDebugLog]);
+  }, [id, isAuthenticated]);
 
   useEffect(() => {
     if (!id) return;
@@ -152,24 +127,15 @@ const LiveBroadcastPage: React.FC = () => {
       }
       setError(null);
       const response = await fetch(`${API_URL}/broadcasts/${id}`);
-      recordRequestDebug({
-        name: 'broadcast',
-        ok: response.ok,
-        status: response.status,
-        detail: response.ok ? 'Broadcast loaded' : 'Failed to load broadcast',
-        at: new Date().toISOString(),
-      });
       if (!response.ok) {
         throw new Error('Broadcast tidak ditemukan');
       }
       const data = await response.json();
       setBroadcast(data);
       setStreamMessage(null);
-      pushDebugLog(`Broadcast loaded: status=${data.status}, ticket_price=${data.ticket_price}, has_playback=${Boolean(data.playback_url)}`);
       if (Number(data.ticket_price || 0) <= 0) {
         setHasAccess(true);
         setAccessLoading(false);
-        pushDebugLog('Free broadcast detected, local access granted');
       }
       if (data.status === 'LIVE' || data.status === 'ENDED') {
         await fetchPlaybackStatus();
@@ -188,35 +154,18 @@ const LiveBroadcastPage: React.FC = () => {
     if (!isAuthenticated) {
       setHasAccess(false);
       setAccessLoading(false);
-      pushDebugLog('User not authenticated, access check skipped');
       return;
     }
 
     try {
       setAccessLoading(true);
       const response = await paymentService.checkBroadcastAccess(id);
-      recordRequestDebug({
-        name: 'broadcast-access',
-        ok: true,
-        status: 200,
-        detail: JSON.stringify(response.data),
-        at: new Date().toISOString(),
-      });
       setHasAccess(response.data.has_access);
-      pushDebugLog(`Access check: has_access=${response.data.has_access}, access_type=${response.data.access_type}, can_buy_ticket=${response.data.can_buy_ticket}`);
       if (response.data.has_access) {
         await fetchPlayerBroadcast();
         await fetchPlaybackStatus();
       }
-    } catch (error: any) {
-      recordRequestDebug({
-        name: 'broadcast-access',
-        ok: false,
-        status: error?.response?.status ?? null,
-        detail: error?.response?.data?.error || error?.message || 'Access check failed',
-        at: new Date().toISOString(),
-      });
-      pushDebugLog(`Access check failed: ${error?.response?.status || 'no-status'} ${error?.response?.data?.error || error?.message || ''}`);
+    } catch {
       setHasAccess(false);
     } finally {
       setAccessLoading(false);
@@ -226,29 +175,12 @@ const LiveBroadcastPage: React.FC = () => {
   const fetchPlayerBroadcast = async (updateState = true) => {
     if (!id) return null;
     const authToken = token || localStorage.getItem('token');
-    pushDebugLog(
-      `Fetch player start: storeToken=${token ? 'yes' : 'no'}, localStorageToken=${localStorage.getItem('token') ? 'yes' : 'no'}`
-    );
 
     const response = await fetch(`${API_URL}/broadcasts/${id}/player`, {
       headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
     });
 
-    recordRequestDebug({
-      name: 'broadcast-player',
-      ok: response.ok,
-      status: response.status,
-      detail: response.ok ? 'Player broadcast loaded' : 'Player request failed',
-      at: new Date().toISOString(),
-    });
-
     if (!response.ok) {
-      let detail = 'Akses live event belum tersedia';
-      try {
-        const errorBody = await response.clone().json();
-        detail = errorBody.error || detail;
-      } catch {}
-      pushDebugLog(`Player request failed: ${response.status} ${detail}`);
       throw new Error('Akses live event belum tersedia');
     }
 
@@ -257,7 +189,6 @@ const LiveBroadcastPage: React.FC = () => {
       setBroadcast(data);
       setStreamMessage(null);
     }
-    pushDebugLog(`Player data loaded: status=${data.status}, has_playback=${Boolean(data.playback_url)}`);
     return data;
   };
 
@@ -266,20 +197,12 @@ const LiveBroadcastPage: React.FC = () => {
 
     try {
       const response = await fetch(`${API_URL}/broadcasts/${id}/playback-status`);
-      recordRequestDebug({
-        name: 'playback-status',
-        ok: response.ok,
-        status: response.status,
-        detail: response.ok ? 'Playback status loaded' : 'Playback status failed',
-        at: new Date().toISOString(),
-      });
       if (!response.ok) {
         return null;
       }
 
       const data: PlaybackStatus = await response.json();
       setPlaybackStatus(data);
-      pushDebugLog(`Playback status: available=${data.available}, http_status=${data.http_status}, message=${data.message}`);
 
       if (
         updateMessage &&
@@ -331,30 +254,11 @@ const LiveBroadcastPage: React.FC = () => {
 
   // Initialize HLS player
   useEffect(() => {
-    if (!broadcast) {
-      pushDebugLog('HLS effect skipped: no broadcast');
-      return;
-    }
-
-    if (!videoElement) {
-      pushDebugLog('HLS effect skipped: videoRef not ready');
-      return;
-    }
-
-    if (!hasAccess) {
-      pushDebugLog('HLS effect skipped: hasAccess=false');
-      return;
-    }
+    if (!broadcast || !videoElement || !hasAccess) return;
 
     const playbackUrl = broadcast.playback_url;
-    if (!playbackUrl) {
-      pushDebugLog('HLS effect skipped: empty playback URL');
-      return;
-    }
+    if (!playbackUrl) return;
     const video = videoElement;
-    pushDebugLog(
-      `HLS effect start: status=${broadcast.status}, playbackStatus=${playbackStatus?.available ?? 'unknown'}, readyState=${video.readyState}`
-    );
 
     const attemptPlayback = () => {
       video.defaultMuted = true;
@@ -364,17 +268,13 @@ const LiveBroadcastPage: React.FC = () => {
       if (playPromise && typeof playPromise.catch === 'function') {
         playPromise.catch((err) => {
           console.warn('Video autoplay blocked or delayed:', err);
-          pushDebugLog(`Video play() rejected: ${String(err)}`);
           setStreamMessage('Stream sudah tersedia. Tekan video atau tombol refresh jika playback belum mulai otomatis.');
         });
       }
     };
 
     // Only play if LIVE or ENDED
-    if (broadcast.status !== 'LIVE' && broadcast.status !== 'ENDED') {
-      pushDebugLog(`HLS effect skipped: status=${broadcast.status}`);
-      return;
-    }
+    if (broadcast.status !== 'LIVE' && broadcast.status !== 'ENDED') return;
 
     // Clean up previous instance
     if (hlsRef.current) {
@@ -383,7 +283,6 @@ const LiveBroadcastPage: React.FC = () => {
     }
 
     if (Hls.isSupported()) {
-      pushDebugLog('HLS.js supported, attaching source');
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: broadcast.status === 'LIVE',
@@ -397,26 +296,18 @@ const LiveBroadcastPage: React.FC = () => {
 
       hls.loadSource(playbackUrl);
       hls.attachMedia(video);
-      pushDebugLog(`HLS attach source: ${playbackUrl}`);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setStreamMessage(null);
-        pushDebugLog('HLS manifest parsed');
         attemptPlayback();
-      });
-
-      hls.on(Hls.Events.LEVEL_LOADED, (_event, data) => {
-        pushDebugLog(`HLS level loaded: fragments=${data.details.fragments.length}`);
       });
 
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (!data.fatal) {
-          pushDebugLog(`HLS non-fatal error: ${data.details}`);
           return;
         }
 
         console.warn('HLS Error:', data.details);
-        pushDebugLog(`HLS fatal error: type=${data.type}, detail=${data.details}`);
 
         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
           setStreamMessage(
@@ -438,22 +329,14 @@ const LiveBroadcastPage: React.FC = () => {
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Safari native HLS
-      pushDebugLog('Native HLS branch used');
       video.src = playbackUrl;
       attemptPlayback();
-    } else {
-      pushDebugLog('No supported HLS playback path found');
     }
 
     video.addEventListener('loadedmetadata', attemptPlayback);
     video.addEventListener('canplay', attemptPlayback);
-    video.addEventListener('error', () => {
-      const mediaError = video.error;
-      pushDebugLog(`Video element error: code=${mediaError?.code ?? 'unknown'}`);
-    });
 
     return () => {
-      pushDebugLog('HLS effect cleanup');
       video.removeEventListener('loadedmetadata', attemptPlayback);
       video.removeEventListener('canplay', attemptPlayback);
       if (hlsRef.current) {
@@ -461,7 +344,7 @@ const LiveBroadcastPage: React.FC = () => {
         hlsRef.current = null;
       }
     };
-  }, [broadcast?.id, broadcast?.status, broadcast?.playback_url, hasAccess, playbackStatus?.available, playbackStatus?.message, pushDebugLog, videoElement]);
+  }, [broadcast?.id, broadcast?.status, broadcast?.playback_url, hasAccess, playbackStatus?.available, playbackStatus?.message, videoElement]);
 
   // WebSocket chat connection
   useEffect(() => {
@@ -478,18 +361,15 @@ const LiveBroadcastPage: React.FC = () => {
     socket.on('connect', () => {
       console.log('Connected to chat server');
       setIsChatConnected(true);
-      pushDebugLog('WebSocket connected');
       socket.emit('join-broadcast', id);
     });
 
     socket.on('disconnect', () => {
       setIsChatConnected(false);
-      pushDebugLog('WebSocket disconnected');
     });
 
     socket.on('connect_error', () => {
       setIsChatConnected(false);
-      pushDebugLog('WebSocket connect_error');
     });
 
     socket.on('recent-messages', (messages: ChatMessage[]) => {
@@ -537,7 +417,7 @@ const LiveBroadcastPage: React.FC = () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [id, hasAccess, pushDebugLog]);
+  }, [id, hasAccess]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -713,43 +593,6 @@ const LiveBroadcastPage: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-[#0f0f0f] pt-6 pb-16">
         <div className="max-w-7xl mx-auto px-6">
-          {debugEnabled && (
-            <div className="mb-6 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-xs text-cyan-50">
-              <div className="mb-3 flex flex-wrap gap-3">
-                <span>auth: {isAuthenticated ? 'yes' : 'no'}</span>
-                <span>store token: {token ? 'yes' : 'no'}</span>
-                <span>local token: {localStorage.getItem('token') ? 'yes' : 'no'}</span>
-                <span>hasAccess: {hasAccess ? 'yes' : 'no'}</span>
-                <span>broadcast status: {broadcast?.status || '-'}</span>
-                <span>playback ok: {playbackStatus ? String(playbackStatus.available) : '-'}</span>
-              </div>
-              <div className="grid gap-3 lg:grid-cols-2">
-                <div>
-                  <div className="mb-1 font-semibold text-cyan-100">Requests</div>
-                  <div className="space-y-1">
-                    {Object.values(requestDebug).map((entry) => (
-                      <div key={entry.name} className="rounded-lg bg-black/30 px-3 py-2">
-                        <div className="font-medium">
-                          {entry.name}: {entry.ok ? 'OK' : 'FAIL'} {entry.status ?? '-'}
-                        </div>
-                        <div className="text-cyan-100/80 break-words">{entry.detail}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-1 font-semibold text-cyan-100">Live Log</div>
-                  <div className="max-h-56 space-y-1 overflow-auto rounded-lg bg-black/30 p-2">
-                    {debugLog.map((line) => (
-                      <div key={line} className="font-mono text-[11px] text-cyan-50/90">
-                        {line}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
           {/* Back button */}
           <button
             onClick={() => navigate('/live-events')}
