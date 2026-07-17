@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, token, hasHydrated } = useAuthStore()
+  const { isAuthenticated, isLoading, hasHydrated } = useAuthStore()
   const location = useLocation()
 
   // Show loading while store is hydrating or checking auth

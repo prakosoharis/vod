@@ -60,6 +60,9 @@ model Content {
   cast         Json
   type         ContentType
   featured     Boolean        @default(false)
+  show_in_latest         Boolean @default(false)
+  show_in_movie_picks    Boolean @default(false)
+  show_in_popular_series Boolean @default(false)
   created_at   DateTime       @default(now())
 
   // HLS Transcoding Fields
@@ -73,12 +76,37 @@ model Content {
   watch_progress WatchProgress[]
   rental_price RentalPrice?
   rentals      UserRental[]
+  episodes     Episode[]
 
   @@index([featured])
+  @@index([show_in_latest])
+  @@index([show_in_movie_picks])
+  @@index([show_in_popular_series])
   @@index([type])
   @@index([hls_video_id])
   @@index([transcoding_status])
   @@map("contents")
+}
+
+model Episode {
+  id             String   @id @default(uuid())
+  content_id     String
+  season_number  Int      @default(1)
+  episode_number Int
+  title          String
+  description    String?  @db.Text
+  duration       String
+  thumbnail_url  String?
+  video_url      String?
+  hls_url        String?
+  is_published   Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  content        Content  @relation(fields: [content_id], references: [id], onDelete: Cascade)
+
+  @@unique([content_id, season_number, episode_number])
+  @@index([content_id, season_number, episode_number])
+  @@map("episodes")
 }
 
 model Watchlist {
@@ -274,6 +302,8 @@ model UserRental {
   rental_price_id String
   rented_at       DateTime    @default(now())
   expired_at      DateTime
+  price_paid      Decimal     @db.Decimal(10, 2)
+  duration_hours  Int
   user            User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
   content         Content     @relation(fields: [content_id], references: [id], onDelete: Cascade)
   rental_price    RentalPrice @relation(fields: [rental_price_id], references: [id])
@@ -281,6 +311,7 @@ model UserRental {
   transaction_id  String      @unique
 
   @@index([user_id, content_id])
+  @@index([content_id, rented_at])
   @@index([expired_at])
   @@map("user_rentals")
 }

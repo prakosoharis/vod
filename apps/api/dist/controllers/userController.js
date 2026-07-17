@@ -15,6 +15,7 @@ export async function getProfile(request, reply) {
                 avatar_url: true,
                 created_at: true,
                 updated_at: true,
+                _count: { select: { rentals: true } },
             },
         });
         if (!user) {
@@ -295,6 +296,7 @@ export async function getAllUsers(_request, reply) {
                 avatar_url: true,
                 created_at: true,
                 updated_at: true,
+                _count: { select: { rentals: true } },
             },
             orderBy: { created_at: 'desc' },
         });
@@ -303,6 +305,39 @@ export async function getAllUsers(_request, reply) {
     catch (error) {
         reply.code(500).send({ error: 'Internal server error' });
     }
+}
+export async function getUserRentalsAdmin(request, reply) {
+    const { id } = request.params;
+    const user = await prisma.user.findUnique({
+        where: { id },
+        select: { id: true, email: true, full_name: true },
+    });
+    if (!user) {
+        reply.code(404).send({ error: 'User not found' });
+        return;
+    }
+    const rentals = await prisma.userRental.findMany({
+        where: { user_id: id },
+        include: {
+            content: {
+                select: { id: true, title: true, thumbnail_url: true, year: true },
+            },
+        },
+        orderBy: { rented_at: 'desc' },
+    });
+    const now = new Date();
+    reply.send({
+        user,
+        summary: {
+            total_rentals: rentals.length,
+            active_rentals: rentals.filter((item) => item.expired_at > now).length,
+            total_spent: rentals.reduce((total, item) => total + Number(item.price_paid), 0),
+        },
+        rentals: rentals.map((item) => ({
+            ...item,
+            is_active: item.expired_at > now,
+        })),
+    });
 }
 export async function createUser(request, reply) {
     try {

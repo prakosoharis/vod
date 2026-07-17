@@ -12,6 +12,7 @@ import {
   createUser,
   updateUser,
   getUserById,
+  getUserRentalsAdmin,
 } from '../controllers/userController.js';
 import { authenticateRequest } from '../middleware/auth.js';
 
@@ -24,6 +25,7 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get('/all', { preHandler: [authenticateRequest] }, getAllUsers);
   fastify.post('/', { preHandler: [authenticateRequest] }, createUser);
   fastify.get('/:id', getUserById);
+  fastify.get('/:id/rentals', { preHandler: [authenticateRequest] }, getUserRentalsAdmin);
   fastify.put('/:id', { preHandler: [authenticateRequest] }, updateUser);
 
   // Watchlist
@@ -38,4 +40,3 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
   // Continue watching
   fastify.get('/continue-watching', { preHandler: [authenticateRequest] }, getContinueWatching);
 }
-

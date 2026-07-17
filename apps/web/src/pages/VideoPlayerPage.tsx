@@ -1,4 +1,4 @@
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -13,7 +13,6 @@ import {
   ThumbsUp,
   Plus,
   Share2,
-  Loader2,
   Lock
 } from 'lucide-react'
 
@@ -37,7 +36,7 @@ import { useAuthStore } from '@/stores/authStore'
 const VideoPlayerPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { isAuthenticated } = useAuthStore()
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
@@ -64,13 +63,23 @@ const VideoPlayerPage = () => {
   })
 
   // Check payment access to this content
-  const { data: accessInfo, isLoading: checkingAccess, refetch: refetchAccess } = useQuery({
+  const { data: accessInfo, isLoading: checkingAccess } = useQuery({
     queryKey: ['content-access', id],
     queryFn: () => id ? paymentService.checkContentAccess(id) : null,
     enabled: !!id && isAuthenticated,
   })
 
   const hasAccess = accessInfo?.data?.has_access || false
+  const requestedEpisodeId = searchParams.get('episode')
+  const currentEpisode = content?.type === 'SERIES'
+    ? content.episodes?.find((episode) => episode.id === requestedEpisodeId) || content.episodes?.[0]
+    : undefined
+  const currentEpisodeIndex = currentEpisode && content?.episodes
+    ? content.episodes.findIndex((episode) => episode.id === currentEpisode.id)
+    : -1
+  const nextEpisode = currentEpisodeIndex >= 0 ? content?.episodes?.[currentEpisodeIndex + 1] : undefined
+  const playbackHlsUrl = currentEpisode?.hls_url || content?.hls_url
+  const playbackVideoUrl = currentEpisode?.video_url || content?.video_url
 
   const {
     isOpen: modalOpen,
@@ -81,7 +90,7 @@ const VideoPlayerPage = () => {
 
   // Watch progress tracking
   const [lastSyncTime, setLastSyncTime] = useState(0)
-  const progressSyncInterval = useRef<NodeJS.Timeout>()
+  const progressSyncInterval = useRef<ReturnType<typeof window.setInterval> | null>(null)
 
   // Sync watch progress to backend
   const syncWatchProgress = async (currentTime: number) => {
@@ -292,7 +301,7 @@ const VideoPlayerPage = () => {
               className="w-full py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold text-lg rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
             >
               <Play size={20} fill="white" />
-              Sewa / Berlangganan untuk Nonton
+              Sewa {content.type === 'SERIES' ? 'Series' : 'Film'} untuk Menonton
             </button>
             <button
               onClick={() => navigate('/browse')}
@@ -305,7 +314,7 @@ const VideoPlayerPage = () => {
           {/* Access Info */}
           {accessInfo?.data?.access_type === null && (
             <p className="text-gray-400 text-center text-sm mt-4">
-              Belum berlangganan? Sewa film ini mulai Rp 10.000 atau berlangganan untuk akses unlimited.
+              Masa sewa Anda belum aktif atau sudah berakhir. Sewa kembali film ini untuk melanjutkan.
             </p>
           )}
         </div>
@@ -358,11 +367,11 @@ const VideoPlayerPage = () => {
         </button>
 
         {/* Next Episode (for series) */}
-        {content.type === 'SERIES' && videoState.isPlaying && (
+        {content.type === 'SERIES' && nextEpisode && (
           <div className="absolute top-4 right-4 z-20">
-            <button className="flex items-center gap-2 px-4 py-2 bg-black/50 hover:bg-black/70 rounded transition-colors">
+            <button onClick={() => navigate(`/watch/${content.id}?episode=${nextEpisode.id}`)} className="flex items-center gap-2 px-4 py-2 bg-black/50 hover:bg-black/70 rounded transition-colors">
               <SkipForward size={20} />
-              <span className="text-white">Episode Berikutnya</span>
+              <span className="text-white">E{nextEpisode.episode_number}: {nextEpisode.title}</span>
             </button>
           </div>
         )}
@@ -370,10 +379,11 @@ const VideoPlayerPage = () => {
         {/* Video Container */}
         <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()}>
           {/* Use HLS Player if HLS URL exists, otherwise fallback to regular video */}
-          {content.hls_url ? (
+          {playbackHlsUrl ? (
             <HLSPlayer
-              hlsUrl={content.hls_url}
-              poster={content.backdrop_url || content.thumbnail_url}
+              key={currentEpisode?.id || content.id}
+              hlsUrl={playbackHlsUrl}
+              poster={currentEpisode?.thumbnail_url || content.backdrop_url || content.thumbnail_url}
               autoPlay={false}
               controls={true}
               className="w-full h-full"
@@ -390,7 +400,7 @@ const VideoPlayerPage = () => {
                 userSelect: 'none',
                 WebkitTouchCallout: 'none'
               }}
-              src={content.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
+              src={playbackVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
               onClick={videoActions.togglePlay}
               onContextMenu={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
@@ -404,7 +414,7 @@ const VideoPlayerPage = () => {
         </div>
 
         {/* Controls Overlay (Hidden for HLS videos) */}
-        {!content.hls_url && (
+        {!playbackHlsUrl && (
         <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent transition-opacity duration-300 ${videoState.showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="p-3 md:p-4">
             {/* Progress Bar */}

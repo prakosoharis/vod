@@ -9,6 +9,7 @@ export declare function getWatchProgress(request: FastifyRequest, reply: Fastify
 export declare function updateWatchProgress(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 export declare function getContinueWatching(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 export declare function getAllUsers(_request: FastifyRequest, reply: FastifyReply): Promise<void>;
+export declare function getUserRentalsAdmin(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 export declare function createUser(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 export declare function updateUser(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 //# sourceMappingURL=userController.d.ts.map

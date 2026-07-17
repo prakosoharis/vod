@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { LoginCredentials, AuthResponse, User, Movie } from '../types'
+import { LoginCredentials, AuthResponse, User, Movie, RentalReport } from '../types'
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || ''
 
@@ -57,6 +57,10 @@ export const usersApi = {
     const response = await api.put(`/api/user/${id}`, user)
     return response.data
   },
+  getRentals: async (id: string): Promise<RentalReport> => {
+    const response = await api.get(`/api/user/${id}/rentals`)
+    return response.data
+  },
 }
 
 export const moviesApi = {
@@ -79,6 +83,10 @@ export const moviesApi = {
   },
   update: async (id: string, movie: Partial<Movie>): Promise<Movie> => {
     const response = await api.put(`/api/content/${id}`, movie)
+    return response.data
+  },
+  getRentals: async (id: string): Promise<RentalReport> => {
+    const response = await api.get(`/api/content/${id}/rentals`)
     return response.data
   },
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { MagnifyingGlassIcon, UserIcon, PlusIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, UserIcon, PlusIcon, PencilIcon, FilmIcon } from '@heroicons/react/24/outline'
 import { usersApi } from '../services/api'
-import { User } from '../types'
+import { User, RentalReport } from '../types'
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([])
@@ -11,6 +11,7 @@ export default function Users() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [rentalReport, setRentalReport] = useState<RentalReport | null>(null)
   const [formData, setFormData] = useState({
     email: '',
     full_name: '',
@@ -89,6 +90,11 @@ export default function Users() {
     setShowEditModal(true)
   }
 
+  const openRentalReport = async (user: User) => {
+    setSelectedUser(user)
+    setRentalReport(await usersApi.getRentals(user.id))
+  }
+
   if (loading) {
     console.log('Users component: Still loading...')
     return (
@@ -149,6 +155,7 @@ export default function Users() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tanggal Daftar
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penyewaan</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Aksi
                 </th>
@@ -174,6 +181,11 @@ export default function Users() {
                           </div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button onClick={() => openRentalReport(user)} className="flex items-center text-sm font-medium text-primary-600 hover:underline">
+                        <FilmIcon className="mr-1 h-4 w-4" />{user._count?.rentals || 0} film
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{user.full_name || '-'}</div>
@@ -203,7 +215,7 @@ export default function Users() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada user</h3>
                     <p className="mt-1 text-sm text-gray-500">
@@ -274,7 +286,7 @@ export default function Users() {
         </div>
       )}
 
-          {showEditModal && (
+      {showEditModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
             <div className="mt-3">
@@ -326,6 +338,28 @@ export default function Users() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {rentalReport && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-4">
+          <div className="w-full max-w-4xl rounded-xl bg-white p-6 shadow-xl">
+            <div className="mb-5 flex justify-between">
+              <div><h3 className="text-xl font-bold">Film yang disewa {selectedUser.full_name || selectedUser.email}</h3>
+                <p className="text-sm text-gray-500">{rentalReport.summary.total_rentals} transaksi · {rentalReport.summary.active_rentals} aktif · total Rp {Number(rentalReport.summary.total_spent || 0).toLocaleString('id-ID')}</p></div>
+              <button className="btn-secondary" onClick={() => setRentalReport(null)}>Tutup</button>
+            </div>
+            <div className="max-h-[60vh] overflow-auto">
+              <table className="min-w-full divide-y text-sm">
+                <thead><tr><th className="p-3 text-left">Film</th><th className="p-3 text-left">Mulai</th><th className="p-3 text-left">Berakhir</th><th className="p-3 text-left">Harga</th><th className="p-3 text-left">Status</th></tr></thead>
+                <tbody className="divide-y">{rentalReport.rentals.map((rental) => <tr key={rental.id}>
+                  <td className="p-3 font-medium">{rental.content?.title}</td><td className="p-3">{new Date(rental.rented_at).toLocaleString('id-ID')}</td>
+                  <td className="p-3">{new Date(rental.expired_at).toLocaleString('id-ID')}</td><td className="p-3">Rp {Number(rental.price_paid).toLocaleString('id-ID')}</td>
+                  <td className="p-3"><span className={rental.is_active ? 'text-emerald-600' : 'text-gray-500'}>{rental.is_active ? 'Aktif' : 'Berakhir'}</span></td>
+                </tr>)}
+                {!rentalReport.rentals.length && <tr><td colSpan={5} className="p-8 text-center text-gray-500">User belum pernah menyewa film.</td></tr>}</tbody>
+              </table>
             </div>
           </div>
         </div>

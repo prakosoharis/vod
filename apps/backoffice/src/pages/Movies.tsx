@@ -1,742 +1,199 @@
-import { useState, useEffect } from 'react'
-import { MagnifyingGlassIcon, FilmIcon, PlayIcon, PlusIcon, PencilIcon, StarIcon } from '@heroicons/react/24/outline'
-import { moviesApi } from '../services/api'
-import { Movie } from '../types'
+import { useEffect, useMemo, useState } from 'react'
+import { FilmIcon, MagnifyingGlassIcon, PencilIcon, PlusIcon, RectangleStackIcon, TrashIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 import { toast } from 'react-toastify'
+import { moviesApi } from '../services/api'
+import type { Episode, Movie, RentalReport } from '../types'
+
+type FormState = {
+  title: string; description: string; genre: string; year: number; rating: string; duration: string
+  thumbnail_url: string; backdrop_url: string; video_url: string; hls_url: string; trailer_url: string
+  cast: string; type: 'MOVIE' | 'SERIES'; featured: boolean; rental_price: number
+  show_in_latest: boolean; show_in_movie_picks: boolean; show_in_popular_series: boolean
+  rental_duration_hours: number; rental_active: boolean; episodes: Episode[]
+}
+
+const emptyForm = (type: 'MOVIE' | 'SERIES' = 'MOVIE'): FormState => ({
+  title: '', description: '', genre: '', year: new Date().getFullYear(), rating: '4.0', duration: '',
+  thumbnail_url: '', backdrop_url: '', video_url: '', hls_url: '', trailer_url: '', cast: '', type,
+  featured: false, show_in_latest: false, show_in_movie_picks: false, show_in_popular_series: false,
+  rental_price: 15000, rental_duration_hours: 48, rental_active: true, episodes: [],
+})
+
+const blankEpisode = (episodes: Episode[]): Episode => ({
+  season_number: 1, episode_number: episodes.length + 1, title: '', description: '', duration: '',
+  thumbnail_url: '', video_url: '', hls_url: '', is_published: true,
+})
 
 export default function Movies() {
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([])
+  const [contents, setContents] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    genre: '',
-    year: new Date().getFullYear(),
-    rating: '4.0',
-    duration: '',
-    thumbnail_url: '',
-    backdrop_url: '',
-    video_url: '',
-    hls_url: '',
-    trailer_url: '',
-    cast: '',
-    type: 'MOVIE',
-    featured: false
-  })
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'ALL' | 'MOVIE' | 'SERIES'>('ALL')
+  const [editing, setEditing] = useState<Movie | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState<FormState>(emptyForm())
+  const [reportFor, setReportFor] = useState<Movie | null>(null)
+  const [report, setReport] = useState<RentalReport | null>(null)
 
-  useEffect(() => {
-    fetchMovies()
-  }, [])
-
-  useEffect(() => {
-    const filtered = movies.filter(movie =>
-      movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      movie.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    setFilteredMovies(filtered)
-  }, [searchTerm, movies])
-
-  const fetchMovies = async () => {
+  const load = async () => {
     try {
-      const data = await moviesApi.getAll({ type: 'MOVIE' })
-      setMovies(data.data || [])
-      setFilteredMovies(data.data || [])
-    } catch (error) {
-      console.error('Error fetching movies:', error)
-      toast.error('Gagal memuat data film')
-    } finally {
-      setLoading(false)
-    }
+      const response = await moviesApi.getAll({ limit: 100 })
+      setContents(response.data || [])
+    } catch { toast.error('Gagal memuat konten') } finally { setLoading(false) }
   }
+  useEffect(() => { load() }, [])
 
-  const handleCreateMovie = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const newMovie = await moviesApi.create({
-        title: formData.title,
-        description: formData.description,
-        genre: formData.genre.split(',').map(g => g.trim()).filter(g => g),
-        year: formData.year,
-        rating: formData.rating,
-        duration: formData.duration,
-        thumbnail_url: formData.thumbnail_url,
-        backdrop_url: formData.backdrop_url,
-        video_url: formData.video_url,
-        hls_url: formData.hls_url,
-        trailer_url: formData.trailer_url,
-        cast: formData.cast.split(',').map(c => {
-          const [name, role] = c.trim().split(' as ')
-          return { name: name.trim(), role: role?.trim() || 'Actor' }
-        }).filter(c => c.name),
-        type: formData.type as 'MOVIE' | 'SERIES',
-        featured: formData.featured
-      })
-      setShowCreateModal(false)
-      resetForm()
-      fetchMovies()
-      toast.success(`Film "${newMovie.title}" berhasil ditambahkan!`)
-    } catch (error: any) {
-      console.error('Error creating movie:', error)
-      const errorMessage = error.response?.data?.error || error.message || 'Gagal menambahkan film'
-      toast.error(errorMessage)
-    }
+  const visible = useMemo(() => contents.filter((item) =>
+    (filter === 'ALL' || item.type === filter) &&
+    `${item.title} ${item.description || ''}`.toLowerCase().includes(search.toLowerCase())
+  ), [contents, filter, search])
+
+  const openCreate = (type: 'MOVIE' | 'SERIES') => {
+    setEditing(null); setForm(emptyForm(type)); setShowForm(true)
   }
-
-  const handleUpdateMovie = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedMovie) return
-    try {
-      const updatedMovie = await moviesApi.update(selectedMovie.id, {
-        title: formData.title,
-        description: formData.description,
-        genre: formData.genre.split(',').map(g => g.trim()).filter(g => g),
-        year: formData.year,
-        rating: formData.rating,
-        duration: formData.duration,
-        thumbnail_url: formData.thumbnail_url,
-        backdrop_url: formData.backdrop_url,
-        video_url: formData.video_url,
-        hls_url: formData.hls_url,
-        trailer_url: formData.trailer_url,
-        cast: formData.cast.split(',').map(c => {
-          const [name, role] = c.trim().split(' as ')
-          return { name: name.trim(), role: role?.trim() || 'Actor' }
-        }).filter(c => c.name),
-        type: formData.type as 'MOVIE' | 'SERIES',
-        featured: formData.featured
-      })
-      setShowEditModal(false)
-      setSelectedMovie(null)
-      resetForm()
-      fetchMovies()
-      toast.success(`Film "${updatedMovie.title}" berhasil diperbarui!`)
-    } catch (error: any) {
-      console.error('Error updating movie:', error)
-      const errorMessage = error.response?.data?.error || error.message || 'Gagal memperbarui film'
-      toast.error(errorMessage)
-    }
-  }
-
-  const openEditModal = (movie: Movie) => {
-    setSelectedMovie(movie)
-    setFormData({
-      title: movie.title,
-      description: movie.description || '',
-      genre: movie.genre.join(', '),
-      year: movie.year,
-      rating: movie.rating.toString(),
-      duration: movie.duration,
-      thumbnail_url: movie.thumbnail_url || '',
-      backdrop_url: movie.backdrop_url || '',
-      video_url: movie.video_url || '',
-      hls_url: movie.hls_url || '',
-      trailer_url: movie.trailer_url || '',
-      cast: movie.cast.map(c => `${c.name} as ${c.role}`).join(', '),
-      type: movie.type,
-      featured: movie.featured
+  const openEdit = (item: Movie) => {
+    setEditing(item)
+    setForm({
+      title: item.title, description: item.description || '', genre: item.genre.join(', '), year: item.year,
+      rating: String(item.rating), duration: item.duration, thumbnail_url: item.thumbnail_url || '',
+      backdrop_url: item.backdrop_url || '', video_url: item.video_url || '', hls_url: item.hls_url || '',
+      trailer_url: item.trailer_url || '', cast: (item.cast || []).map((c) => `${c.name} as ${c.role}`).join(', '),
+      type: item.type, featured: item.featured, show_in_latest: item.show_in_latest ?? false,
+      show_in_movie_picks: item.show_in_movie_picks ?? false, show_in_popular_series: item.show_in_popular_series ?? false,
+      rental_price: Number(item.rental_price?.price || 15000),
+      rental_duration_hours: item.rental_price?.duration_hours || 48,
+      rental_active: item.rental_price?.is_active ?? true, episodes: item.episodes || [],
     })
-    setShowEditModal(true)
+    setShowForm(true)
   }
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      genre: '',
-      year: new Date().getFullYear(),
-      rating: '4.0',
-      duration: '',
-      thumbnail_url: '',
-      backdrop_url: '',
-      video_url: '',
-      hls_url: '',
-      trailer_url: '',
-      cast: '',
-      type: 'MOVIE',
-      featured: false
-    })
+  const payload = {
+    title: form.title, description: form.description, genre: form.genre.split(',').map((v) => v.trim()).filter(Boolean),
+    year: form.year, rating: form.rating, duration: form.duration, thumbnail_url: form.thumbnail_url,
+    backdrop_url: form.backdrop_url, video_url: form.type === 'MOVIE' ? form.video_url : '',
+    hls_url: form.type === 'MOVIE' ? form.hls_url : '', trailer_url: form.trailer_url,
+    cast: form.cast.split(',').map((value) => { const [name, role] = value.trim().split(' as '); return { name, role: role || 'Actor' } }).filter((v) => v.name),
+    type: form.type, featured: form.featured, show_in_latest: form.type === 'MOVIE' && form.show_in_latest,
+    show_in_movie_picks: form.type === 'MOVIE' && form.show_in_movie_picks,
+    show_in_popular_series: form.type === 'SERIES' && form.show_in_popular_series,
+    rental_price_amount: form.rental_price,
+    rental_duration_hours: form.rental_duration_hours, rental_active: form.rental_active,
+    episodes: form.type === 'SERIES' ? form.episodes.map((episode) => ({
+      season_number: episode.season_number,
+      episode_number: episode.episode_number,
+      title: episode.title,
+      description: episode.description || '',
+      duration: episode.duration,
+      thumbnail_url: episode.thumbnail_url || '',
+      video_url: episode.video_url || '',
+      hls_url: episode.hls_url || '',
+      is_published: episode.is_published,
+    })) : [],
   }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    )
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault()
+    try {
+      if (editing) await moviesApi.update(editing.id, payload)
+      else await moviesApi.create(payload)
+      toast.success(`${form.type === 'SERIES' ? 'Series' : 'Film'} berhasil ${editing ? 'diperbarui' : 'ditambahkan'}`)
+      setShowForm(false); setEditing(null); await load()
+    } catch (error: any) { toast.error(error.response?.data?.error || 'Gagal menyimpan konten') }
   }
+  const showRentals = async (item: Movie) => {
+    setReportFor(item)
+    try { setReport(await moviesApi.getRentals(item.id)) } catch { toast.error('Gagal memuat penyewaan') }
+  }
+  const updateEpisode = (index: number, patch: Partial<Episode>) =>
+    setForm({ ...form, episodes: form.episodes.map((episode, i) => i === index ? { ...episode, ...patch } : episode) })
 
-  return (
-    <div>
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Konten Film</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Kelola dan pantau semua konten film yang tersedia di platform VOD
-          </p>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="btn-primary flex items-center"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Tambah Film
-        </button>
+  if (loading) return <div className="flex h-64 items-center justify-center"><div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"/></div>
+
+  return <div>
+    <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div><h1 className="text-3xl font-bold text-gray-900">Film & Series</h1><p className="mt-2 text-sm text-gray-600">Kelola katalog, tarif rental, dan episode series.</p></div>
+      <div className="flex gap-2">
+        <button onClick={() => openCreate('MOVIE')} className="btn-primary flex items-center"><PlusIcon className="mr-2 h-5 w-5"/>Tambah Film</button>
+        <button onClick={() => openCreate('SERIES')} className="btn-secondary flex items-center"><RectangleStackIcon className="mr-2 h-5 w-5"/>Tambah Series</button>
       </div>
-
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-          </div>
-          <input
-            type="text"
-            className="input-field pl-10"
-            placeholder="Cari berdasarkan judul atau deskripsi film..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Movies Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredMovies.length > 0 ? (
-          filteredMovies.map((movie) => (
-            <div key={movie.id} className="card hover:shadow-lg transition-shadow duration-300">
-              {/* Movie Poster */}
-              <div className="relative aspect-[3/4] rounded-lg overflow-hidden mb-4 bg-gray-100">
-                {movie.thumbnail_url ? (
-                  <img
-                    src={movie.thumbnail_url}
-                    alt={movie.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://via.placeholder.com/300x450?text=No+Image'
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <FilmIcon className="h-16 w-16 text-gray-400" />
-                  </div>
-                )}
-
-                {/* Status Badges */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
-                  {movie.featured && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 text-yellow-900">
-                      <StarIcon className="h-3 w-3 mr-1" />
-                      Featured
-                    </span>
-                  )}
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-400 text-blue-900">
-                    {movie.type}
-                  </span>
-                </div>
-
-                {/* Edit Button */}
-                <div className="absolute top-2 right-2">
-                  <button
-                    onClick={() => openEditModal(movie)}
-                    className="p-2 bg-white bg-opacity-90 rounded-full shadow-md hover:bg-opacity-100 transition-all"
-                  >
-                    <PencilIcon className="h-4 w-4 text-gray-700" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Movie Info */}
-              <div className="space-y-2">
-                <h3 className="font-semibold text-gray-900 line-clamp-1">
-                  {movie.title}
-                </h3>
-
-                <p className="text-sm text-gray-600 line-clamp-2">
-                  {movie.description || 'Tidak ada deskripsi'}
-                </p>
-
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <div className="flex items-center">
-                    <PlayIcon className="h-4 w-4 mr-1" />
-                    {movie.duration}
-                  </div>
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                    ⭐ {movie.rating}
-                  </span>
-                </div>
-
-                {/* Genre */}
-                <div className="flex flex-wrap gap-1">
-                  {movie.genre.map((g, index) => (
-                    <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                      {g}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Links */}
-                <div className="pt-2 border-t border-gray-100 space-y-1">
-                  {movie.hls_url && (
-                    <div className="text-xs">
-                      <span className="font-medium text-green-700">HLS:</span>
-                      <a
-                        href={movie.hls_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-1 text-green-600 hover:text-green-700 truncate block"
-                      >
-                        {movie.hls_url}
-                      </a>
-                    </div>
-                  )}
-                  {movie.video_url && (
-                    <div className="text-xs">
-                      <span className="font-medium text-gray-700">Video:</span>
-                      <a
-                        href={movie.video_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-1 text-primary-600 hover:text-primary-700 truncate block"
-                      >
-                        {movie.video_url}
-                      </a>
-                    </div>
-                  )}
-                  {movie.trailer_url && (
-                    <div className="text-xs">
-                      <span className="font-medium text-gray-700">Trailer:</span>
-                      <a
-                        href={movie.trailer_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-1 text-primary-600 hover:text-primary-700 truncate block"
-                      >
-                        {movie.trailer_url}
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                {/* Dates */}
-                <div className="pt-2 text-xs text-gray-500 border-t border-gray-100">
-                  <div>Tahun: {movie.year}</div>
-                  <div>Dibuat: {new Date(movie.created_at).toLocaleDateString('id-ID')}</div>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-12">
-            <FilmIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada film</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm ? 'Tidak ada film yang cocok dengan pencarian Anda' : 'Belum ada film yang tersedia'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Create Movie Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white max-h-[90vh] overflow-y-auto">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Tambah Film Baru</h3>
-              <form onSubmit={handleCreateMovie}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Judul Film</label>
-                  <input
-                    type="text"
-                    required
-                    className="input-field"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Masukkan judul film"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
-                  <textarea
-                    required
-                    rows={3}
-                    className="input-field"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Masukkan deskripsi film"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Genre (pisahkan dengan koma)</label>
-                  <input
-                    type="text"
-                    required
-                    className="input-field"
-                    value={formData.genre}
-                    onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-                    placeholder="Action, Drama, Thriller"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
-                    <input
-                      type="number"
-                      required
-                      min="1900"
-                      max={new Date().getFullYear() + 10}
-                      className="input-field"
-                      value={formData.year}
-                      onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Rating (1-5)</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      max="5"
-                      step="0.1"
-                      className="input-field"
-                      value={formData.rating}
-                      onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Durasi</label>
-                  <input
-                    type="text"
-                    required
-                    className="input-field"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    placeholder="120 min atau 10 episodes"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail URL</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.thumbnail_url}
-                    onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-                    placeholder="https://example.com/poster.jpg"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Backdrop URL</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.backdrop_url}
-                    onChange={(e) => setFormData({ ...formData, backdrop_url: e.target.value })}
-                    placeholder="https://example.com/backdrop.jpg"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.video_url}
-                    onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                    placeholder="https://example.com/video.mp4"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">HLS URL (Opsional - Adaptive Streaming)</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.hls_url}
-                    onChange={(e) => setFormData({ ...formData, hls_url: e.target.value })}
-                    placeholder="http://localhost:8089/videos/abc-123/playlist.m3u8"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    💡 Kosongkan jika tidak menggunakan HLS. Player akan prioritaskan HLS jika diisi.
-                  </p>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Trailer URL</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.trailer_url}
-                    onChange={(e) => setFormData({ ...formData, trailer_url: e.target.value })}
-                    placeholder="https://example.com/trailer.mp4"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cast (nama as role, pisahkan dengan koma)</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={formData.cast}
-                    onChange={(e) => setFormData({ ...formData, cast: e.target.value })}
-                    placeholder="John Doe as Actor, Jane Smith as Actress"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipe</label>
-                  <select
-                    required
-                    className="input-field"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as 'MOVIE' | 'SERIES' })}
-                  >
-                    <option value="MOVIE">Film</option>
-                    <option value="SERIES">Series</option>
-                  </select>
-                </div>
-
-                <div className="mb-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      className="mr-2"
-                      checked={formData.featured}
-                      onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                    />
-                    <span className="text-sm font-medium text-gray-700">Tampilkan di Featured</span>
-                  </label>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => {
-                      setShowCreateModal(false)
-                      resetForm()
-                    }}
-                  >
-                    Batal
-                  </button>
-                  <button type="submit" className="btn-primary">
-                    Simpan
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Movie Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white max-h-[90vh] overflow-y-auto">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Film</h3>
-              <form onSubmit={handleUpdateMovie}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Judul Film</label>
-                  <input
-                    type="text"
-                    required
-                    className="input-field"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Masukkan judul film"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
-                  <textarea
-                    required
-                    rows={3}
-                    className="input-field"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Masukkan deskripsi film"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Genre (pisahkan dengan koma)</label>
-                  <input
-                    type="text"
-                    required
-                    className="input-field"
-                    value={formData.genre}
-                    onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-                    placeholder="Action, Drama, Thriller"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
-                    <input
-                      type="number"
-                      required
-                      min="1900"
-                      max={new Date().getFullYear() + 10}
-                      className="input-field"
-                      value={formData.year}
-                      onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Rating (1-5)</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      max="5"
-                      step="0.1"
-                      className="input-field"
-                      value={formData.rating}
-                      onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Durasi</label>
-                  <input
-                    type="text"
-                    required
-                    className="input-field"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    placeholder="120 min atau 10 episodes"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail URL</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.thumbnail_url}
-                    onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-                    placeholder="https://example.com/poster.jpg"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Backdrop URL</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.backdrop_url}
-                    onChange={(e) => setFormData({ ...formData, backdrop_url: e.target.value })}
-                    placeholder="https://example.com/backdrop.jpg"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.video_url}
-                    onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                    placeholder="https://example.com/video.mp4"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">HLS URL (Opsional - Adaptive Streaming)</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.hls_url}
-                    onChange={(e) => setFormData({ ...formData, hls_url: e.target.value })}
-                    placeholder="http://localhost:8089/videos/abc-123/playlist.m3u8"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    💡 Kosongkan jika tidak menggunakan HLS. Player akan prioritaskan HLS jika diisi.
-                  </p>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Trailer URL</label>
-                  <input
-                    type="url"
-                    className="input-field"
-                    value={formData.trailer_url}
-                    onChange={(e) => setFormData({ ...formData, trailer_url: e.target.value })}
-                    placeholder="https://example.com/trailer.mp4"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cast (nama as role, pisahkan dengan koma)</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={formData.cast}
-                    onChange={(e) => setFormData({ ...formData, cast: e.target.value })}
-                    placeholder="John Doe as Actor, Jane Smith as Actress"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipe</label>
-                  <select
-                    required
-                    className="input-field"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as 'MOVIE' | 'SERIES' })}
-                  >
-                    <option value="MOVIE">Film</option>
-                    <option value="SERIES">Series</option>
-                  </select>
-                </div>
-
-                <div className="mb-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      className="mr-2"
-                      checked={formData.featured}
-                      onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                    />
-                    <span className="text-sm font-medium text-gray-700">Tampilkan di Featured</span>
-                  </label>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => {
-                      setShowEditModal(false)
-                      setSelectedMovie(null)
-                      resetForm()
-                    }}
-                  >
-                    Batal
-                  </button>
-                  <button type="submit" className="btn-primary">
-                    Update
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  )
+    <div className="mb-6 flex flex-wrap gap-3">
+      <div className="relative min-w-[280px] flex-1"><MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400"/><input className="input-field pl-10" placeholder="Cari film atau series..." value={search} onChange={(e) => setSearch(e.target.value)}/></div>
+      <div className="flex rounded-lg bg-gray-100 p-1">{(['ALL','MOVIE','SERIES'] as const).map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-md px-4 py-2 text-sm ${filter === value ? 'bg-white font-semibold shadow' : 'text-gray-600'}`}>{value === 'ALL' ? 'Semua' : value === 'MOVIE' ? 'Film' : 'Series'}</button>)}</div>
+    </div>
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+      {visible.map((item) => <article key={item.id} className="card">
+        <div className="relative mb-4 aspect-[3/4] overflow-hidden rounded-lg bg-gray-100">
+          {item.thumbnail_url ? <img src={item.thumbnail_url} className="h-full w-full object-cover" alt={item.title}/> : <FilmIcon className="m-auto h-full w-16 text-gray-400"/>}
+          <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-xs font-bold ${item.type === 'SERIES' ? 'bg-purple-600 text-white' : 'bg-blue-500 text-white'}`}>{item.type === 'SERIES' ? `SERIES · ${item.episodes?.length || 0} EPISODE` : 'FILM'}</span>
+          <button onClick={() => openEdit(item)} className="absolute right-2 top-2 rounded-full bg-white p-2 shadow"><PencilIcon className="h-4 w-4"/></button>
+        </div>
+        <h3 className="font-semibold text-gray-900">{item.title}</h3><p className="mt-1 line-clamp-2 text-sm text-gray-500">{item.description}</p>
+        <div className="mt-3 rounded-lg bg-emerald-50 p-3"><b className="text-emerald-800">Rp {Number(item.rental_price?.price || 0).toLocaleString('id-ID')} · {item.rental_price?.duration_hours || 0} jam</b>
+          <button onClick={() => showRentals(item)} className="mt-2 flex text-sm text-emerald-700"><UserGroupIcon className="mr-1 h-4 w-4"/>{item._count?.rentals || 0} kali disewa</button></div>
+      </article>)}
+    </div>
+
+    {showForm && <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 p-4">
+      <div className="mx-auto my-8 w-full max-w-4xl rounded-xl bg-white p-6 shadow-xl">
+        <div className="mb-5 flex justify-between"><div><h2 className="text-xl font-bold">{editing ? 'Edit' : 'Tambah'} {form.type === 'SERIES' ? 'Series' : 'Film'}</h2><p className="text-sm text-gray-500">Tarif dan masa sewa berlaku untuk keseluruhan konten.</p></div><button onClick={() => setShowForm(false)} className="btn-secondary">Tutup</button></div>
+        <form onSubmit={save} className="space-y-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="md:col-span-2 text-sm font-medium">Judul<input required className="input-field mt-1" value={form.title} onChange={(e) => setForm({...form,title:e.target.value})}/></label>
+            <label className="md:col-span-2 text-sm font-medium">Deskripsi<textarea required className="input-field mt-1" rows={3} value={form.description} onChange={(e) => setForm({...form,description:e.target.value})}/></label>
+            <label className="text-sm font-medium">Genre<input required className="input-field mt-1" value={form.genre} onChange={(e) => setForm({...form,genre:e.target.value})} placeholder="Drama, Action"/></label>
+            <label className="text-sm font-medium">Cast<input className="input-field mt-1" value={form.cast} onChange={(e) => setForm({...form,cast:e.target.value})} placeholder="Nama as Peran"/></label>
+            <label className="text-sm font-medium">Tahun<input required type="number" className="input-field mt-1" value={form.year} onChange={(e) => setForm({...form,year:Number(e.target.value)})}/></label>
+            <label className="text-sm font-medium">Rating<input required type="number" min="1" max="5" step=".1" className="input-field mt-1" value={form.rating} onChange={(e) => setForm({...form,rating:e.target.value})}/></label>
+            <label className="text-sm font-medium">Durasi / jumlah episode<input required className="input-field mt-1" value={form.duration} onChange={(e) => setForm({...form,duration:e.target.value})} placeholder={form.type === 'SERIES' ? '8 episode' : '120 min'}/></label>
+            <label className="text-sm font-medium">Trailer URL<input type="url" className="input-field mt-1" value={form.trailer_url} onChange={(e) => setForm({...form,trailer_url:e.target.value})}/></label>
+            <label className="text-sm font-medium">Thumbnail URL<input required type="url" className="input-field mt-1" value={form.thumbnail_url} onChange={(e) => setForm({...form,thumbnail_url:e.target.value})}/></label>
+            <label className="text-sm font-medium">Backdrop URL<input type="url" className="input-field mt-1" value={form.backdrop_url} onChange={(e) => setForm({...form,backdrop_url:e.target.value})}/></label>
+          </div>
+          <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+            <h3 className="mb-3 font-bold text-emerald-900">Pengaturan Rental</h3>
+            <div className="grid gap-4 md:grid-cols-3">
+              <label className="text-sm font-medium">Harga (Rp)<input required type="number" min="1" className="input-field mt-1" value={form.rental_price} onChange={(e) => setForm({...form,rental_price:Number(e.target.value)})}/></label>
+              <label className="text-sm font-medium">Masa sewa (jam)<input required type="number" min="1" className="input-field mt-1" value={form.rental_duration_hours} onChange={(e) => setForm({...form,rental_duration_hours:Number(e.target.value)})}/></label>
+              <label className="flex items-center gap-2 pt-7"><input type="checkbox" checked={form.rental_active} onChange={(e) => setForm({...form,rental_active:e.target.checked})}/>Rental aktif</label>
+            </div>
+          </section>
+          {form.type === 'MOVIE' ? <section className="grid gap-4 rounded-xl border p-4 md:grid-cols-2"><h3 className="md:col-span-2 font-bold">Sumber Video Film</h3>
+            <label className="text-sm font-medium">Video URL<input type="url" className="input-field mt-1" value={form.video_url} onChange={(e) => setForm({...form,video_url:e.target.value})}/></label>
+            <label className="text-sm font-medium">HLS URL<input type="url" className="input-field mt-1" value={form.hls_url} onChange={(e) => setForm({...form,hls_url:e.target.value})}/></label></section>
+          : <section className="rounded-xl border border-purple-200 bg-purple-50/40 p-4">
+            <div className="mb-4 flex justify-between"><div><h3 className="font-bold text-purple-900">Daftar Episode</h3><p className="text-xs text-gray-500">Satu rental series membuka semua episode selama masa sewa.</p></div>
+              <button type="button" className="btn-secondary flex items-center" onClick={() => setForm({...form,episodes:[...form.episodes,blankEpisode(form.episodes)]})}><PlusIcon className="mr-1 h-4 w-4"/>Tambah Episode</button></div>
+            <div className="space-y-4">{form.episodes.map((episode,index) => <div key={index} className="rounded-lg border bg-white p-4">
+              <div className="mb-3 flex justify-between"><b>Episode {index + 1}</b><button type="button" onClick={() => setForm({...form,episodes:form.episodes.filter((_,i)=>i!==index)})} className="text-red-600"><TrashIcon className="h-5 w-5"/></button></div>
+              <div className="grid gap-3 md:grid-cols-4">
+                <label className="text-xs">Season<input required type="number" min="1" className="input-field mt-1" value={episode.season_number} onChange={(e)=>updateEpisode(index,{season_number:Number(e.target.value)})}/></label>
+                <label className="text-xs">Nomor episode<input required type="number" min="1" className="input-field mt-1" value={episode.episode_number} onChange={(e)=>updateEpisode(index,{episode_number:Number(e.target.value)})}/></label>
+                <label className="text-xs md:col-span-2">Judul<input required className="input-field mt-1" value={episode.title} onChange={(e)=>updateEpisode(index,{title:e.target.value})}/></label>
+                <label className="text-xs">Durasi<input required className="input-field mt-1" value={episode.duration} onChange={(e)=>updateEpisode(index,{duration:e.target.value})} placeholder="45 min"/></label>
+                <label className="text-xs md:col-span-3">Deskripsi<input className="input-field mt-1" value={episode.description || ''} onChange={(e)=>updateEpisode(index,{description:e.target.value})}/></label>
+                <label className="text-xs md:col-span-2">Video URL<input type="url" className="input-field mt-1" value={episode.video_url || ''} onChange={(e)=>updateEpisode(index,{video_url:e.target.value})}/></label>
+                <label className="text-xs md:col-span-2">HLS URL<input type="url" className="input-field mt-1" value={episode.hls_url || ''} onChange={(e)=>updateEpisode(index,{hls_url:e.target.value})}/></label>
+                <label className="text-xs md:col-span-4">Thumbnail episode<input type="url" className="input-field mt-1" value={episode.thumbnail_url || ''} onChange={(e)=>updateEpisode(index,{thumbnail_url:e.target.value})}/></label>
+              </div></div>)}
+              {!form.episodes.length && <p className="py-6 text-center text-sm text-gray-500">Belum ada episode. Klik “Tambah Episode”.</p>}</div>
+          </section>}
+          <section className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <h3 className="font-bold text-amber-900">Penempatan di Homepage</h3>
+            <p className="mb-3 text-xs text-gray-600">Admin menentukan sendiri konten yang tampil pada setiap bagian.</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="flex items-center gap-2"><input type="checkbox" checked={form.featured} onChange={(e)=>setForm({...form,featured:e.target.checked})}/>Carousel slideshow</label>
+              {form.type === 'MOVIE' && <label className="flex items-center gap-2"><input type="checkbox" checked={form.show_in_latest} onChange={(e)=>setForm({...form,show_in_latest:e.target.checked})}/>Rilis Terbaru (maks. 10)</label>}
+              {form.type === 'MOVIE' && <label className="flex items-center gap-2"><input type="checkbox" checked={form.show_in_movie_picks} onChange={(e)=>setForm({...form,show_in_movie_picks:e.target.checked})}/>Film Pilihan</label>}
+              {form.type === 'SERIES' && <label className="flex items-center gap-2"><input type="checkbox" checked={form.show_in_popular_series} onChange={(e)=>setForm({...form,show_in_popular_series:e.target.checked})}/>Serial Populer</label>}
+            </div>
+          </section>
+          <div className="flex justify-end gap-2"><button type="button" className="btn-secondary" onClick={()=>setShowForm(false)}>Batal</button><button className="btn-primary">Simpan {form.type === 'SERIES' ? 'Series' : 'Film'}</button></div>
+        </form>
+      </div>
+    </div>}
+
+    {report && reportFor && <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-4"><div className="w-full max-w-4xl rounded-xl bg-white p-6">
+      <div className="mb-4 flex justify-between"><div><h3 className="text-xl font-bold">Penyewaan “{reportFor.title}”</h3><p className="text-sm text-gray-500">{report.summary.total_rentals} transaksi · {report.summary.active_rentals} aktif</p></div><button className="btn-secondary" onClick={()=>setReport(null)}>Tutup</button></div>
+      <div className="max-h-[60vh] overflow-auto"><table className="min-w-full text-sm"><thead><tr><th className="p-3 text-left">User</th><th className="p-3 text-left">Mulai</th><th className="p-3 text-left">Berakhir</th><th className="p-3 text-left">Harga</th></tr></thead><tbody>{report.rentals.map((r)=><tr className="border-t" key={r.id}><td className="p-3">{r.user?.full_name || r.user?.email}</td><td className="p-3">{new Date(r.rented_at).toLocaleString('id-ID')}</td><td className="p-3">{new Date(r.expired_at).toLocaleString('id-ID')}</td><td className="p-3">Rp {Number(r.price_paid).toLocaleString('id-ID')}</td></tr>)}</tbody></table></div>
+    </div></div>}
+  </div>
 }

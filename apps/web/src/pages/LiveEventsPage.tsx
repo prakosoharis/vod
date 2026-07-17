@@ -1,360 +1,216 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Layout from '@/components/layout/Layout';
-import { Radio, Calendar, Clock, Users, Play, Filter, Search, Tag, Video } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ArrowRight, Calendar, Clock, Play, Radio, Search } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import Layout from '@/components/layout/Layout'
 
 interface BroadcastEvent {
-  id: string;
-  title: string;
-  description?: string;
-  scheduled_time: string;
-  category: string;
-  chat_enabled: boolean;
-  status: 'SCHEDULED' | 'LIVE' | 'ENDED' | 'CANCELLED';
-  viewer_count: number;
-  ticket_price?: number | string;
-  started_at?: string;
-  ended_at?: string;
-  thumbnail_url?: string;
-  backdrop_url?: string;
-  created_at: string;
+  id: string
+  title: string
+  description?: string
+  scheduled_time: string
+  category: string
+  status: 'SCHEDULED' | 'LIVE' | 'ENDED' | 'CANCELLED'
+  viewer_count: number
+  ticket_price?: number | string
+  thumbnail_url?: string
+  backdrop_url?: string
 }
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
+type LiveTab = 'LIVE' | 'SCHEDULED' | 'ENDED'
 
-const resolveBroadcastImage = (url?: string) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (API_URL.startsWith('/')) return url;
-  return `${API_ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
-};
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'
+const API_ORIGIN = API_URL.replace(/\/api\/?$/, '')
 
-const LiveEventsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [broadcasts, setBroadcasts] = useState<BroadcastEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'LIVE' | 'SCHEDULED' | 'ENDED'>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
+const resolveImage = (url?: string) => {
+  if (!url) return ''
+  if (/^https?:\/\//.test(url) || API_URL.startsWith('/')) return url
+  return `${API_ORIGIN}${url.startsWith('/') ? url : `/${url}`}`
+}
+
+const formatSchedule = (value: string) => new Intl.DateTimeFormat('id-ID', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZoneName: 'short',
+}).format(new Date(value))
+
+const formatPrice = (price?: number | string) => {
+  const value = Number(price || 0)
+  return value > 0 ? `Rp${value.toLocaleString('id-ID')}` : 'Gratis'
+}
+
+const LiveEventsPage = () => {
+  const navigate = useNavigate()
+  const [broadcasts, setBroadcasts] = useState<BroadcastEvent[]>([])
+  const [activeTab, setActiveTab] = useState<LiveTab>('LIVE')
+  const [query, setQuery] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [failed, setFailed] = useState(false)
+
+  const fetchBroadcasts = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true)
+    try {
+      const response = await fetch(`${API_URL}/broadcasts`)
+      if (!response.ok) throw new Error('Gagal mengambil event')
+      setBroadcasts(await response.json())
+      setFailed(false)
+    } catch {
+      setFailed(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    fetchBroadcasts(true);
-    const interval = window.setInterval(() => fetchBroadcasts(false), 15000);
-    return () => window.clearInterval(interval);
-  }, []);
+    fetchBroadcasts(true)
+    const interval = window.setInterval(() => fetchBroadcasts(), 15_000)
+    return () => window.clearInterval(interval)
+  }, [fetchBroadcasts])
 
-  const fetchBroadcasts = async (showLoading = false) => {
-    try {
-      if (showLoading) setLoading(true);
-      const response = await fetch(`${API_URL}/broadcasts`);
-      const data = await response.json();
-      setBroadcasts(data);
-    } catch (error) {
-      console.error('Error fetching broadcasts:', error);
-    } finally {
-      setLoading(false);
+  const counts = useMemo(() => ({
+    LIVE: broadcasts.filter((event) => event.status === 'LIVE').length,
+    SCHEDULED: broadcasts.filter((event) => event.status === 'SCHEDULED').length,
+    ENDED: broadcasts.filter((event) => event.status === 'ENDED').length,
+  }), [broadcasts])
+
+  useEffect(() => {
+    if (!loading && counts.LIVE === 0 && activeTab === 'LIVE') {
+      setActiveTab(counts.SCHEDULED > 0 ? 'SCHEDULED' : 'ENDED')
     }
-  };
+  }, [activeTab, counts, loading])
 
-  const filteredBroadcasts = broadcasts.filter((b) => {
-    const matchesFilter = activeFilter === 'ALL' || b.status === activeFilter;
-    const matchesSearch =
-      !searchQuery ||
-      b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (b.description && b.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesFilter && matchesSearch;
-  });
+  const featured = broadcasts.find((event) => event.status === 'LIVE')
+    || broadcasts.find((event) => event.status === 'SCHEDULED')
+    || broadcasts[0]
 
-  const liveBroadcasts = broadcasts.filter((b) => b.status === 'LIVE');
-  const scheduledBroadcasts = broadcasts.filter((b) => b.status === 'SCHEDULED');
-  const endedBroadcasts = broadcasts.filter((b) => b.status === 'ENDED');
+  const filtered = broadcasts
+    .filter((event) => event.status === activeTab)
+    .filter((event) => {
+      const keyword = query.trim().toLocaleLowerCase('id-ID')
+      return !keyword
+        || event.title.toLocaleLowerCase('id-ID').includes(keyword)
+        || event.category.toLocaleLowerCase('id-ID').includes(keyword)
+        || event.description?.toLocaleLowerCase('id-ID').includes(keyword)
+    })
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'LIVE':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            LIVE
-          </span>
-        );
-      case 'SCHEDULED':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-            <Clock className="w-3 h-3" />
-            SCHEDULED
-          </span>
-        );
-      case 'ENDED':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-500/20 text-gray-400 border border-gray-500/30">
-            ENDED
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    const colors: Record<string, string> = {
-      Sports: 'from-blue-600 to-blue-800',
-      Music: 'from-purple-600 to-purple-800',
-      Education: 'from-green-600 to-green-800',
-      Gaming: 'from-orange-600 to-orange-800',
-      Entertainment: 'from-pink-600 to-pink-800',
-      Talk: 'from-teal-600 to-teal-800',
-    };
-    return colors[category] || 'from-gray-600 to-gray-800';
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
-
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const openEvent = (event: BroadcastEvent) => navigate(`/live/${event.id}`)
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#0f0f0f]">
-        {/* Hero Header */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-900/30 via-transparent to-purple-900/20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0f0f0f]" />
-          <div className="relative max-w-7xl mx-auto px-6 pt-32 pb-12">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-red-500/20 rounded-xl border border-red-500/30">
-                <Radio className="w-8 h-8 text-red-400" />
+      <div className="smash-live">
+        {featured ? (
+          <section
+            className="smash-live__hero"
+            style={{ backgroundImage: `url("${resolveImage(featured.backdrop_url || featured.thumbnail_url)}")` }}
+          >
+            <div className="smash-live__hero-wash" />
+            <div className="smash-live__hero-content">
+              <p>SIARAN LANGSUNG DARI NUSANTARA</p>
+              <h1>{featured.title}</h1>
+              <span>{featured.description || 'Saksikan pertunjukan dan cerita pilihan, langsung dari berbagai penjuru Indonesia.'}</span>
+              <div className="smash-live__facts">
+                <b className={featured.status === 'LIVE' ? 'is-live' : ''}>
+                  {featured.status === 'LIVE' ? <><i /> LIVE</> : <><Calendar /> AKAN DATANG</>}
+                </b>
+                {featured.status === 'LIVE' && <span>{Number(featured.viewer_count || 0).toLocaleString('id-ID')} menonton</span>}
+                <span>{formatPrice(featured.ticket_price)}</span>
               </div>
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-white">Live Events</h1>
-                <p className="text-gray-400 text-lg mt-1">
-                  Tonton siaran langsung, acara spesial, dan konten eksklusif
-                </p>
-              </div>
+              <button className="nusantara-button is-primary" onClick={() => openEvent(featured)}>
+                {featured.status === 'LIVE' ? <Play fill="currentColor" /> : <Calendar />}
+                {featured.status === 'LIVE' ? 'Tonton Sekarang' : 'Lihat Event'}
+              </button>
             </div>
-
-            {/* Stats */}
-            <div className="flex gap-6 mt-8">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-red-400 font-semibold">{liveBroadcasts.length}</span> Live Now
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Calendar className="w-4 h-4 text-yellow-400" />
-                <span className="text-yellow-400 font-semibold">{scheduledBroadcasts.length}</span> Upcoming
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Video className="w-4 h-4 text-gray-400" />
-                <span className="font-semibold">{endedBroadcasts.length}</span> Completed
-              </div>
+          </section>
+        ) : (
+          <section className="smash-live__hero is-empty">
+            <div className="smash-live__hero-content">
+              <p>SIARAN LANGSUNG DARI NUSANTARA</p>
+              <h1>Panggung cerita<br />dari seluruh Indonesia.</h1>
+              <span>Event live terbaru akan segera hadir di SMASH.</span>
             </div>
-          </div>
-        </div>
+          </section>
+        )}
 
-        <div className="max-w-7xl mx-auto px-6 pb-16">
-          {/* Live Now Section */}
-          {liveBroadcasts.length > 0 && (
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                Sedang Berlangsung
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {liveBroadcasts.map((broadcast) => (
-                  <button
-                    key={broadcast.id}
-                    onClick={() => navigate(`/live/${broadcast.id}`)}
-                    className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-900/40 to-red-950/60 border border-red-500/20 p-6 text-left transition-all duration-300 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 hover:scale-[1.02]"
-                  >
-                    {(broadcast.backdrop_url || broadcast.thumbnail_url) && (
-                      <>
-                        <img
-                          src={resolveBroadcastImage(broadcast.backdrop_url || broadcast.thumbnail_url)}
-                          alt={broadcast.title}
-                          className="absolute inset-0 h-full w-full object-cover opacity-35 transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
-                      </>
-                    )}
-                    <div className="absolute top-4 right-4">
-                      {getStatusBadge(broadcast.status)}
-                    </div>
-                    <div className="relative flex items-start gap-4">
-                      <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${getCategoryIcon(broadcast.category)} flex items-center justify-center shadow-lg`}>
-                        <Play className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-xl font-bold text-white group-hover:text-red-300 transition-colors truncate">
-                          {broadcast.title}
-                        </h3>
-                        <div className="flex items-center gap-3 mt-2">
-                          <span className="inline-flex items-center gap-1 text-sm text-gray-400">
-                            <Tag className="w-3.5 h-3.5" />
-                            {broadcast.category}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-sm text-gray-400">
-                            <Users className="w-3.5 h-3.5" />
-                            {broadcast.viewer_count} viewers
-                          </span>
-                          <span className="text-sm text-gray-400">
-                            {Number(broadcast.ticket_price || 0) > 0
-                              ? `Rp ${Number(broadcast.ticket_price).toLocaleString('id-ID')}`
-                              : 'Gratis'}
-                          </span>
-                        </div>
-                        {broadcast.description && (
-                          <p className="text-sm text-gray-500 mt-2 line-clamp-2">{broadcast.description}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="relative mt-4 flex items-center gap-2 text-red-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="w-4 h-4" />
-                      Tonton Sekarang
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
+        <nav className="smash-live__tabs" aria-label="Status live event">
+          <button className={activeTab === 'LIVE' ? 'is-active' : ''} onClick={() => setActiveTab('LIVE')}>
+            Live Sekarang <b>{counts.LIVE}</b>
+          </button>
+          <button className={activeTab === 'SCHEDULED' ? 'is-active' : ''} onClick={() => setActiveTab('SCHEDULED')}>
+            Akan Datang <b>{counts.SCHEDULED}</b>
+          </button>
+          <button className={activeTab === 'ENDED' ? 'is-active' : ''} onClick={() => setActiveTab('ENDED')}>
+            Selesai <b>{counts.ENDED}</b>
+          </button>
+        </nav>
 
-          {/* Search & Filter Bar */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Cari broadcast..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white/25 transition-colors"
-              />
+        <section className="smash-live__events">
+          <header>
+            <div>
+              <small>{activeTab === 'LIVE' ? 'SEDANG BERLANGSUNG' : activeTab === 'SCHEDULED' ? 'JANGAN LEWATKAN' : 'ARSIP SIARAN'}</small>
+              <h2>{activeTab === 'LIVE' ? 'Live Sekarang' : activeTab === 'SCHEDULED' ? 'Live & Akan Datang' : 'Event Selesai'}</h2>
             </div>
-            <div className="flex gap-2">
-              {(['ALL', 'LIVE', 'SCHEDULED', 'ENDED'] as const).map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    activeFilter === filter
-                      ? 'bg-white text-black'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10'
-                  }`}
-                >
-                  {filter === 'ALL' ? 'Semua' : filter === 'LIVE' ? 'Live' : filter === 'SCHEDULED' ? 'Akan Datang' : 'Selesai'}
-                </button>
-              ))}
-            </div>
-          </div>
+            <label>
+              <Search />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari event..." />
+            </label>
+          </header>
 
-          {/* Broadcast Grid */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-white/5 rounded-2xl p-6 animate-pulse">
-                  <div className="h-5 bg-white/10 rounded w-3/4 mb-3" />
-                  <div className="h-4 bg-white/10 rounded w-1/2 mb-4" />
-                  <div className="h-3 bg-white/10 rounded w-full mb-2" />
-                  <div className="h-3 bg-white/10 rounded w-2/3" />
-                </div>
-              ))}
+            <div className="smash-live__grid is-loading">
+              {Array.from({ length: 6 }).map((_, index) => <div key={index} />)}
             </div>
-          ) : filteredBroadcasts.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/5 rounded-full mb-6">
-                <Filter className="w-10 h-10 text-gray-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Tidak ada broadcast ditemukan</h3>
-              <p className="text-gray-500">Coba ubah filter atau kata kunci pencarian</p>
+          ) : failed ? (
+            <div className="nusantara-empty">
+              <Radio />
+              <h3>Event belum dapat dimuat</h3>
+              <p>Periksa koneksi Anda, lalu coba kembali.</p>
+              <button className="nusantara-button is-primary" onClick={() => fetchBroadcasts(true)}>Coba Lagi</button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="nusantara-empty">
+              <Radio />
+              <h3>{query ? 'Event tidak ditemukan' : 'Belum ada event di kategori ini'}</h3>
+              <p>{query ? 'Coba gunakan kata kunci yang berbeda.' : 'Kembali lagi untuk melihat jadwal terbaru dari SMASH.'}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBroadcasts
-                .filter((b) => b.status !== 'LIVE') // Live broadcasts shown above
-                .map((broadcast) => (
-                  <button
-                    key={broadcast.id}
-                    onClick={() => navigate(`/live/${broadcast.id}`)}
-                    className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 text-left transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
+            <div className="smash-live__grid">
+              {filtered.map((event) => (
+                <article key={event.id} onClick={() => openEvent(event)}>
+                  <div
+                    className="smash-live-card__art"
+                    style={{ backgroundImage: `url("${resolveImage(event.thumbnail_url || event.backdrop_url)}")` }}
                   >
-                    {/* Category gradient bar */}
-                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${getCategoryIcon(broadcast.category)}`} />
-
-                    {(broadcast.thumbnail_url || broadcast.backdrop_url) && (
-                      <img
-                        src={resolveBroadcastImage(broadcast.thumbnail_url || broadcast.backdrop_url)}
-                        alt={broadcast.title}
-                        className="h-40 w-full object-cover"
-                      />
-                    )}
-
-                    <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br ${getCategoryIcon(broadcast.category)} flex items-center justify-center`}>
-                        <Video className="w-5 h-5 text-white" />
-                      </div>
-                      {getStatusBadge(broadcast.status)}
-                    </div>
-
-                    <h3 className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors line-clamp-1">
-                      {broadcast.title}
-                    </h3>
-
-                    <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
-                      <span className="inline-flex items-center gap-1">
-                        <Tag className="w-3 h-3" />
-                        {broadcast.category}
-                      </span>
-                    </div>
-
-                    {broadcast.description && (
-                      <p className="text-sm text-gray-500 mt-3 line-clamp-2">{broadcast.description}</p>
-                    )}
-
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/5">
-                      <div className="text-xs text-gray-600">
-                        <Calendar className="w-3 h-3 inline mr-1" />
-                        {formatDate(broadcast.scheduled_time)}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        {formatTime(broadcast.scheduled_time)}
-                      </div>
-                    </div>
-
-                    <div className="mt-3 text-sm font-semibold text-white">
-                      {Number(broadcast.ticket_price || 0) > 0
-                        ? `Tiket Rp ${Number(broadcast.ticket_price).toLocaleString('id-ID')}`
-                        : 'Gratis'}
-                    </div>
-
-                    {broadcast.viewer_count > 0 && (
-                      <div className="flex items-center gap-1 mt-2 text-xs text-gray-600">
-                        <Users className="w-3 h-3" />
-                        {broadcast.viewer_count} viewers
-                      </div>
-                    )}
-                    </div>
-                  </button>
-                ))}
+                    <span className={event.status === 'LIVE' ? 'is-live' : ''}>
+                      {event.status === 'LIVE' ? '● LIVE' : event.status === 'ENDED' ? 'SELESAI' : formatSchedule(event.scheduled_time)}
+                    </span>
+                    <button aria-label={`Buka ${event.title}`}><Play fill="currentColor" /></button>
+                  </div>
+                  <div className="smash-live-card__copy">
+                    <small>{event.category} · {formatPrice(event.ticket_price)}</small>
+                    <h3>{event.title}</h3>
+                    <p>
+                      {event.status === 'LIVE'
+                        ? `${Number(event.viewer_count || 0).toLocaleString('id-ID')} sedang menonton`
+                        : event.status === 'ENDED'
+                          ? 'Siaran telah selesai'
+                          : formatSchedule(event.scheduled_time)}
+                    </p>
+                    <button onClick={(click) => { click.stopPropagation(); openEvent(event) }}>
+                      {event.status === 'LIVE' ? 'Tonton Live' : event.status === 'ENDED' ? 'Lihat Detail' : 'Ingatkan Saya'}
+                      <ArrowRight />
+                    </button>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
-        </div>
+          <p className="smash-live__timezone"><Clock /> Waktu ditampilkan sesuai zona waktu perangkat Anda</p>
+        </section>
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default LiveEventsPage;
+export default LiveEventsPage

@@ -1,399 +1,174 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
+import { Search, SlidersHorizontal } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
-import ContentRow from '@/components/home/ContentRow'
-import FeaturedCarousel from '@/components/home/FeaturedCarousel'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import ContentDetailModal from '@/components/content/ContentDetailModal'
+import { ContentCard } from '@/components/home/ContentCard'
 import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal'
-import ContentCard from '@/components/content/ContentCard'
 import { contentService } from '@/services/content.service'
-import { userService } from '@/services/auth.service'
 import { paymentService } from '@/services/payment.service'
 import { useAuthStore } from '@/stores/authStore'
 import type { Content } from '@/types'
 
-const LoadingSkeleton = () => {
-  return (
-    <div className="bg-warm-charcoal-100 min-h-screen">
-      <div className="h-[80vh] w-full bg-gray-800 animate-pulse" />
-      <div className="-mt-32 relative z-10 space-y-12 pb-20 px-4 sm:px-6 lg:px-8">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="space-y-4">
-            <div className="h-6 w-48 bg-gray-800 rounded animate-pulse" />
-            <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+const contentTypes = [
+  { label: 'Semua', value: '' },
+  { label: 'Film', value: 'MOVIE' },
+  { label: 'Serial', value: 'SERIES' },
+]
+
+const genres = ['Drama', 'Comedy', 'Action', 'Horror', 'Romance', 'Documentary', 'Family', 'Indonesian']
 
 const BrowsePage = () => {
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
   const { isAuthenticated } = useAuthStore()
-
-  // State for staggered loading
-  const [loadSecondary, setLoadSecondary] = useState(false)
-  const [loadGenre, setLoadGenre] = useState(false)
-
-  // State for genre filtering
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
-
-  // State for modal
-  const [modalOpen, setModalOpen] = useState(false)
   const [selectedContent, setSelectedContent] = useState<Content | null>(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentContent, setPaymentContent] = useState<Content | null>(null)
+  const [type, setType] = useState(params.get('type') || '')
+  const [genre, setGenre] = useState(params.get('genre') || '')
+  const [query, setQuery] = useState(params.get('search') || '')
+  const [sort, setSort] = useState<'newest' | 'az'>('newest')
+  const collection = params.get('collection') as 'latest' | 'movie_picks' | 'popular_series' | null
 
-  // Available genres
-  const genres = [
-    'Action', 'Drama', 'Comedy', 'Horror', 'Thriller', 'Sci-Fi',
-    'Romance', 'Animation', 'Documentary', 'Fantasy', 'Mystery',
-    'Adventure', 'Crime', 'Family', 'War', 'Musical', 'Biography',
-    'History', 'Sport', 'Indonesian'
-  ]
-
-  // Load secondary content after 1 second
-  useEffect(() => {
-    const timer = setTimeout(() => setLoadSecondary(true), 1000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Load genre content after 2 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => setLoadGenre(true), 2000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Priority 1: Featured content (immediate load)
-  const { data: featured, isLoading: loadingFeatured } = useQuery<Content[]>({
-    queryKey: ['featured'],
-    queryFn: () => contentService.getFeaturedContent(),
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['browse-catalog', type, genre, collection],
+    queryFn: () => contentService.getAllContent({
+      limit: 100,
+      type: type || undefined,
+      genre: genre || undefined,
+      homepage_section: collection || undefined,
+    }),
   })
 
-  // Priority 1: Continue Watching (immediate load, if logged in)
-  const { data: continueWatching, isLoading: loadingContinue } = useQuery<Content[]>({
-    queryKey: ['continue-watching'],
-    queryFn: () => userService.getContinueWatching(),
-    enabled: !!localStorage.getItem('token'), // Only if logged in
-  })
+  const results = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase('id-ID')
+    const filtered = (data?.data || []).filter((content) =>
+      !normalized ||
+      content.title.toLocaleLowerCase('id-ID').includes(normalized) ||
+      content.genre?.some((item) => item.toLocaleLowerCase('id-ID').includes(normalized)),
+    )
+    return [...filtered].sort((a, b) => sort === 'az'
+      ? a.title.localeCompare(b.title, 'id-ID')
+      : new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }, [data?.data, query, sort])
 
-  
-  // Priority 2: Load after 1 second delay
-  const { data: indonesian, isLoading: loadingIndonesian } = useQuery<Content[]>({
-    queryKey: ['indonesian'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ genre: 'Indonesian', limit: 20 })
-      return response.data
-    },
-    enabled: loadSecondary,
-  })
-
-  const { data: newReleases, isLoading: loadingNewReleases } = useQuery<Content[]>({
-    queryKey: ['new-releases'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ limit: 20 })
-      return response.data
-    },
-    enabled: loadSecondary,
-  })
-
-  
-  // Priority 3: Load after 2 seconds delay
-  const { data: action, isLoading: loadingAction } = useQuery<Content[]>({
-    queryKey: ['genre', 'Action'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ genre: 'Action', limit: 20 })
-      return response.data
-    },
-    enabled: loadGenre,
-  })
-
-  const { data: drama, isLoading: loadingDrama } = useQuery<Content[]>({
-    queryKey: ['genre', 'Drama'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ genre: 'Drama', limit: 20 })
-      return response.data
-    },
-    enabled: loadGenre,
-  })
-
-  const { data: horror, isLoading: loadingHorror } = useQuery<Content[]>({
-    queryKey: ['genre', 'Horror'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ genre: 'Horror', limit: 20 })
-      return response.data
-    },
-    enabled: loadGenre,
-  })
-
-  const { data: comedy, isLoading: loadingComedy } = useQuery<Content[]>({
-    queryKey: ['genre', 'Comedy'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ genre: 'Comedy', limit: 20 })
-      return response.data
-    },
-    enabled: loadGenre,
-  })
-
-  // Fetch similar content for modal
-  const { data: similarContent } = useQuery<Content[]>({
-    queryKey: ['similar-content', selectedContent?.genre],
-    queryFn: async () => {
-      if (!selectedContent?.genre?.[0]) return []
-      const response = await contentService.getAllContent({
-        genre: selectedContent.genre[0],
-        limit: 10
-      })
-      return response.data.filter(item => item.id !== selectedContent.id)
-    },
-    enabled: !!selectedContent?.genre?.[0]
-  })
-
-  // Genre filtered content
-  const { data: genreFilteredContent, isLoading: loadingGenreFilter } = useQuery<{
-    data: Content[]
-    total: number
-  }>({
-    queryKey: ['genre-filter', selectedGenre],
-    queryFn: async () => {
-      if (!selectedGenre) return { data: [], total: 0 }
-      return await contentService.getAllContent({
-        genre: selectedGenre,
-        limit: 50
-      })
-    },
-    enabled: !!selectedGenre
-  })
-
-  // Modal handlers
-  const openModal = (content: Content) => {
-    setSelectedContent(content)
-    setModalOpen(true)
+  const updateFilters = (nextType = type, nextGenre = genre, nextQuery = query) => {
+    const next = new URLSearchParams()
+    if (nextType) next.set('type', nextType)
+    if (nextGenre) next.set('genre', nextGenre)
+    if (nextQuery.trim()) next.set('search', nextQuery.trim())
+    setParams(next, { replace: true })
   }
+  const collectionTitle = collection === 'latest'
+    ? 'Rilis Terbaru'
+    : collection === 'movie_picks'
+      ? 'Film Pilihan'
+      : collection === 'popular_series'
+        ? 'Serial Populer'
+        : null
 
-  const closeModal = () => {
-    setModalOpen(false)
-    setSelectedContent(null)
-  }
-
-  const handleContentChange = (content: Content) => {
-    setSelectedContent(content)
-  }
-
-  // Play handler - Check access before playing
-  const handlePlayClick = async (content: Content) => {
+  const play = async (content: Content) => {
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/login', { state: { from: `/watch/${content.id}` } })
       return
     }
-
     try {
-      // Check if user has access
-      const accessInfo = await paymentService.checkContentAccess(content.id)
-
-      if (!accessInfo.data.has_access) {
-        // Show payment modal
-        setPaymentContent(content)
-        setShowPaymentModal(true)
-        return
-      }
-
-      // User has access, navigate to player
-      navigate(`/watch/${content.id}`)
-    } catch (error) {
-      console.error('Error checking access:', error)
-      // On error, show payment modal to be safe
+      const access = await paymentService.checkContentAccess(content.id)
+      if (!access.data.has_access) return setPaymentContent(content)
+      const firstEpisode = content.type === 'SERIES' ? content.episodes?.[0] : null
+      navigate(`/watch/${content.id}${firstEpisode ? `?episode=${firstEpisode.id}` : ''}`)
+    } catch {
       setPaymentContent(content)
-      setShowPaymentModal(true)
     }
   }
 
-  // Only show initial loading for priority 1 content
-  const isLoadingInitial = useMemo(
-    () => loadingFeatured || loadingContinue,
-    [loadingFeatured, loadingContinue]
-  )
-
-  if (isLoadingInitial) {
-    return <LoadingSkeleton />
-  }
-
-
   return (
-    <div className="bg-warm-charcoal-100 min-h-screen">
-      {/* Genre Filter Section */}
-      <div className="sticky top-0 z-20 bg-warm-charcoal-100/95 backdrop-blur-sm border-b border-warm-charcoal-50 px-4 py-3">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
+    <div className="nusantara-browse">
+      <section className="nusantara-browse__intro">
+        <div>
+          <p>JELAJAHI KEPULAUAN CERITA</p>
+          <h1>Cerita dari ribuan pulau,<br /><em>dalam satu layar.</em></h1>
+          <span>Temukan sinema dan serial yang membawa suara Indonesia dari barat hingga timur.</span>
+        </div>
+      </section>
+
+      <section className="nusantara-browse__toolbar">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            updateFilters()
+          }}
+        >
+          <Search />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onBlur={() => updateFilters(type, genre, query)}
+            placeholder="Cari judul atau genre..."
+          />
+        </form>
+        <div className="nusantara-browse__filters">
+          {contentTypes.map((item) => (
             <button
-              onClick={() => setSelectedGenre(null)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-all ${
-                selectedGenre === null
-                  ? 'bg-accent-500 text-white shadow-coffee-glow'
-                  : 'bg-warm-charcoal-50 text-gray-400 hover:bg-warm-charcoal-100 hover:text-gray-300'
-              }`}
+              key={item.label}
+              className={type === item.value ? 'is-active' : ''}
+              onClick={() => {
+                setType(item.value)
+                updateFilters(item.value, genre, query)
+              }}
             >
-              Semua
+              {item.label}
             </button>
-            {genres.map((genre) => (
-              <button
-                key={genre}
-                onClick={() => setSelectedGenre(genre)}
-                className={`px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-all ${
-                  selectedGenre === genre
-                    ? 'bg-accent-500 text-white shadow-coffee-glow'
-                    : 'bg-warm-charcoal-50 text-gray-400 hover:bg-warm-charcoal-100 hover:text-gray-300'
-                }`}
-              >
-                {genre}
-              </button>
+          ))}
+          <select
+            aria-label="Pilih genre"
+            value={genre}
+            onChange={(event) => {
+              setGenre(event.target.value)
+              updateFilters(type, event.target.value, query)
+            }}
+          >
+            <option value="">Semua genre</option>
+            {genres.map((item) => <option value={item} key={item}>{item}</option>)}
+          </select>
+        </div>
+      </section>
+
+      <section className="nusantara-browse__catalog">
+        <header>
+          <div>
+            <small>KOLEKSI SMASH</small>
+            <h2>{collectionTitle || genre || contentTypes.find((item) => item.value === type)?.label || 'Semua Cerita'}</h2>
+            {!isLoading && <p>{results.length} tayangan ditemukan</p>}
+          </div>
+          <label><SlidersHorizontal /><select value={sort} onChange={(event) => setSort(event.target.value as 'newest' | 'az')}><option value="newest">Terbaru</option><option value="az">A–Z</option></select></label>
+        </header>
+
+        {isLoading ? (
+          <div className="nusantara-browse__grid is-loading">
+            {Array.from({ length: 12 }).map((_, index) => <div key={index} />)}
+          </div>
+        ) : isError ? (
+          <div className="nusantara-empty"><h3>Koleksi belum dapat dimuat</h3><p>Periksa koneksi Anda, lalu coba kembali.</p><button className="nusantara-button is-primary" onClick={() => refetch()}>Coba Lagi</button></div>
+        ) : results.length === 0 ? (
+          <div className="nusantara-empty"><h3>Tidak ada cerita yang ditemukan</h3><p>Coba kata kunci atau filter lain.</p><button className="nusantara-button is-secondary" onClick={() => { setQuery(''); setType(''); setGenre(''); setParams({}) }}>Hapus Filter</button></div>
+        ) : (
+          <div className="nusantara-browse__grid">
+            {results.map((content) => (
+              <ContentCard content={content} key={content.id} onInfoClick={setSelectedContent} onPlayClick={play} />
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Featured Carousel */}
-      {featured && featured.length >= 3 && (
-        <FeaturedCarousel
-          contents={featured}
-          onInfoClick={openModal}
-          onPlayClick={handlePlayClick}
-          autoPlayInterval={5000}
-        />
-      )}
-
-      {/* Negative margin to overlap hero */}
-      <div className="relative -mt-22 z-10 space-y-12 pb-20 pt-8">
-        {/* Genre Filter Results */}
-        {selectedGenre && (
-          <div className="px-4 sm:px-6 lg:px-8">
-            {loadingGenreFilter ? (
-              <div className="space-y-4">
-                <div className="h-6 w-48 bg-gray-800 rounded animate-pulse" />
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : genreFilteredContent && genreFilteredContent.data.length > 0 ? (
-              <>
-                <h2 className="text-2xl font-bold mb-4">
-                  {selectedGenre} <span className="text-gray-400 text-lg font-normal">({genreFilteredContent.total} hasil)</span>
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {genreFilteredContent.data.map((content) => (
-                    <div key={content.id} className="group">
-                      <ContentCard
-                        content={content}
-                        onPress={() => openModal(content)}
-                        onPlay={() => handlePlayClick(content)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-400">Tidak ada konten untuk genre {selectedGenre}</p>
-              </div>
-            )}
-          </div>
         )}
+      </section>
 
-        {/* 1. Continue Watching (conditional) */}
-        {!selectedGenre && continueWatching && continueWatching.length > 0 && (
-          <ContentRow title="Lanjutkan Menonton" contents={continueWatching} onInfoClick={openModal} onPlayClick={handlePlayClick} />
-        )}
-
-        {/* 2. Made in Indonesia (Priority 2) */}
-        {!selectedGenre && loadSecondary && (
-          <>
-            {loadingIndonesian ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Buatan Indonesia</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : indonesian && indonesian.length > 0 ? (
-              <ContentRow title="Buatan Indonesia" contents={indonesian} onInfoClick={openModal} onPlayClick={handlePlayClick} />
-            ) : null}
-          </>
-        )}
-
-        {/* 4. New Releases (Priority 2) */}
-        {!selectedGenre && loadSecondary && (
-          <>
-            {loadingNewReleases ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Rilis Terbaru</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : newReleases && newReleases.length > 0 ? (
-              <ContentRow title="Rilis Terbaru" contents={newReleases} onInfoClick={openModal} onPlayClick={handlePlayClick} />
-            ) : null}
-          </>
-        )}
-
-
-        {/* 6. Genre rows (Priority 3) */}
-        {!selectedGenre && loadGenre && (
-          <>
-            {loadingAction ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Aksi</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : action && action.length > 0 ? (
-              <ContentRow title="Aksi" contents={action} onInfoClick={openModal} onPlayClick={handlePlayClick} />
-            ) : null}
-
-            {loadingDrama ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Drama</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : drama && drama.length > 0 ? (
-              <ContentRow title="Drama" contents={drama} onInfoClick={openModal} onPlayClick={handlePlayClick} />
-            ) : null}
-
-            {loadingHorror ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Horror</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : horror && horror.length > 0 ? (
-              <ContentRow title="Horror" contents={horror} onInfoClick={openModal} onPlayClick={handlePlayClick} />
-            ) : null}
-
-            {loadingComedy ? (
-              <div className="px-12">
-                <h2 className="text-2xl font-bold mb-4">Komedi</h2>
-                <div className="h-40 w-full bg-gray-800 rounded animate-pulse" />
-              </div>
-            ) : comedy && comedy.length > 0 ? (
-              <ContentRow title="Komedi" contents={comedy} onInfoClick={openModal} onPlayClick={handlePlayClick} />
-            ) : null}
-          </>
-        )}
-      </div>
-
-      {/* Content Detail Modal */}
       <ContentDetailModal
         content={selectedContent}
-        isOpen={modalOpen}
-        onClose={closeModal}
-        similarContent={similarContent}
-        onContentChange={handleContentChange}
+        isOpen={Boolean(selectedContent)}
+        onClose={() => setSelectedContent(null)}
+        similarContent={[]}
+        onContentChange={setSelectedContent}
       />
-
-      {/* Payment Modal */}
-      {paymentContent && (
-        <PaymentOptionsModal
-          content={paymentContent}
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false)
-            setPaymentContent(null)
-          }}
-        />
-      )}
+      {paymentContent && <PaymentOptionsModal content={paymentContent} isOpen onClose={() => setPaymentContent(null)} />}
     </div>
   )
 }

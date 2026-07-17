@@ -6,4 +6,5 @@ export declare function getTrendingContent(_request: FastifyRequest, reply: Fast
 export declare function searchContent(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 export declare function createContent(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 export declare function updateContent(request: FastifyRequest, reply: FastifyReply): Promise<void>;
+export declare function getContentRentals(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 //# sourceMappingURL=contentController.d.ts.map

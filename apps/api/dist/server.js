@@ -10,6 +10,8 @@ import { contentRoutes } from './routes/content.js';
 import { uploadRoutes } from './routes/upload.js';
 import { eventRoutes } from './routes/event.js';
 import paymentRoutes from './routes/payment.js';
+import { broadcastRoutes } from './routes/broadcastRoutes.js';
+import { getChatWebSocket } from './websocket/chatWebSocket.js';
 import prisma from './config/database.js';
 // Load environment variables
 dotenv.config();
@@ -23,7 +25,7 @@ async function build() {
     });
     // CORS
     await fastify.register(cors, {
-        origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id', '*'],
+        origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id', 'https://broadcaster.mostara.id', '*'],
         credentials: true,
     });
     // Multipart for file uploads
@@ -34,9 +36,10 @@ async function build() {
     });
     // JWT
     await registerJwt(fastify);
-    // Static file serving for uploads (use fixed absolute path)
+    // Static file serving for uploads
+    const uploadsPath = process.env.UPLOADS_PATH || '/app/uploads';
     await fastify.register(fastifyStatic, {
-        root: '/var/www/vod/apps/api/uploads',
+        root: uploadsPath,
         prefix: '/api/uploads/',
         decorateReply: false,
     });
@@ -74,6 +77,11 @@ async function build() {
     await fastify.register(eventRoutes, { prefix: '/api/events' });
     await fastify.register(paymentRoutes, { prefix: '/api/payment' });
     await fastify.register(uploadRoutes, { prefix: '/api' });
+    await fastify.register(broadcastRoutes, { prefix: '/api' });
+    // Start WebSocket server for chat
+    const wsPath = process.env.WEBSOCKET_PATH || '/ws';
+    const chatWebSocket = getChatWebSocket(wsPath);
+    chatWebSocket.start(parseInt(process.env.WEBSOCKET_PORT || '3002', 10));
     // Global error handler
     fastify.setErrorHandler((error, request, reply) => {
         const statusCode = error.statusCode || 500;

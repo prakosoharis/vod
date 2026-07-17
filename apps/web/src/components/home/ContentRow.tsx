@@ -1,70 +1,70 @@
-import { useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { Content } from '@/types';
-import { ContentCard } from './ContentCard';
+import { useRef } from 'react'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import type { Content } from '@/types'
+import { ContentCard } from './ContentCard'
 
 export interface ContentRowProps {
-  title: string;
-  contents: Content[];
-  onInfoClick?: (content: Content) => void;
-  onPlayClick?: (content: Content) => void;
-  ContentCardComponent?: React.ComponentType<{ content: Content; onInfoClick?: (content: Content) => void; onPlayClick?: (content: Content) => void }>;
+  title: string
+  contents: Content[]
+  onInfoClick?: (content: Content) => void
+  onPlayClick?: (content: Content) => void
+  ContentCardComponent?: React.ComponentType<{
+    content: Content
+    onInfoClick?: (content: Content) => void
+    onPlayClick?: (content: Content) => void
+  }>
+  viewAllHref?: string
 }
 
-const ContentRow = ({ title, contents, onInfoClick, onPlayClick, ContentCardComponent = ContentCard }: ContentRowProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
+const ContentRow = ({
+  title,
+  contents,
+  onInfoClick,
+  onPlayClick,
+  ContentCardComponent = ContentCard,
+  viewAllHref,
+}: ContentRowProps) => {
+  const navigate = useNavigate()
+  const railRef = useRef<HTMLDivElement>(null)
+  if (!contents?.length) return null
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      // Adjust amount if needed for small screens
-      const base = 800;
-      const vw = typeof window !== 'undefined' ? Math.max(window.innerWidth, 320) : 1280;
-      const responsive = vw < 640 ? Math.round(base * 0.5) : base; // ~400px on mobile, 800px otherwise
-      const scrollAmount = direction === 'left' ? -responsive : responsive;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
-
-  if (!contents || contents.length === 0) return null;
+  const scroll = (direction: -1 | 1) => {
+    railRef.current?.scrollBy({
+      left: direction * Math.min(window.innerWidth * 0.75, 900),
+      behavior: 'smooth',
+    })
+  }
 
   return (
-    <div className="px-12">
-      <h2 className="text-2xl font-bold mb-4">{title}</h2>
-      <div className="relative group">
-        {/* Left Arrow */}
-        <button
-          type="button"
-          aria-label="Scroll left"
-          onClick={() => scroll('left')}
-          className="absolute left-0 top-0 bottom-0 z-10 w-12 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-        >
-          <ChevronLeft size={32} />
+    <section className="nusantara-section">
+      <header className="nusantara-section__head">
+        <h2>{title}</h2>
+        <button onClick={() => viewAllHref ? navigate(viewAllHref) : scroll(1)}>
+          Lihat semua <ArrowRight />
         </button>
-
-        {/* Scrollable Container */}
-        <div
-          ref={scrollRef}
-          className="flex gap-6 overflow-x-scroll overflow-y-hidden scrollbar-hide scroll-smooth"
-        >
+      </header>
+      <div className="nusantara-rail-wrap">
+        <button className="nusantara-rail-arrow is-left" onClick={() => scroll(-1)} aria-label="Geser ke kiri">
+          <ChevronLeft />
+        </button>
+        <div className="nusantara-rail" ref={railRef}>
           {contents.map((content) => (
-            <div key={content.id} className="shrink-0 w-[38vw] sm:w-[24vw] md:w-[17vw] lg:w-[13vw] xl:w-[11vw]">
-              <ContentCardComponent content={content} onInfoClick={onInfoClick} onPlayClick={onPlayClick} />
+            <div className="nusantara-rail__item" key={content.id}>
+              <ContentCardComponent
+                content={content}
+                onInfoClick={onInfoClick}
+                onPlayClick={onPlayClick}
+              />
             </div>
           ))}
         </div>
-
-        {/* Right Arrow */}
-        <button
-          type="button"
-          aria-label="Scroll right"
-          onClick={() => scroll('right')}
-          className="absolute right-0 top-0 bottom-0 z-10 w-12 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-        >
-          <ChevronRight size={32} />
+        <button className="nusantara-rail-arrow is-right" onClick={() => scroll(1)} aria-label="Geser ke kanan">
+          <ChevronRight />
         </button>
       </div>
-    </div>
-  );
-};
+    </section>
+  )
+}
 
-export default ContentRow;
+export default ContentRow

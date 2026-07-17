@@ -35,13 +35,23 @@ const grantPaidAccess = async (transaction: any) => {
     }
   } else if (transaction.payment_type === 'RENTAL') {
     const metadata = transaction.metadata as any;
-    await prisma.userRental.create({
-      data: {
+    const durationHours = Number(metadata.duration_hours);
+    if (!metadata?.content_id || !metadata?.rental_price_id || !Number.isInteger(durationHours) || durationHours < 1) {
+      throw new Error(`Invalid rental metadata for transaction ${transaction.id}`);
+    }
+    const rentedAt = new Date();
+    const expiredAt = new Date(rentedAt.getTime() + durationHours * 60 * 60 * 1000);
+    await prisma.userRental.upsert({
+      where: { transaction_id: transaction.id },
+      update: {},
+      create: {
         user_id: transaction.user_id,
         content_id: metadata.content_id,
         rental_price_id: metadata.rental_price_id,
-        rented_at: new Date(),
-        expired_at: new Date(metadata.expired_at),
+        rented_at: rentedAt,
+        expired_at: expiredAt,
+        price_paid: transaction.amount,
+        duration_hours: durationHours,
         transaction_id: transaction.id,
       },
     });
@@ -295,22 +305,6 @@ export const rentContent = async (
     const userId = (request.user as any).userId;
     const { content_id } = request.body;
 
-    // Check if user already has active subscription
-    const activeSubscription = await prisma.userSubscription.findFirst({
-      where: {
-        user_id: userId,
-        status: 'ACTIVE',
-        expired_at: { gt: new Date() },
-      },
-    });
-
-    if (activeSubscription) {
-      return reply.status(400).send({
-        success: false,
-        error: 'You already have an active subscription. No need to rent!',
-      });
-    }
-
     // Check if user already rented this content
     const existingRental = await prisma.userRental.findFirst({
       where: {
@@ -327,22 +321,15 @@ export const rentContent = async (
       });
     }
 
-    // Get rental price (fallback to default if not set)
-    let rentalPrice = await prisma.rentalPrice.findUnique({
+    const rentalPrice = await prisma.rentalPrice.findUnique({
       where: { content_id },
       include: { content: true },
     });
 
     if (!rentalPrice) {
-      // Auto-create default rental price for this content
-      rentalPrice = await prisma.rentalPrice.create({
-        data: {
-          content_id,
-          price: 10000,
-          duration_hours: 24,
-          is_active: true,
-        },
-        include: { content: true },
+      return reply.status(400).send({
+        success: false,
+        error: 'Tarif dan durasi sewa film ini belum dikonfigurasi',
       });
     }
 
@@ -362,10 +349,6 @@ export const rentContent = async (
     // Generate order ID
     const orderId = generateOrderId();
 
-    // Calculate expiration
-    const expiredAt = new Date();
-    expiredAt.setHours(expiredAt.getHours() + rentalPrice.duration_hours);
-
     // Create transaction
     const transaction = await prisma.transaction.create({
       data: {
@@ -377,7 +360,7 @@ export const rentContent = async (
         metadata: {
           content_id,
           rental_price_id: rentalPrice.id,
-          expired_at: expiredAt.toISOString(),
+          duration_hours: rentalPrice.duration_hours,
         },
       },
     });
@@ -873,26 +856,6 @@ export const checkContentAccess = async (
   try {
     const userId = (request.user as any).userId;
     const { contentId } = request.params;
-
-    // Check subscription
-    const subscription = await prisma.userSubscription.findFirst({
-      where: {
-        user_id: userId,
-        status: 'ACTIVE',
-        expired_at: { gt: new Date() },
-      },
-    });
-
-    if (subscription) {
-      return reply.send({
-        success: true,
-        data: {
-          has_access: true,
-          access_type: 'subscription',
-          expires_at: subscription.expired_at,
-        },
-      });
-    }
 
     // Check rental
     const rental = await prisma.userRental.findFirst({

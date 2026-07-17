@@ -18,6 +18,7 @@ export const contentService = {
     type?: string;
     genre?: string;
     featured?: boolean;
+    homepage_section?: 'latest' | 'movie_picks' | 'popular_series';
   }): Promise<ContentListResponse> {
     const response = await api.get('/content', { params });
     return response.data;

@@ -1,304 +1,193 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/stores/authStore';
-import ContentRow from '@/components/home/ContentRow';
-import FeaturedCarousel from '@/components/home/FeaturedCarousel';
-import ContentDetailModal from '@/components/content/ContentDetailModal';
-import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal';
-import { contentService } from '@/services/content.service';
-import { paymentService } from '@/services/payment.service';
-import { userService } from '@/services/user.service';
-import { Radio, Play } from 'lucide-react';
-import type { Content } from '@/types';
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowRight, Radio } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import ContentDetailModal from '@/components/content/ContentDetailModal'
+import ContentRow from '@/components/home/ContentRow'
+import FeaturedCarousel from '@/components/home/FeaturedCarousel'
+import PaymentOptionsModal from '@/components/payment/PaymentOptionsModal'
+import { contentService } from '@/services/content.service'
+import { paymentService } from '@/services/payment.service'
+import { userService, type ContentWithProgress } from '@/services/user.service'
+import { useAuthStore } from '@/stores/authStore'
+import type { Content } from '@/types'
 
-// API base URL
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.mostara.id/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.mostara.id/api'
 
-// Simple Loading
-const LoadingSkeleton = () => (
-  <div className="bg-warm-charcoal-100 min-h-screen">
-    <div className="h-[40vh] w-full bg-warm-charcoal-50 animate-pulse" />
-    <div className="py-12 px-12 space-y-12">
-      {[1, 2].map((i) => (
-        <div key={i} className="space-y-6">
-          <div className="h-8 w-48 bg-warm-charcoal-50 rounded animate-pulse" />
-          <div className="h-48 w-full bg-warm-charcoal-50 rounded-2xl animate-pulse" />
-        </div>
-      ))}
-    </div>
+interface BroadcastSummary {
+  id: string
+  title: string
+  description?: string | null
+  thumbnail_url?: string | null
+  backdrop_url?: string | null
+  viewer_count?: number
+  is_free?: boolean
+}
+
+const LandingSkeleton = () => (
+  <div className="nusantara-loading">
+    <div className="nusantara-loading__hero" />
+    <div className="nusantara-loading__line" />
+    <div className="nusantara-loading__rail" />
   </div>
 )
 
-export const LandingPage: React.FC = () => {
+export const LandingPage = () => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
-  const [modalOpen, setModalOpen] = useState(false)
   const [selectedContent, setSelectedContent] = useState<Content | null>(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentContent, setPaymentContent] = useState<Content | null>(null)
 
-  // Fetch LIVE broadcasts for live streaming banner
-  const { data: liveBroadcasts } = useQuery({
+  const { data: featured = [], isLoading: loadingFeatured } = useQuery({
+    queryKey: ['featured'],
+    queryFn: contentService.getFeaturedContent,
+  })
+  const { data: latest = [], isLoading: loadingLatest } = useQuery({
+    queryKey: ['latest-releases'],
+    queryFn: async () => (await contentService.getAllContent({
+      type: 'MOVIE',
+      homepage_section: 'latest',
+      limit: 10,
+    })).data,
+  })
+  const { data: movies = [] } = useQuery({
+    queryKey: ['homepage-movie-picks'],
+    queryFn: async () => (await contentService.getAllContent({
+      type: 'MOVIE',
+      homepage_section: 'movie_picks',
+      limit: 20,
+    })).data,
+  })
+  const { data: series = [] } = useQuery({
+    queryKey: ['homepage-popular-series'],
+    queryFn: async () => (await contentService.getAllContent({
+      type: 'SERIES',
+      homepage_section: 'popular_series',
+      limit: 20,
+    })).data,
+  })
+  const { data: continueWatching = [] } = useQuery<ContentWithProgress[]>({
+    queryKey: ['continue-watching'],
+    queryFn: userService.getContinueWatching,
+    enabled: isAuthenticated,
+  })
+  const { data: liveBroadcasts = [] } = useQuery<BroadcastSummary[]>({
     queryKey: ['live-broadcasts'],
     queryFn: async () => {
       const response = await fetch(`${API_URL}/broadcasts?status=LIVE`)
-      if (!response.ok) throw new Error('Failed to fetch live broadcasts')
+      if (!response.ok) throw new Error('Gagal mengambil siaran langsung')
       return response.json()
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30_000,
   })
 
-  // Check if there's any live broadcast
-  const hasLiveStream = liveBroadcasts && liveBroadcasts.length > 0
-
-  // SIMPLE: Load everything at once - NO staggered delays!
-  const { data: featured, isLoading: loadingFeatured } = useQuery<Content[]>({
-    queryKey: ['featured'],
-    queryFn: () => contentService.getFeaturedContent(),
-  })
-
-  // VOD CONTENT - Film & Serial only
-  const { data: movies, isLoading: loadingMovies } = useQuery<Content[]>({
-    queryKey: ['movies'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ type: 'MOVIE', limit: 20 })
-      return response.data
-    },
-  })
-
-  const { data: series, isLoading: loadingSeries } = useQuery<Content[]>({
-    queryKey: ['series'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ type: 'SERIES', limit: 20 })
-      return response.data
-    },
-  })
-
-  // LATEST RELEASES - Rilis Terbaru
-  const { data: latestReleases, isLoading: loadingLatest } = useQuery<Content[]>({
-    queryKey: ['latest-releases'],
-    queryFn: async () => {
-      const response = await contentService.getAllContent({ limit: 20 })
-      return response.data
-    },
-  })
-
-  // CONTINUE WATCHING - Only for authenticated users
-  const { data: continueWatching } = useQuery({
-    queryKey: ['continue-watching'],
-    queryFn: () => userService.getContinueWatching(),
-    enabled: isAuthenticated,
-  })
-
-  // Modal handlers
-  const openModal = (content: Content) => {
-    setSelectedContent(content)
-    setModalOpen(true)
-  }
-
-  const closeModal = () => {
-    setModalOpen(false)
-    setSelectedContent(null)
-  }
-
-  // Play handler - Check access before playing
-  const handlePlayClick = async (content: Content) => {
+  const play = async (content: Content) => {
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/login', { state: { from: `/watch/${content.id}` } })
       return
     }
-
     try {
-      // Check if user has access
-      const accessInfo = await paymentService.checkContentAccess(content.id)
-
-      if (!accessInfo.data.has_access) {
-        // Show payment modal
+      const access = await paymentService.checkContentAccess(content.id)
+      if (!access.data.has_access) {
         setPaymentContent(content)
-        setShowPaymentModal(true)
         return
       }
-
-      // User has access, navigate to player
-      navigate(`/watch/${content.id}`)
-    } catch (error) {
-      console.error('Error checking access:', error)
-      // On error, show payment modal to be safe
+      const firstEpisode = content.type === 'SERIES' ? content.episodes?.[0] : null
+      navigate(`/watch/${content.id}${firstEpisode ? `?episode=${firstEpisode.id}` : ''}`)
+    } catch {
       setPaymentContent(content)
-      setShowPaymentModal(true)
     }
   }
 
-  // Simple loading
-  if (loadingFeatured || loadingMovies || loadingSeries || loadingLatest) {
-    return <LoadingSkeleton />
-  }
+  if (loadingFeatured || loadingLatest) return <LandingSkeleton />
+  const live = liveBroadcasts[0]
+  const editorial = movies[0] || latest[0]
 
   return (
-    <div className="bg-warm-charcoal-100 min-h-screen">
-      {/* Hero - Simple, Clean */}
-      {featured && featured.length > 0 && (
-        <FeaturedCarousel
-          contents={featured}
-          onInfoClick={openModal}
-          onPlayClick={handlePlayClick}
-          autoPlayInterval={5000}
-        />
-      )}
-
-      {/* Continue Watching - Only for authenticated users */}
-      {isAuthenticated && continueWatching && continueWatching.length > 0 && (
-        <div className="pt-8 md:pt-16">
-          <ContentRow
-            title="Lanjut Tonton"
-            contents={continueWatching}
-            onInfoClick={openModal}
-            onPlayClick={handlePlayClick}
-          />
-        </div>
-      )}
-
-      {/* Rilis Terbaru - Mobile Priority Section */}
-      {latestReleases && latestReleases.length > 0 && (
-        <div className={isAuthenticated && continueWatching && continueWatching.length > 0 ? "pt-8" : "pt-8 md:pt-16"}>
-          <ContentRow
-            title="Rilis Terbaru"
-            contents={latestReleases}
-            onInfoClick={openModal}
-            onPlayClick={handlePlayClick}
-          />
-        </div>
-      )}
-
-      {/* Live Streaming Banner - Only show when live */}
-      {hasLiveStream && (
-        <div className="px-6 md:px-12 pt-12 md:pt-24">
-          <button
-            onClick={() => navigate(`/live/${liveBroadcasts[0].id}`)}
-            className="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 rounded-2xl p-6 md:p-8 transition-all duration-300 transform hover:scale-[1.02] cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Radio className="w-6 h-6 md:w-8 md:h-8 text-cream-50 animate-pulse" />
-                <div className="text-left">
-                  <h2 className="text-xl md:text-2xl font-bold text-cream-50 mb-1">Live Sekarang</h2>
-                  <p className="text-cream-100 text-xs md:text-sm">{liveBroadcasts[0].title} - Klik untuk menonton</p>
-                </div>
-              </div>
-              <div className="bg-cream-50 text-primary-500 px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold text-sm md:text-base">
-                TONTON
-              </div>
-            </div>
-          </button>
-        </div>
-      )}
-
-      {/* TONIGHT'S PICK - Signature Hero Card */}
-      {!hasLiveStream && movies && movies.length > 0 && (
-        <div className="pt-16 px-6 md:px-12">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-1.5 h-8 bg-accent-500 rounded-full"></div>
-            <h2 className="text-3xl font-bold text-cream-50">Tontonan Malam Ini</h2>
-          </div>
-
-          <div
-            onClick={() => handlePlayClick(movies[0])}
-            className="group relative bg-gradient-to-r from-warm-charcoal-50 to-warm-charcoal-100 rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-accent-500/40 transition-all duration-500 border md:border-2 border-accent-500/30 shadow-lg shadow-accent-500/10 cursor-pointer"
-          >
-              <div className="flex flex-col md:flex-row gap-4 md:gap-8 p-4 md:p-8">
-                {/* Poster */}
-                <div className="flex-shrink-0 w-32 md:w-64 mx-auto md:mx-0">
-                  <img
-                    src={movies[0].thumbnail_url}
-                    alt={movies[0].title}
-                    className="w-full aspect-[2/3] object-cover rounded-xl md:rounded-2xl shadow-2xl shadow-accent-500/30 group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 flex flex-col justify-center space-y-3 md:space-y-5 text-center md:text-left">
-                  <div className="inline-block self-center md:self-start px-4 py-1.5 md:px-5 md:py-2 bg-accent-500/30 backdrop-blur-md rounded-full border md:border-2 border-accent-400/60 shadow-lg shadow-accent-500/40">
-                    <span className="text-xs md:text-sm font-bold text-accent-300 drop-shadow-lg">Pilihan Spesial Hari Ini</span>
-                  </div>
-
-                  <h3 className="text-2xl md:text-4xl font-bold text-cream-50 leading-tight">
-                    {movies[0].title}
-                  </h3>
-
-                  <p className="hidden md:block text-lg text-cream-100 leading-relaxed line-clamp-3">
-                    {movies[0].description}
-                  </p>
-
-                  <div className="flex items-center justify-center md:justify-start gap-2 md:gap-4 text-xs md:text-base text-cream-200">
-                    <span>{movies[0].year}</span>
-                    <span>•</span>
-                    <span>{movies[0].duration}</span>
-                    {movies[0].genre && movies[0].genre.length > 0 && (
-                      <>
-                        <span>•</span>
-                        <span>{movies[0].genre[0]}</span>
-                      </>
-                    )}
-                  </div>
-
-                  <button className="self-center md:self-start group/btn flex items-center gap-2 md:gap-3 px-6 py-2.5 md:px-10 md:py-4 bg-gradient-to-r from-accent-500 to-accent-600 text-cream-50 font-semibold text-sm md:text-lg rounded-full hover:from-accent-600 hover:to-accent-700 transition-all duration-300 shadow-lg shadow-accent-500/30 hover:shadow-2xl hover:shadow-accent-500/50">
-                    <Play className="h-4 w-4 md:h-6 md:w-6 group-hover/btn:scale-110 transition-transform" fill="currentColor" />
-                    <span>Mulai Nonton</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-        </div>
-      )}
-
-      {/* VOD Content - Film & Serial */}
-      <div className="pt-16 space-y-12">
-
-        {/* Film - Personal & Curated */}
-        {movies && movies.length > 1 && (
-          <ContentRow
-            title="Film Lainnya"
-            contents={movies.slice(1)}
-            onInfoClick={openModal}
-            onPlayClick={handlePlayClick}
-          />
-        )}
-
-        {/* Serial - Engaging & Fun */}
-        {series && series.length > 0 && (
-          <ContentRow
-            title="Serial yang Bikin Ketagihan"
-            contents={series}
-            onInfoClick={openModal}
-            onPlayClick={handlePlayClick}
-          />
-        )}
-
-      </div>
-
-      {/* Modals */}
-      <ContentDetailModal
-        content={selectedContent}
-        isOpen={modalOpen}
-        onClose={closeModal}
-        similarContent={[]}
-        onContentChange={() => {}}
+    <div className="nusantara-home">
+      <FeaturedCarousel
+        contents={featured}
+        onInfoClick={setSelectedContent}
+        onPlayClick={play}
       />
 
-      {/* Payment Modal */}
+      <div className="nusantara-home__content">
+        {isAuthenticated && continueWatching.length > 0 && (
+          <ContentRow
+            title="Lanjutkan Menonton"
+            contents={continueWatching}
+            onInfoClick={setSelectedContent}
+            onPlayClick={play}
+          />
+        )}
+        <ContentRow title="Rilis Terbaru" contents={latest} onInfoClick={setSelectedContent} onPlayClick={play} viewAllHref="/browse?collection=latest" />
+
+        {live && (
+          <section className="nusantara-live-feature">
+            <header className="nusantara-section__head">
+              <div>
+                <small>SEDANG BERLANGSUNG</small>
+                <h2>Live Sekarang</h2>
+              </div>
+              <button onClick={() => navigate('/live-events')}>Lihat semua <ArrowRight /></button>
+            </header>
+            <article>
+              <div
+                className="nusantara-live-feature__art"
+                style={{ backgroundImage: `url("${live.backdrop_url || live.thumbnail_url || ''}")` }}
+              >
+                <span><i /> LIVE</span>
+              </div>
+              <div className="nusantara-live-feature__copy">
+                <small>EKSKLUSIF SMASH · SIARAN LANGSUNG</small>
+                <h3>{live.title}</h3>
+                <p>{live.description || 'Saksikan cerita dan pertunjukan pilihan langsung dari berbagai penjuru Nusantara.'}</p>
+                <div>
+                  {typeof live.viewer_count === 'number' && <span>● {live.viewer_count.toLocaleString('id-ID')} menonton</span>}
+                  <b>{live.is_free === false ? 'Bertiket' : 'Gratis'}</b>
+                </div>
+                <button className="nusantara-button is-primary" onClick={() => navigate(`/live/${live.id}`)}>
+                  <Radio /> Tonton Live
+                </button>
+              </div>
+            </article>
+          </section>
+        )}
+
+        {editorial && (
+          <section className="nusantara-editorial">
+            <div style={{ backgroundImage: `url("${editorial.backdrop_url || editorial.thumbnail_url}")` }} />
+            <article>
+              <small>PILIHAN EDITOR</small>
+              <h2>Cerita yang tinggal<br />setelah layar gelap.</h2>
+              <p>{editorial.description || 'Temukan cerita pilihan tentang rumah, kehilangan, dan keberanian untuk memulai kembali.'}</p>
+              <button onClick={() => setSelectedContent(editorial)}>
+                Jelajahi cerita <ArrowRight />
+              </button>
+            </article>
+          </section>
+        )}
+
+        <ContentRow title="Film Pilihan" contents={movies} onInfoClick={setSelectedContent} onPlayClick={play} viewAllHref="/browse?collection=movie_picks" />
+        <ContentRow title="Serial Populer" contents={series} onInfoClick={setSelectedContent} onPlayClick={play} viewAllHref="/browse?collection=popular_series" />
+      </div>
+
+      <ContentDetailModal
+        content={selectedContent}
+        isOpen={Boolean(selectedContent)}
+        onClose={() => setSelectedContent(null)}
+        similarContent={[]}
+        onContentChange={setSelectedContent}
+      />
       {paymentContent && (
         <PaymentOptionsModal
           content={paymentContent}
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false)
-            setPaymentContent(null)
-          }}
+          isOpen
+          onClose={() => setPaymentContent(null)}
         />
       )}
     </div>
   )
-};
+}
 
-export default LandingPage;
+export default LandingPage

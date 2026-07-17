@@ -36,6 +36,8 @@ interface BroadcastEvent {
   playback_url: string;
   viewer_count: number;
   ticket_price?: number | string;
+  thumbnail_url?: string;
+  backdrop_url?: string;
   started_at?: string;
   ended_at?: string;
   created_at: string;
@@ -473,19 +475,6 @@ const LiveBroadcastPage: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'LIVE':
-        return 'text-red-400';
-      case 'SCHEDULED':
-        return 'text-yellow-400';
-      case 'ENDED':
-        return 'text-gray-400';
-      default:
-        return 'text-gray-500';
-    }
-  };
-
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('id-ID', {
       day: 'numeric',
@@ -497,13 +486,9 @@ const LiveBroadcastPage: React.FC = () => {
   if (loading || accessLoading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-[#0f0f0f] pt-24 px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 w-32 bg-white/10 rounded" />
-              <div className="aspect-video bg-white/5 rounded-2xl" />
-            </div>
-          </div>
+        <div className="smash-broadcast-loading">
+          <div />
+          <section />
         </div>
       </Layout>
     );
@@ -512,14 +497,14 @@ const LiveBroadcastPage: React.FC = () => {
   if (error || !broadcast) {
     return (
       <Layout>
-        <div className="min-h-screen bg-[#0f0f0f] pt-24 px-6">
-          <div className="max-w-7xl mx-auto text-center py-20">
-            <h2 className="text-2xl font-bold text-white mb-4">{error || 'Broadcast tidak ditemukan'}</h2>
-            <button
-              onClick={() => navigate('/live-events')}
-              className="px-6 py-3 bg-white text-black rounded-xl font-medium hover:bg-white/90 transition"
-            >
-              Kembali ke Live Events
+        <div className="smash-broadcast-state">
+          <div>
+            <Radio />
+            <small>LIVE EVENT</small>
+            <h2>{error || 'Broadcast tidak ditemukan'}</h2>
+            <p>Event ini mungkin sudah tidak tersedia atau koneksi sedang bermasalah.</p>
+            <button className="nusantara-button is-primary" onClick={() => navigate('/live-events')}>
+              <ArrowLeft /> Kembali ke Live Events
             </button>
           </div>
         </div>
@@ -531,44 +516,46 @@ const LiveBroadcastPage: React.FC = () => {
     const price = Number(broadcast.ticket_price || 0);
     return (
       <Layout>
-        <div className="min-h-screen bg-[#0f0f0f] pt-24 px-6">
-          <div className="max-w-3xl mx-auto">
-            <button
-              onClick={() => navigate('/live-events')}
-              className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition mb-6 text-sm"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Kembali ke Live Events
-            </button>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/15 text-red-300">
-                <Lock className="h-8 w-8" />
-              </div>
-              <h1 className="text-2xl font-bold text-white mb-2">{broadcast.title}</h1>
+        <div
+          className="smash-broadcast-paywall"
+          style={{ backgroundImage: `url("${broadcast.backdrop_url || broadcast.thumbnail_url || ''}")` }}
+        >
+          <div className="smash-broadcast-paywall__wash" />
+          <button className="smash-broadcast__back" onClick={() => navigate('/live-events')}>
+            <ArrowLeft /> Kembali ke Live Events
+          </button>
+          <article>
+            <div className="smash-broadcast-paywall__lock"><Lock /></div>
+            <small>AKSES LIVE EVENT</small>
+            <h1>{broadcast.title}</h1>
+            {broadcast.description && <p>{broadcast.description}</p>}
+            <div className="smash-broadcast-paywall__facts">
+              <span><Calendar /> {formatDate(broadcast.scheduled_time)}</span>
+              <span><Tag /> {broadcast.category}</span>
+            </div>
+            <aside>
               {price > 0 ? (
                 <>
-                  <p className="text-gray-400 mb-6">
-                    Event ini membutuhkan tiket seharga{' '}
-                    <span className="font-semibold text-white">Rp {price.toLocaleString('id-ID')}</span>.
-                  </p>
+                  <small>TIKET LIVE</small>
+                  <h2>Rp{price.toLocaleString('id-ID')}</h2>
+                  <p>Satu tiket memberikan akses ke siaran langsung dan live chat event ini.</p>
                   {isAuthenticated ? (
                     broadcast.status === 'ENDED' || broadcast.status === 'CANCELLED' ? (
-                      <p className="text-sm text-gray-500">Penjualan tiket untuk event ini sudah ditutup.</p>
+                      <p>Penjualan tiket untuk event ini sudah ditutup.</p>
                     ) : (
                       <button
                         onClick={handleBuyTicket}
                         disabled={paymentLoading}
-                        className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+                        className="nusantara-button is-primary"
                       >
-                        <CreditCard className="h-5 w-5" />
+                        <CreditCard />
                         {paymentLoading ? 'Membuat pembayaran...' : 'Beli Tiket'}
                       </button>
                     )
                   ) : (
                     <button
                       onClick={() => navigate('/login')}
-                      className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:bg-white/90"
+                      className="nusantara-button is-primary"
                     >
                       Login untuk Beli Tiket
                     </button>
@@ -577,13 +564,13 @@ const LiveBroadcastPage: React.FC = () => {
               ) : (
                 <button
                   onClick={checkAccess}
-                  className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:bg-white/90"
+                  className="nusantara-button is-primary"
                 >
                   Masuk ke Event Gratis
                 </button>
               )}
-            </div>
-          </div>
+            </aside>
+          </article>
         </div>
       </Layout>
     );
@@ -591,234 +578,133 @@ const LiveBroadcastPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#0f0f0f] pt-6 pb-16">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Back button */}
-          <button
-            onClick={() => navigate('/live-events')}
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition mb-6 text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Kembali ke Live Events
+      <div className="smash-broadcast">
+        <header className="smash-broadcast__topbar">
+          <button className="smash-broadcast__back" onClick={() => navigate('/live-events')}>
+            <ArrowLeft /> Kembali ke Live Events
           </button>
+          <div>
+            <span className={isChatConnected ? 'is-connected' : ''}>
+              {isChatConnected ? <Wifi /> : <WifiOff />}
+              {isChatConnected ? 'Terhubung' : 'Menghubungkan'}
+            </span>
+          </div>
+        </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content - Video + Info */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Video Player */}
-              <div className="relative aspect-video bg-black rounded-2xl overflow-hidden">
-                {/* Live badge */}
+        <div className="smash-broadcast__layout">
+          <main>
+            <div className="smash-broadcast__player">
                 {broadcast.status === 'LIVE' && (
-                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold">
-                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  <div className="smash-broadcast__live-badge">
+                    <i />
                     LIVE
                   </div>
                 )}
-
-                {/* Viewer count */}
                 {broadcast.status === 'LIVE' && (
-                  <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-black/60 text-white px-3 py-1.5 rounded-lg text-sm">
-                    <Users className="w-4 h-4" />
-                    {broadcast.viewer_count}
+                  <div className="smash-broadcast__viewers">
+                    <Users /> {Number(broadcast.viewer_count || 0).toLocaleString('id-ID')}
                   </div>
                 )}
-
                 <video
                   ref={setVideoNode}
-                  className="w-full h-full object-contain"
                   playsInline
                   muted={isMuted}
                   autoPlay
                   controls
                 />
-
                 {streamMessage && (
-                  <div className="absolute inset-x-6 bottom-20 z-10 rounded-xl border border-yellow-500/30 bg-black/75 px-4 py-3 text-sm text-yellow-100">
-                    {streamMessage}
-                  </div>
+                  <div className="smash-broadcast__stream-message">{streamMessage}</div>
                 )}
-
-                {/* Video controls */}
                 {(broadcast.status === 'LIVE' || broadcast.status === 'ENDED') && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                    <div className="flex items-center gap-2">
-                      <button onClick={toggleMute} className="p-2 text-white hover:bg-white/20 rounded-lg transition">
-                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                      </button>
-                      <button onClick={toggleFullscreen} className="p-2 text-white hover:bg-white/20 rounded-lg transition">
-                        <Maximize2 className="w-5 h-5" />
-                      </button>
-                      <button onClick={togglePiP} className="p-2 text-white hover:bg-white/20 rounded-lg transition">
-                        <Monitor className="w-5 h-5" />
-                      </button>
-                      <div className="flex-1" />
-                      <button onClick={fetchBroadcast} className="p-2 text-white hover:bg-white/20 rounded-lg transition">
-                        <RefreshCw className="w-5 h-5" />
-                      </button>
-                    </div>
+                  <div className="smash-broadcast__controls">
+                    <button onClick={toggleMute} aria-label={isMuted ? 'Aktifkan suara' : 'Bisukan'}>
+                      {isMuted ? <VolumeX /> : <Volume2 />}
+                    </button>
+                    <button onClick={toggleFullscreen} aria-label="Layar penuh"><Maximize2 /></button>
+                    <button onClick={togglePiP} aria-label="Picture in picture"><Monitor /></button>
+                    <button onClick={() => fetchBroadcast()} aria-label="Muat ulang"><RefreshCw /></button>
                   </div>
                 )}
-
-                {/* Stream not live overlay */}
                 {broadcast.status === 'SCHEDULED' && (
-                  <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                    <div className="text-center">
-                      <Clock className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-                      <h3 className="text-xl font-bold text-white mb-2">Belum Dimulai</h3>
-                      <p className="text-gray-400">
+                  <div className="smash-broadcast__status-overlay">
+                    <div>
+                      <Clock />
+                      <small>AKAN DATANG</small>
+                      <h3>Siaran belum dimulai</h3>
+                      <p>
                         {formatDate(broadcast.scheduled_time)} - {new Date(broadcast.scheduled_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>
                 )}
-
-                {/* Stream ended overlay */}
                 {broadcast.status === 'ENDED' && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
-                    <div className="text-center">
-                      <h3 className="text-lg font-medium text-white/80">Siaran telah berakhir</h3>
-                    </div>
+                  <div className="smash-broadcast__ended">
+                    <div><small>EVENT SELESAI</small><h3>Siaran telah berakhir</h3></div>
                   </div>
                 )}
-              </div>
+            </div>
 
-              {/* Broadcast Info */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-bold text-white">{broadcast.title}</h1>
-                    <div className="flex items-center gap-4 mt-2">
-                      <span className={`text-sm font-semibold ${getStatusColor(broadcast.status)}`}>
-                        {broadcast.status === 'LIVE' && 'Sedang Berlangsung'}
-                        {broadcast.status === 'SCHEDULED' && 'Akan Datang'}
-                        {broadcast.status === 'ENDED' && 'Siaran Berakhir'}
-                      </span>
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
-                        <Tag className="w-3 h-3" />
-                        {broadcast.category}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {broadcast.description && (
-                  <p className="text-gray-400 mt-4 leading-relaxed">{broadcast.description}</p>
-                )}
-
-                <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-white/10 text-sm text-gray-500">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
-                    {formatDate(broadcast.scheduled_time)}
-                  </div>
+            <article className="smash-broadcast__info">
+              <small>LIVE DARI NUSANTARA · {broadcast.category}</small>
+              <h1>{broadcast.title}</h1>
+              {broadcast.description && <p>{broadcast.description}</p>}
+              <div>
+                <span><Calendar /> {formatDate(broadcast.scheduled_time)}</span>
                   {broadcast.started_at && (
-                    <div className="flex items-center gap-1.5">
-                      <Radio className="w-4 h-4" />
+                    <span><Radio />
                       Dimulai: {new Date(broadcast.started_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+                    </span>
                   )}
-                  <div className="flex items-center gap-1.5">
-                    <Users className="w-4 h-4" />
-                    {broadcast.viewer_count} viewers
-                  </div>
-                </div>
+                <span><Users /> {Number(broadcast.viewer_count || 0).toLocaleString('id-ID')} penonton</span>
               </div>
+            </article>
+          </main>
+
+          <aside className="smash-chat">
+            <header>
+              <div><MessageCircle /><span>Live Chat</span></div>
+              <div className={isChatConnected ? 'is-connected' : ''}>
+                {isChatConnected ? <Wifi /> : <WifiOff />}
+                <span>{isChatConnected ? 'Terhubung' : 'Offline'}</span>
+              </div>
+            </header>
+
+            <div className="smash-chat__messages">
+              {!broadcast.chat_enabled ? (
+                <div className="smash-chat__empty"><MessageCircle /><p>Chat dinonaktifkan untuk event ini.</p></div>
+              ) : chatMessages.length === 0 ? (
+                <div className="smash-chat__empty"><MessageCircle /><p>Belum ada pesan.<br />Mulai percakapan!</p></div>
+              ) : (
+                chatMessages.map((msg) => (
+                  <article className={msg.is_host_message ? 'is-host' : ''} key={msg.id}>
+                    <div>
+                      <b>{msg.is_host_message && 'HOST · '}{msg.username}</b>
+                      <time>{new Date(msg.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</time>
+                    </div>
+                    <p>{msg.message}</p>
+                  </article>
+                ))
+              )}
+              <div ref={chatEndRef} />
+              {typingUser && <p className="smash-chat__typing">{typingUser} sedang mengetik...</p>}
             </div>
 
-            {/* Chat Panel */}
-            <div className="lg:col-span-1">
-              <div className="bg-white/5 border border-white/10 rounded-2xl h-[calc(100vh-160px)] flex flex-col overflow-hidden">
-                {/* Chat Header */}
-                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-white" />
-                    <span className="font-semibold text-white text-sm">Live Chat</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {isChatConnected ? (
-                      <div className="flex items-center gap-1 text-green-400">
-                        <Wifi className="w-3.5 h-3.5" />
-                        <span className="text-xs">Connected</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-red-400">
-                        <WifiOff className="w-3.5 h-3.5" />
-                        <span className="text-xs">Offline</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Chat Messages */}
-                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 min-h-0">
-                  {!broadcast.chat_enabled ? (
-                    <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                      Chat dinonaktifkan
-                    </div>
-                  ) : chatMessages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                      Belum ada pesan. Mulai percakapan!
-                    </div>
-                  ) : (
-                    chatMessages.map((msg) => (
-                      <div key={msg.id} className="py-1">
-                        <div className="flex items-baseline gap-2">
-                          <span
-                            className={`text-sm font-semibold ${
-                              msg.is_host_message ? 'text-yellow-400' : 'text-blue-400'
-                            }`}
-                          >
-                            {msg.is_host_message && '[HOST] '}
-                            {msg.username}
-                          </span>
-                          <span className="text-[10px] text-gray-600">
-                            {new Date(msg.created_at).toLocaleTimeString('id-ID', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-300 break-words">{msg.message}</p>
-                      </div>
-                    ))
-                  )}
-                  <div ref={chatEndRef} />
-
-                  {/* Typing indicator */}
-                  {typingUser && (
-                    <div className="text-xs text-gray-500 italic pt-1">
-                      {typingUser} sedang mengetik...
-                    </div>
-                  )}
-                </div>
-
-                {/* Chat Input */}
-                {broadcast.chat_enabled && (
-                  <form onSubmit={sendChat} className="px-4 py-3 border-t border-white/10">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        placeholder={
-                          isChatConnected ? 'Ketik pesan...' : 'Menghubungkan...'
-                        }
-                        disabled={!isChatConnected}
-                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/25 disabled:opacity-50 transition"
-                        maxLength={500}
-                      />
-                      <button
-                        type="submit"
-                        disabled={!isChatConnected || !chatInput.trim()}
-                        className="p-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:hover:bg-red-600 text-white rounded-lg transition"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </div>
-          </div>
+            {broadcast.chat_enabled && (
+              <form className="smash-chat__form" onSubmit={sendChat}>
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder={isChatConnected ? 'Tulis pesan...' : 'Menghubungkan...'}
+                  disabled={!isChatConnected}
+                  maxLength={500}
+                />
+                <button type="submit" disabled={!isChatConnected || !chatInput.trim()} aria-label="Kirim pesan">
+                  <Send />
+                </button>
+              </form>
+            )}
+          </aside>
         </div>
       </div>
     </Layout>

@@ -249,6 +249,1124 @@ body {
   }
 }
 
+/* ═══════════════════════════════════════════════════════
+   MOST NUSANTARA — EDITORIAL CINEMA REDESIGN
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --nusantara-bg: #17150f;
+  --nusantara-bg-2: #1e1b13;
+  --nusantara-surface: #282319;
+  --nusantara-up: #332c1f;
+  --nusantara-cream: #f4ecd9;
+  --nusantara-muted: #d2c3a5;
+  --nusantara-dim: #9e9175;
+  --nusantara-gold: #c98431;
+  --nusantara-clay: #a65335;
+  --nusantara-line: rgba(244, 236, 217, 0.13);
+  --color-background: var(--nusantara-bg);
+  --color-text-primary: var(--nusantara-cream);
+  --color-text-secondary: var(--nusantara-muted);
+}
+
+body {
+  background: var(--nusantara-bg);
+  color: var(--nusantara-cream);
+}
+
+button, input { font: inherit; }
+button { color: inherit; }
+
+.nusantara-logo {
+  align-items: center;
+  display: inline-flex;
+  height: 64px;
+  overflow: hidden;
+  width: 104px;
+}
+.nusantara-logo img {
+  display: block;
+  height: 64px;
+  object-fit: contain;
+  width: 104px;
+}
+
+.nusantara-nav {
+  align-items: center;
+  background: linear-gradient(180deg, rgba(15, 14, 10, 0.82), transparent);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  height: 72px;
+  left: 0;
+  padding: 0 6.7vw;
+  position: fixed;
+  right: 0;
+  top: 0;
+  transition: background 240ms ease, border-color 240ms ease;
+  z-index: 50;
+}
+.nusantara-nav.is-solid {
+  background: rgba(30, 27, 19, 0.96);
+  border-bottom: 1px solid var(--nusantara-line);
+  backdrop-filter: blur(16px);
+}
+.nusantara-nav__links { justify-self: center; }
+.nusantara-links { align-items: center; display: flex; gap: 1.8rem; }
+.nusantara-links a {
+  color: var(--nusantara-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+  padding: 0.6rem 0;
+  position: relative;
+}
+.nusantara-links a::after {
+  background: var(--nusantara-gold);
+  bottom: 0;
+  content: '';
+  height: 1px;
+  left: 50%;
+  position: absolute;
+  transition: left 180ms ease, width 180ms ease;
+  width: 0;
+}
+.nusantara-links a:hover, .nusantara-links a.active { color: var(--nusantara-cream); }
+.nusantara-links a.active::after { left: 0; width: 100%; }
+.nusantara-nav__actions { align-items: center; display: flex; gap: 0.6rem; }
+.nusantara-nav__round, .nusantara-nav__menu {
+  align-items: center;
+  background: rgba(23, 21, 15, 0.45);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 50%;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.nusantara-nav__round svg, .nusantara-nav__menu svg { height: 18px; width: 18px; }
+.nusantara-nav__menu { display: none; }
+.nusantara-nav__mobile-menu { display: none; }
+.nusantara-nav-spacer { height: 72px; }
+.nusantara-auth-buttons { align-items: center; display: flex; gap: 0.5rem; }
+.nusantara-auth-link, .nusantara-auth-register {
+  border-radius: 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.62rem 0.9rem;
+}
+.nusantara-auth-link { color: var(--nusantara-muted); }
+.nusantara-auth-register { background: var(--nusantara-cream); color: var(--nusantara-bg); }
+.nusantara-bottom-nav { display: none; }
+
+.nusantara-search {
+  align-items: center;
+  background: rgba(15, 14, 10, 0.96);
+  backdrop-filter: blur(22px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1.25rem;
+  position: fixed;
+  z-index: 100;
+}
+.nusantara-search form { max-width: 760px; width: 92vw; }
+.nusantara-search small, .nusantara-eyebrow {
+  color: var(--nusantara-gold);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.22em;
+}
+.nusantara-search h2 {
+  font: 500 clamp(1.7rem, 3vw, 2.4rem)/1.1 Georgia, serif;
+  margin: 0.8rem 0 2rem;
+}
+.nusantara-search label {
+  align-items: center;
+  border-bottom: 1px solid var(--nusantara-cream);
+  display: flex;
+  gap: 1rem;
+  height: 66px;
+}
+.nusantara-search label svg { color: var(--nusantara-dim); width: 22px; }
+.nusantara-search input {
+  background: transparent;
+  border: 0;
+  color: var(--nusantara-cream);
+  flex: 1;
+  font-size: 1rem;
+  outline: none;
+}
+.nusantara-search p { color: var(--nusantara-dim); font-size: 0.7rem; margin-top: 1rem; }
+.nusantara-search p b { color: var(--nusantara-muted); margin-left: 1rem; }
+.nusantara-search__close, .nusantara-detail__close {
+  align-items: center;
+  background: rgba(23, 21, 15, 0.8);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 50%;
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  position: fixed;
+  right: 24px;
+  top: 20px;
+  width: 44px;
+  z-index: 120;
+}
+.nusantara-search__close svg, .nusantara-detail__close svg { width: 19px; }
+
+.nusantara-home { background: var(--nusantara-bg); margin-top: -72px; min-height: 100vh; }
+.nusantara-hero {
+  background: var(--nusantara-bg);
+  height: min(78vh, 800px);
+  min-height: 620px;
+  overflow: hidden;
+  position: relative;
+}
+.nusantara-hero__art {
+  background-position: center;
+  background-size: cover;
+  filter: saturate(0.84);
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  transform: scale(1.015);
+  transition: opacity 900ms ease, transform 7s ease;
+}
+.nusantara-hero__art.is-active { opacity: 1; transform: scale(1.05); }
+.nusantara-hero__wash {
+  background:
+    linear-gradient(90deg, rgba(23,21,15,.97) 0%, rgba(23,21,15,.68) 42%, rgba(23,21,15,.08) 76%),
+    linear-gradient(0deg, var(--nusantara-bg) 0%, transparent 45%),
+    linear-gradient(180deg, rgba(15,14,10,.45), transparent 22%);
+  inset: 0;
+  position: absolute;
+}
+.nusantara-hero__content {
+  left: 7vw;
+  max-width: 650px;
+  position: absolute;
+  top: 52%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+.nusantara-hero h1 {
+  font: 500 clamp(3.2rem, 5.5vw, 5.3rem)/0.97 Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.045em;
+  margin: 0.65rem 0 1rem;
+  text-wrap: balance;
+}
+.nusantara-meta { align-items: center; color: var(--nusantara-muted); display: flex; flex-wrap: wrap; font-size: 0.72rem; gap: 0.8rem; }
+.nusantara-meta b { border: 1px solid var(--nusantara-line); border-radius: 3px; color: var(--nusantara-cream); font-size: 0.61rem; padding: 0.14rem 0.35rem; }
+.nusantara-hero__description {
+  color: var(--nusantara-muted);
+  display: -webkit-box;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin: 1.1rem 0 1.5rem;
+  max-width: 560px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.nusantara-actions { display: flex; gap: 0.7rem; }
+.nusantara-button {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 750;
+  gap: 0.55rem;
+  height: 46px;
+  justify-content: center;
+  padding: 0 1.2rem;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.nusantara-button:hover { transform: translateY(-1px); }
+.nusantara-button svg { height: 17px; width: 17px; }
+.nusantara-button.is-primary { background: var(--nusantara-cream); color: var(--nusantara-bg); }
+.nusantara-button.is-primary:hover { background: #fff9e9; }
+.nusantara-button.is-secondary { background: rgba(40,35,25,.78); border-color: var(--nusantara-line); backdrop-filter: blur(12px); }
+.nusantara-hero__index {
+  align-items: center;
+  bottom: 56px;
+  color: var(--nusantara-dim);
+  display: flex;
+  font-size: 0.65rem;
+  gap: 0.7rem;
+  position: absolute;
+  right: 6.7vw;
+}
+.nusantara-hero__index strong { color: var(--nusantara-cream); }
+.nusantara-hero__index i { background: var(--nusantara-line); height: 1px; width: 52px; }
+.nusantara-hero__dots { bottom: 28px; display: flex; gap: 5px; left: 50%; position: absolute; transform: translateX(-50%); }
+.nusantara-hero__dots button { background: rgba(244,236,217,.3); border: 0; height: 2px; transition: width 200ms ease; width: 12px; }
+.nusantara-hero__dots button.is-active { background: var(--nusantara-gold); width: 35px; }
+
+.nusantara-home__content { margin-top: -18px; position: relative; z-index: 2; }
+.nusantara-section { padding: 3.1rem 0 1.1rem 6.7vw; }
+.nusantara-section__head {
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.1rem;
+  padding-right: 6.7vw;
+}
+.nusantara-section__head h2 {
+  font: 500 clamp(1.5rem, 2.2vw, 2rem)/1.1 Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.025em;
+}
+.nusantara-section__head small { color: var(--nusantara-clay); display: block; font-size: 0.58rem; font-weight: 850; letter-spacing: 0.18em; margin-bottom: 0.45rem; }
+.nusantara-section__head button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--nusantara-dim);
+  display: flex;
+  font-size: 0.65rem;
+  gap: 0.4rem;
+}
+.nusantara-section__head button svg { height: 13px; width: 13px; }
+.nusantara-rail-wrap { position: relative; }
+.nusantara-rail {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 0.2rem 6.7vw 0.8rem 0;
+  scrollbar-width: none;
+}
+.nusantara-rail::-webkit-scrollbar { display: none; }
+.nusantara-rail__item { flex: 0 0 clamp(145px, 13.4vw, 215px); }
+.nusantara-poster-card__art {
+  aspect-ratio: 2 / 3;
+  background: var(--nusantara-surface);
+  border: 0;
+  border-radius: 9px;
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+.nusantara-poster-card__art img { height: 100%; object-fit: cover; transition: transform 350ms ease, filter 350ms ease; width: 100%; }
+.nusantara-poster-card__badge {
+  background: rgba(23,21,15,.82);
+  border-radius: 3px;
+  font-size: 0.48rem;
+  font-weight: 850;
+  left: 0.6rem;
+  letter-spacing: 0.1em;
+  padding: 0.26rem 0.35rem;
+  position: absolute;
+  top: 0.6rem;
+}
+.nusantara-poster-card__overlay {
+  align-items: flex-end;
+  background: linear-gradient(0deg, rgba(23,21,15,.96), transparent 60%);
+  bottom: 0;
+  display: flex;
+  gap: 0.42rem;
+  inset-inline: 0;
+  opacity: 0;
+  padding: 0.75rem;
+  position: absolute;
+  top: 0;
+  transition: opacity 200ms ease;
+}
+.nusantara-poster-card:hover .nusantara-poster-card__overlay,
+.nusantara-poster-card:focus-within .nusantara-poster-card__overlay { opacity: 1; }
+.nusantara-poster-card:hover img { filter: saturate(.78); transform: scale(1.025); }
+.nusantara-round-action {
+  align-items: center;
+  background: rgba(40,35,25,.9);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 50%;
+  display: flex;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+.nusantara-round-action.is-play { background: var(--nusantara-cream); color: var(--nusantara-bg); }
+.nusantara-round-action svg { height: 14px; width: 14px; }
+.nusantara-poster-card__copy { background: transparent; border: 0; display: block; padding: 0.65rem 0 0; text-align: left; width: 100%; }
+.nusantara-poster-card__copy strong { display: block; font-size: 0.74rem; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nusantara-poster-card__copy small { color: var(--nusantara-dim); display: block; font-size: 0.59rem; margin-top: 0.22rem; }
+.nusantara-rail-arrow {
+  align-items: center;
+  background: rgba(23,21,15,.82);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 50%;
+  display: flex;
+  height: 42px;
+  justify-content: center;
+  opacity: 0;
+  position: absolute;
+  top: 38%;
+  transition: opacity 160ms ease;
+  width: 42px;
+  z-index: 5;
+}
+.nusantara-rail-wrap:hover .nusantara-rail-arrow { opacity: 1; }
+.nusantara-rail-arrow.is-left { left: -21px; }
+.nusantara-rail-arrow.is-right { right: 6.7vw; }
+.nusantara-rail-arrow svg { width: 18px; }
+
+.nusantara-live-feature { padding: 5rem 6.7vw 1rem; }
+.nusantara-live-feature .nusantara-section__head { padding-right: 0; }
+.nusantara-live-feature > article {
+  background: var(--nusantara-surface);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 13px;
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  min-height: 390px;
+  overflow: hidden;
+}
+.nusantara-live-feature__art { background-position: center; background-size: cover; min-height: 330px; position: relative; }
+.nusantara-live-feature__art::after { background: linear-gradient(90deg, transparent 55%, var(--nusantara-surface)); content: ''; inset: 0; position: absolute; }
+.nusantara-live-feature__art span {
+  background: rgba(23,21,15,.84);
+  border-radius: 4px;
+  font-size: 0.58rem;
+  font-weight: 850;
+  left: 1.2rem;
+  letter-spacing: 0.12em;
+  padding: 0.45rem 0.55rem;
+  position: absolute;
+  top: 1.2rem;
+  z-index: 1;
+}
+.nusantara-live-feature__art i { background: var(--nusantara-clay); border-radius: 50%; display: inline-block; height: 7px; margin-right: 5px; width: 7px; }
+.nusantara-live-feature__copy { align-self: center; padding: 2.5rem 3rem 2.5rem 1.5rem; }
+.nusantara-live-feature__copy > small, .nusantara-editorial small { color: var(--nusantara-gold); font-size: 0.56rem; font-weight: 800; letter-spacing: .16em; }
+.nusantara-live-feature__copy h3 { font: 500 clamp(2rem,3vw,3rem)/1.02 Georgia,serif; margin: .65rem 0 1rem; }
+.nusantara-live-feature__copy p, .nusantara-editorial p { color: var(--nusantara-muted); font-size: .76rem; line-height: 1.75; }
+.nusantara-live-feature__copy > div { color: var(--nusantara-dim); display: flex; font-size: .64rem; gap: 1rem; margin: 1.1rem 0; }
+.nusantara-live-feature__copy > div b { color: var(--nusantara-cream); }
+
+.nusantara-editorial {
+  background: var(--nusantara-bg-2);
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  margin: 6rem 6.7vw 2rem;
+  min-height: 430px;
+}
+.nusantara-editorial > div { background-position: center; background-size: cover; filter: saturate(.72); position: relative; }
+.nusantara-editorial > div::after { background: linear-gradient(90deg, transparent 50%, var(--nusantara-bg-2)); content: ''; inset: 0; position: absolute; }
+.nusantara-editorial article { align-self: center; padding: 3rem; }
+.nusantara-editorial h2 { font: 500 clamp(2rem,3.5vw,3.4rem)/1.04 Georgia,serif; letter-spacing: -.035em; margin: .8rem 0 1.2rem; }
+.nusantara-editorial button { align-items: center; background: transparent; border: 0; border-bottom: 1px solid var(--nusantara-dim); color: var(--nusantara-muted); display: flex; font-size: .7rem; gap: .5rem; margin-top: 1.3rem; padding: 0 0 .3rem; }
+.nusantara-editorial button svg { width: 13px; }
+
+.nusantara-detail {
+  background: rgba(15,14,10,.94);
+  backdrop-filter: blur(18px);
+  inset: 0;
+  overflow-y: auto;
+  padding: 2.8rem 6vw;
+  position: fixed;
+  z-index: 100;
+}
+.nusantara-detail__card {
+  background: var(--nusantara-surface);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 17px;
+  margin: auto;
+  max-width: 1100px;
+  overflow: hidden;
+}
+.nusantara-detail__media { background: #0d0c09; height: 430px; overflow: hidden; position: relative; }
+.nusantara-detail__media video, .nusantara-detail__media > img { height: 100%; object-fit: cover; width: 100%; }
+.nusantara-detail__wash { background: linear-gradient(90deg,rgba(15,14,10,.72),rgba(15,14,10,.06) 70%),linear-gradient(0deg,var(--nusantara-surface),transparent 58%); inset: 0; position: absolute; }
+.nusantara-detail__title { bottom: 2rem; left: 3.2rem; max-width: 65%; position: absolute; z-index: 2; }
+.nusantara-detail__title small { color: var(--nusantara-gold); font-size: .58rem; font-weight: 800; letter-spacing: .16em; }
+.nusantara-detail__title h2 { font: 500 clamp(2.6rem,5vw,4.2rem)/.98 Georgia,serif; letter-spacing: -.045em; margin-top: .55rem; }
+.nusantara-trailer-controls { display: flex; gap: .5rem; position: absolute; right: 1.3rem; top: 1.3rem; z-index: 4; }
+.nusantara-trailer-controls button {
+  align-items: center;
+  background: rgba(23,21,15,.78);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 20px;
+  display: flex;
+  font-size: .65rem;
+  gap: .45rem;
+  height: 39px;
+  padding: 0 .85rem;
+}
+.nusantara-trailer-controls svg { width: 15px; }
+.nusantara-trailer-controls span { color: var(--nusantara-muted); }
+.nusantara-detail__body { display: grid; gap: 3.4rem; grid-template-columns: 1fr 345px; padding: 2.1rem 3.2rem 2.6rem; }
+.nusantara-detail__synopsis { color: var(--nusantara-muted); font-size: .8rem; line-height: 1.8; margin: 1.2rem 0; }
+.nusantara-detail__credits { color: var(--nusantara-dim); font-size: .7rem; margin-top: .45rem; }
+.nusantara-detail__credits b { color: var(--nusantara-muted); display: inline-block; width: 70px; }
+.nusantara-detail__body aside { background: var(--nusantara-up); border: 1px solid var(--nusantara-line); border-radius: 11px; margin-top: -5.2rem; padding: 1.4rem; position: relative; z-index: 3; }
+.nusantara-detail__body aside > small { color: var(--nusantara-gold); font-size: .55rem; font-weight: 800; letter-spacing: .15em; }
+.nusantara-detail__body aside h3 { font: 500 1.7rem Georgia,serif; margin: .55rem 0; }
+.nusantara-detail__body aside p { color: var(--nusantara-muted); font-size: .67rem; line-height: 1.65; }
+.nusantara-detail__body aside > .nusantara-button { margin: 1rem 0; width: 100%; }
+.nusantara-detail__secondary-actions { border-top: 1px solid var(--nusantara-line); display: flex; gap: 1.2rem; justify-content: center; padding-top: 1rem; }
+.nusantara-detail__secondary-actions button { align-items: center; background: transparent; border: 0; color: var(--nusantara-muted); display: flex; font-size: .62rem; gap: .35rem; }
+.nusantara-detail__secondary-actions svg { width: 15px; }
+.nusantara-detail__notice { background: rgba(201,132,49,.07); border-left: 2px solid var(--nusantara-gold); display: flex; flex-direction: column; font-size: .7rem; gap: .3rem; margin: 0 3.2rem 2.6rem; padding: 1rem 1.3rem; }
+.nusantara-detail__notice span { color: var(--nusantara-dim); font-size: .62rem; }
+.nusantara-detail__similar { border-top: 1px solid var(--nusantara-line); padding-bottom: 2rem; }
+.nusantara-detail__episodes { border-top: 1px solid var(--nusantara-line); padding: 2rem 3.2rem; }
+.nusantara-detail__episodes header { align-items: end; display: flex; justify-content: space-between; margin-bottom: 1rem; }
+.nusantara-detail__episodes header small { color: var(--nusantara-gold); font-size: .55rem; font-weight: 800; letter-spacing: .14em; }
+.nusantara-detail__episodes header h3 { font: 500 1.55rem Georgia,serif; margin-top: .35rem; }
+.nusantara-detail__episodes header > span { color: var(--nusantara-dim); font-size: .62rem; }
+.nusantara-detail__season-tabs { display: flex; gap: .55rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: .2rem; }
+.nusantara-detail__season-tabs button { background: transparent; border: 1px solid var(--nusantara-line); border-radius: 8px; color: var(--nusantara-muted); display: flex; flex-direction: column; flex-shrink: 0; font-size: .68rem; font-weight: 700; gap: .15rem; min-width: 112px; padding: .65rem .9rem; text-align: left; }
+.nusantara-detail__season-tabs button small { color: var(--nusantara-dim); font-size: .5rem; font-weight: 500; }
+.nusantara-detail__season-tabs button.is-active { background: rgba(201,132,49,.12); border-color: var(--nusantara-gold); color: var(--nusantara-gold); }
+.nusantara-detail__episodes > div { display: grid; gap: .65rem; }
+.nusantara-detail__episodes button { align-items: center; background: var(--nusantara-up); border: 1px solid var(--nusantara-line); border-radius: 9px; color: inherit; display: grid; gap: 1rem; grid-template-columns: 120px 1fr 28px; padding: .55rem; text-align: left; }
+.nusantara-detail__episodes button:hover { border-color: var(--nusantara-gold); }
+.nusantara-detail__episodes button img { aspect-ratio: 16/9; border-radius: 6px; object-fit: cover; width: 120px; }
+.nusantara-detail__episodes button span { display: flex; flex-direction: column; }
+.nusantara-detail__episodes button small { color: var(--nusantara-gold); font-size: .52rem; font-weight: 800; }
+.nusantara-detail__episodes button b { font-size: .76rem; margin: .2rem 0; }
+.nusantara-detail__episodes button em { color: var(--nusantara-dim); font-size: .58rem; font-style: normal; }
+.nusantara-detail__episodes button svg { color: var(--nusantara-gold); width: 19px; }
+.nusantara-detail__sticky { display: none; }
+
+.nusantara-footer {
+  align-items: center;
+  background: var(--nusantara-bg-2);
+  border-top: 1px solid var(--nusantara-line);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 3rem;
+  margin-top: 5rem;
+  padding: 3.2rem 6.7vw;
+}
+.nusantara-footer > div { align-items: center; display: flex; gap: 1.5rem; }
+.nusantara-footer p, .nusantara-footer a, .nusantara-footer small { color: var(--nusantara-dim); font-size: .64rem; }
+.nusantara-footer nav { display: flex; gap: 1.4rem; }
+
+.nusantara-loading { min-height: 100vh; padding-bottom: 5rem; }
+.nusantara-loading__hero { animation: pulse 1.5s infinite; background: var(--nusantara-surface); height: 72vh; }
+.nusantara-loading__line { background: var(--nusantara-surface); height: 24px; margin: 3rem 6.7vw 1rem; width: 180px; }
+.nusantara-loading__rail { background: var(--nusantara-surface); height: 260px; margin-left: 6.7vw; }
+
+.nusantara-browse { background: var(--nusantara-bg); min-height: 100vh; }
+.nusantara-browse__intro {
+  align-items: flex-end;
+  background:
+    radial-gradient(circle at 82% 25%,rgba(201,132,49,.12),transparent 25%),
+    linear-gradient(115deg,#242319,#182421);
+  display: flex;
+  min-height: 430px;
+  overflow: hidden;
+  padding: 6.5rem 7vw 4.5rem;
+  position: relative;
+}
+.nusantara-browse__intro::after {
+  background:
+    repeating-linear-gradient(45deg,transparent 0 13px,var(--nusantara-gold) 14px 16px,transparent 17px 28px),
+    repeating-linear-gradient(-45deg,transparent 0 13px,var(--nusantara-clay) 14px 16px,transparent 17px 28px);
+  clip-path: polygon(50% 0,100% 50%,50% 100%,0 50%);
+  content: '';
+  height: 250px;
+  opacity: .13;
+  position: absolute;
+  right: 7vw;
+  top: 65px;
+  width: 320px;
+}
+.nusantara-browse__intro > div { position: relative; z-index: 1; }
+.nusantara-browse__intro p { color: var(--nusantara-gold); font-size: .6rem; font-weight: 850; letter-spacing: .23em; }
+.nusantara-browse__intro h1 { font: 500 clamp(3rem,5.2vw,4.7rem)/.97 Georgia,serif; letter-spacing: -.045em; margin: .65rem 0 1.2rem; }
+.nusantara-browse__intro h1 em { color: var(--nusantara-muted); font-weight: 400; }
+.nusantara-browse__intro span { color: var(--nusantara-muted); display: block; font-size: .8rem; line-height: 1.7; max-width: 610px; }
+.nusantara-browse__toolbar {
+  align-items: center;
+  background: var(--nusantara-bg-2);
+  border-bottom: 1px solid var(--nusantara-line);
+  display: flex;
+  gap: 1.8rem;
+  padding: 1.55rem 6.7vw;
+}
+.nusantara-browse__toolbar form {
+  align-items: center;
+  background: var(--nusantara-surface);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 8px;
+  display: flex;
+  gap: .6rem;
+  height: 46px;
+  padding: 0 .85rem;
+  width: min(390px,35vw);
+}
+.nusantara-browse__toolbar form svg { color: var(--nusantara-dim); width: 17px; }
+.nusantara-browse__toolbar input { background: transparent; border: 0; color: var(--nusantara-cream); font-size: .7rem; outline: none; width: 100%; }
+.nusantara-browse__filters { display: flex; gap: .45rem; overflow-x: auto; scrollbar-width: none; }
+.nusantara-browse__filters button, .nusantara-browse__filters select {
+  background: transparent;
+  border: 1px solid var(--nusantara-line);
+  border-radius: 7px;
+  color: var(--nusantara-muted);
+  font-size: .65rem;
+  height: 40px;
+  padding: 0 .9rem;
+  white-space: nowrap;
+}
+.nusantara-browse__filters button.is-active { background: var(--nusantara-cream); border-color: var(--nusantara-cream); color: var(--nusantara-bg); }
+.nusantara-browse__filters select { background: var(--nusantara-surface); }
+.nusantara-browse__catalog { padding: 3.5rem 6.7vw 6rem; }
+.nusantara-browse__catalog > header { align-items: flex-end; display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+.nusantara-browse__catalog header small { color: var(--nusantara-gold); font-size: .55rem; font-weight: 800; letter-spacing: .17em; }
+.nusantara-browse__catalog header h2 { font: 500 2rem Georgia,serif; margin-top: .35rem; }
+.nusantara-browse__catalog header p { color: var(--nusantara-dim); font-size: .58rem; margin-top: .2rem; }
+.nusantara-browse__catalog header label { align-items: center; background: var(--nusantara-surface); border: 1px solid var(--nusantara-line); border-radius: 7px; display: flex; gap: .4rem; padding: .5rem .65rem; }
+.nusantara-browse__catalog header label svg { color: var(--nusantara-dim); width: 14px; }
+.nusantara-browse__catalog header select { background: transparent; border: 0; color: var(--nusantara-muted); font-size: .6rem; outline: none; }
+.nusantara-browse__grid { display: grid; gap: 2rem 1rem; grid-template-columns: repeat(6,1fr); }
+.nusantara-browse__grid.is-loading > div { animation: pulse 1.5s infinite; aspect-ratio: 2/3; background: var(--nusantara-surface); border-radius: 9px; }
+.nusantara-empty { align-items: center; display: flex; flex-direction: column; min-height: 330px; justify-content: center; text-align: center; }
+.nusantara-empty h3 { font: 500 1.8rem Georgia,serif; }
+.nusantara-empty p { color: var(--nusantara-dim); font-size: .7rem; margin: .5rem 0 1.2rem; }
+
+/* SMASH LIVE — adapted from the supplied Nusantara mockup */
+.smash-live { background: var(--nusantara-bg); min-height: 100vh; }
+.smash-live__hero {
+  align-items: center;
+  background-color: var(--nusantara-bg);
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  filter: saturate(.84);
+  height: 570px;
+  overflow: hidden;
+  padding: 0 7vw;
+  position: relative;
+}
+.smash-live__hero.is-empty {
+  background:
+    radial-gradient(circle at 72% 30%,rgba(201,132,49,.13),transparent 28%),
+    linear-gradient(115deg,#242319,#182421);
+}
+.smash-live__hero.is-empty::after {
+  background:
+    repeating-linear-gradient(45deg,transparent 0 13px,var(--nusantara-gold) 14px 16px,transparent 17px 28px),
+    repeating-linear-gradient(-45deg,transparent 0 13px,var(--nusantara-clay) 14px 16px,transparent 17px 28px);
+  clip-path: polygon(50% 0,100% 50%,50% 100%,0 50%);
+  content: '';
+  height: 260px;
+  opacity: .14;
+  position: absolute;
+  right: 9vw;
+  top: 100px;
+  width: 320px;
+}
+.smash-live__hero-wash {
+  background:
+    linear-gradient(90deg,var(--nusantara-bg) 0%,rgba(23,21,15,.74) 44%,rgba(23,21,15,.1) 75%),
+    linear-gradient(0deg,var(--nusantara-bg),transparent 45%);
+  inset: 0;
+  position: absolute;
+}
+.smash-live__hero-content { max-width: 650px; position: relative; z-index: 2; }
+.smash-live__hero-content > p {
+  color: var(--nusantara-gold);
+  font-size: .6rem;
+  font-weight: 850;
+  letter-spacing: .23em;
+}
+.smash-live__hero-content h1 {
+  font: 500 clamp(3.1rem,5.2vw,4.8rem)/.96 Georgia,serif;
+  letter-spacing: -.045em;
+  margin: .65rem 0 1.2rem;
+  text-wrap: balance;
+}
+.smash-live__hero-content > span {
+  color: var(--nusantara-muted);
+  display: -webkit-box;
+  font-size: .8rem;
+  line-height: 1.7;
+  max-width: 570px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.smash-live__facts { align-items: center; color: var(--nusantara-muted); display: flex; font-size: .66rem; gap: 1rem; margin: 1.35rem 0; }
+.smash-live__facts b { align-items: center; display: flex; font-size: .58rem; gap: .35rem; letter-spacing: .12em; }
+.smash-live__facts b.is-live { color: #e3a786; }
+.smash-live__facts b i { animation: smash-live-pulse 1.5s infinite; background: var(--nusantara-clay); border-radius: 50%; height: 7px; width: 7px; }
+.smash-live__facts svg { height: 13px; width: 13px; }
+@keyframes smash-live-pulse { 50% { opacity: .4; } }
+
+.smash-live__tabs {
+  align-items: center;
+  background: var(--nusantara-bg-2);
+  border-bottom: 1px solid var(--nusantara-line);
+  display: flex;
+  gap: .45rem;
+  height: 68px;
+  padding: 0 6.7vw;
+}
+.smash-live__tabs button {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--nusantara-muted);
+  font-size: .66rem;
+  height: 40px;
+  padding: 0 .9rem;
+  white-space: nowrap;
+}
+.smash-live__tabs button.is-active { background: var(--nusantara-cream); color: var(--nusantara-bg); }
+.smash-live__tabs b {
+  background: var(--nusantara-clay);
+  border-radius: 50%;
+  color: #fff;
+  font-size: .5rem;
+  margin-left: .4rem;
+  padding: .12rem .34rem;
+}
+.smash-live__tabs button.is-active b { background: var(--nusantara-bg); }
+
+.smash-live__events { padding: 3.5rem 6.7vw 6rem; }
+.smash-live__events > header { align-items: flex-end; display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+.smash-live__events header small { color: var(--nusantara-gold); font-size: .55rem; font-weight: 800; letter-spacing: .17em; }
+.smash-live__events header h2 { font: 500 2rem Georgia,serif; margin-top: .35rem; }
+.smash-live__events header label {
+  align-items: center;
+  background: var(--nusantara-surface);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 8px;
+  display: flex;
+  gap: .55rem;
+  height: 42px;
+  padding: 0 .8rem;
+  width: min(280px,30vw);
+}
+.smash-live__events header label svg { color: var(--nusantara-dim); height: 15px; width: 15px; }
+.smash-live__events header input { background: transparent; border: 0; color: var(--nusantara-cream); font-size: .65rem; outline: 0; width: 100%; }
+.smash-live__grid { display: grid; gap: 1.15rem; grid-template-columns: repeat(3,1fr); }
+.smash-live__grid > article {
+  background: var(--nusantara-surface);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+.smash-live__grid > article:hover { border-color: rgba(201,132,49,.38); transform: translateY(-2px); }
+.smash-live__grid.is-loading > div { animation: pulse 1.5s infinite; background: var(--nusantara-surface); border-radius: 12px; height: 340px; }
+.smash-live-card__art { background-color: var(--nusantara-bg-2); background-position: center; background-size: cover; height: 190px; overflow: hidden; position: relative; }
+.smash-live-card__art::after { background: linear-gradient(0deg,rgba(23,21,15,.58),transparent 60%); content: ''; inset: 0; position: absolute; }
+.smash-live-card__art > span {
+  background: rgba(23,21,15,.86);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 4px;
+  font-size: .48rem;
+  font-weight: 800;
+  left: .85rem;
+  letter-spacing: .08em;
+  max-width: calc(100% - 1.7rem);
+  overflow: hidden;
+  padding: .4rem .48rem;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: .85rem;
+  white-space: nowrap;
+  z-index: 2;
+}
+.smash-live-card__art > span.is-live { color: #e3a786; }
+.smash-live-card__art > button {
+  align-items: center;
+  background: var(--nusantara-cream);
+  border: 0;
+  border-radius: 50%;
+  bottom: .85rem;
+  color: var(--nusantara-bg);
+  display: flex;
+  height: 38px;
+  justify-content: center;
+  opacity: 0;
+  position: absolute;
+  right: .85rem;
+  transform: translateY(5px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  width: 38px;
+  z-index: 2;
+}
+.smash-live__grid article:hover .smash-live-card__art > button { opacity: 1; transform: translateY(0); }
+.smash-live-card__art > button svg { width: 15px; }
+.smash-live-card__copy { padding: 1.15rem; }
+.smash-live-card__copy > small { color: var(--nusantara-gold); font-size: .51rem; letter-spacing: .12em; text-transform: uppercase; }
+.smash-live-card__copy h3 { font: 500 1.35rem Georgia,serif; line-height: 1.15; margin: .5rem 0; }
+.smash-live-card__copy p { color: var(--nusantara-dim); font-size: .6rem; }
+.smash-live-card__copy > button { align-items: center; background: transparent; border: 0; color: var(--nusantara-muted); display: flex; font-size: .62rem; gap: .4rem; margin-top: .9rem; padding: .25rem 0; }
+.smash-live-card__copy > button svg { width: 13px; }
+.smash-live__timezone { align-items: center; color: var(--nusantara-dim); display: flex; font-size: .55rem; gap: .35rem; justify-content: flex-end; margin-top: 1.25rem; }
+.smash-live__timezone svg, .nusantara-empty > svg { width: 14px; }
+
+/* SMASH LIVE BROADCAST — player, paywall, information, and chat */
+.smash-broadcast {
+  background:
+    radial-gradient(circle at 12% 0,rgba(201,132,49,.07),transparent 23rem),
+    var(--nusantara-bg);
+  min-height: 100vh;
+  padding: 1.35rem 6.7vw 5rem;
+}
+.smash-broadcast__topbar { align-items: center; display: flex; justify-content: space-between; margin-bottom: 1.1rem; }
+.smash-broadcast__back {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--nusantara-dim);
+  display: flex;
+  font-size: .63rem;
+  gap: .45rem;
+  padding: .5rem 0;
+}
+.smash-broadcast__back:hover { color: var(--nusantara-cream); }
+.smash-broadcast__back svg { width: 15px; }
+.smash-broadcast__topbar > div span {
+  align-items: center;
+  color: var(--nusantara-dim);
+  display: flex;
+  font-size: .55rem;
+  gap: .35rem;
+}
+.smash-broadcast__topbar > div span.is-connected { color: #7eaa84; }
+.smash-broadcast__topbar > div svg { width: 13px; }
+.smash-broadcast__layout { align-items: start; display: grid; gap: 1.1rem; grid-template-columns: minmax(0,2.05fr) minmax(300px,.95fr); margin: auto; max-width: 1500px; }
+.smash-broadcast__player {
+  aspect-ratio: 16/9;
+  background: #090806;
+  border: 1px solid var(--nusantara-line);
+  border-radius: 13px;
+  overflow: hidden;
+  position: relative;
+}
+.smash-broadcast__player video { height: 100%; object-fit: contain; width: 100%; }
+.smash-broadcast__live-badge, .smash-broadcast__viewers {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background: rgba(23,21,15,.8);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 5px;
+  display: flex;
+  font-size: .52rem;
+  font-weight: 800;
+  gap: .35rem;
+  padding: .42rem .52rem;
+  position: absolute;
+  top: .85rem;
+  z-index: 5;
+}
+.smash-broadcast__live-badge { color: #e3a786; left: .85rem; letter-spacing: .1em; }
+.smash-broadcast__live-badge i { animation: smash-live-pulse 1.5s infinite; background: var(--nusantara-clay); border-radius: 50%; height: 7px; width: 7px; }
+.smash-broadcast__viewers { color: var(--nusantara-muted); right: .85rem; }
+.smash-broadcast__viewers svg { width: 13px; }
+.smash-broadcast__stream-message {
+  background: rgba(23,21,15,.9);
+  border: 1px solid rgba(201,132,49,.34);
+  border-radius: 7px;
+  bottom: 4.5rem;
+  color: var(--nusantara-muted);
+  font-size: .63rem;
+  left: 1.2rem;
+  line-height: 1.55;
+  padding: .7rem .9rem;
+  position: absolute;
+  right: 1.2rem;
+  z-index: 6;
+}
+.smash-broadcast__controls {
+  align-items: center;
+  background: linear-gradient(0deg,rgba(9,8,6,.88),transparent);
+  bottom: 0;
+  display: flex;
+  gap: .25rem;
+  left: 0;
+  padding: 1.8rem .8rem .7rem;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  z-index: 5;
+}
+.smash-broadcast__controls button {
+  align-items: center;
+  background: rgba(40,35,25,.7);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 50%;
+  display: flex;
+  height: 34px;
+  justify-content: center;
+  pointer-events: auto;
+  width: 34px;
+}
+.smash-broadcast__controls button:last-child { margin-left: auto; }
+.smash-broadcast__controls svg { width: 14px; }
+.smash-broadcast__status-overlay, .smash-broadcast__ended {
+  align-items: center;
+  background: rgba(15,14,10,.8);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+  text-align: center;
+}
+.smash-broadcast__status-overlay > div > svg { color: var(--nusantara-gold); height: 46px; margin: 0 auto 1rem; width: 46px; }
+.smash-broadcast__status-overlay small, .smash-broadcast__ended small { color: var(--nusantara-gold); font-size: .53rem; font-weight: 800; letter-spacing: .16em; }
+.smash-broadcast__status-overlay h3, .smash-broadcast__ended h3 { font: 500 1.6rem Georgia,serif; margin: .4rem 0; }
+.smash-broadcast__status-overlay p { color: var(--nusantara-dim); font-size: .62rem; }
+.smash-broadcast__info { padding: 1.8rem .3rem 1.1rem; }
+.smash-broadcast__info > small { color: var(--nusantara-gold); font-size: .54rem; font-weight: 800; letter-spacing: .17em; }
+.smash-broadcast__info h1 { font: 500 clamp(2rem,3.4vw,3.2rem)/1 Georgia,serif; letter-spacing: -.04em; margin: .6rem 0 1rem; }
+.smash-broadcast__info > p { color: var(--nusantara-muted); font-size: .75rem; line-height: 1.75; max-width: 760px; }
+.smash-broadcast__info > div { border-top: 1px solid var(--nusantara-line); color: var(--nusantara-dim); display: flex; flex-wrap: wrap; font-size: .58rem; gap: 1.2rem; margin-top: 1.3rem; padding-top: 1rem; }
+.smash-broadcast__info span { align-items: center; display: flex; gap: .35rem; }
+.smash-broadcast__info svg { width: 13px; }
+
+.smash-chat {
+  background: var(--nusantara-surface);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 13px;
+  display: flex;
+  flex-direction: column;
+  height: min(78vh,720px);
+  min-height: 520px;
+  overflow: hidden;
+  position: sticky;
+  top: 90px;
+}
+.smash-chat > header {
+  align-items: center;
+  border-bottom: 1px solid var(--nusantara-line);
+  display: flex;
+  justify-content: space-between;
+  min-height: 57px;
+  padding: 0 1rem;
+}
+.smash-chat > header > div { align-items: center; color: var(--nusantara-dim); display: flex; font-size: .55rem; gap: .4rem; }
+.smash-chat > header > div:first-child { color: var(--nusantara-cream); font-size: .7rem; font-weight: 700; }
+.smash-chat > header > div.is-connected { color: #7eaa84; }
+.smash-chat > header svg { width: 15px; }
+.smash-chat__messages { flex: 1; min-height: 0; overflow-y: auto; padding: .85rem 1rem; scrollbar-color: var(--nusantara-up) transparent; }
+.smash-chat__messages > article { border-bottom: 1px solid rgba(244,236,217,.06); padding: .6rem 0; }
+.smash-chat__messages > article > div { align-items: baseline; display: flex; gap: .5rem; }
+.smash-chat__messages article b { color: var(--nusantara-gold); font-size: .59rem; }
+.smash-chat__messages article.is-host b { color: #e3a786; }
+.smash-chat__messages article time { color: var(--nusantara-dim); font-size: .48rem; }
+.smash-chat__messages article p { color: var(--nusantara-muted); font-size: .66rem; line-height: 1.55; margin-top: .22rem; overflow-wrap: anywhere; }
+.smash-chat__empty { align-items: center; color: var(--nusantara-dim); display: flex; flex-direction: column; height: 100%; justify-content: center; text-align: center; }
+.smash-chat__empty svg { opacity: .45; width: 26px; }
+.smash-chat__empty p { font-size: .62rem; line-height: 1.7; margin-top: .6rem; }
+.smash-chat__typing { color: var(--nusantara-dim); font-size: .55rem; font-style: italic; padding: .5rem 0; }
+.smash-chat__form { border-top: 1px solid var(--nusantara-line); display: flex; gap: .45rem; padding: .75rem; }
+.smash-chat__form input {
+  background: var(--nusantara-bg-2);
+  border: 1px solid var(--nusantara-line);
+  border-radius: 7px;
+  color: var(--nusantara-cream);
+  flex: 1;
+  font-size: .65rem;
+  min-width: 0;
+  outline: none;
+  padding: .7rem .8rem;
+}
+.smash-chat__form input:focus { border-color: rgba(201,132,49,.5); }
+.smash-chat__form button {
+  align-items: center;
+  background: var(--nusantara-cream);
+  border: 0;
+  border-radius: 7px;
+  color: var(--nusantara-bg);
+  display: flex;
+  justify-content: center;
+  width: 41px;
+}
+.smash-chat__form button:disabled { opacity: .35; }
+.smash-chat__form button svg { width: 15px; }
+
+.smash-broadcast-loading, .smash-broadcast-state {
+  background: var(--nusantara-bg);
+  min-height: 75vh;
+  padding: 3rem 6.7vw;
+}
+.smash-broadcast-loading > div { animation: pulse 1.5s infinite; background: var(--nusantara-surface); height: 18px; margin-bottom: 1.3rem; width: 130px; }
+.smash-broadcast-loading > section { animation: pulse 1.5s infinite; aspect-ratio: 16/7; background: var(--nusantara-surface); border-radius: 13px; }
+.smash-broadcast-state { align-items: center; display: flex; justify-content: center; text-align: center; }
+.smash-broadcast-state > div > svg { color: var(--nusantara-gold); height: 42px; margin: 0 auto 1rem; width: 42px; }
+.smash-broadcast-state small, .smash-broadcast-paywall > article > small { color: var(--nusantara-gold); font-size: .55rem; font-weight: 800; letter-spacing: .17em; }
+.smash-broadcast-state h2 { font: 500 2rem Georgia,serif; margin: .5rem 0; }
+.smash-broadcast-state p { color: var(--nusantara-dim); font-size: .68rem; margin-bottom: 1rem; }
+
+.smash-broadcast-paywall {
+  align-items: center;
+  background-color: var(--nusantara-bg);
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  min-height: calc(100vh - 72px);
+  padding: 5rem 7vw;
+  position: relative;
+}
+.smash-broadcast-paywall__wash { background: linear-gradient(90deg,var(--nusantara-bg) 0%,rgba(23,21,15,.84) 58%,rgba(23,21,15,.35)),linear-gradient(0deg,var(--nusantara-bg),transparent 50%); inset: 0; position: absolute; }
+.smash-broadcast-paywall > .smash-broadcast__back { left: 7vw; position: absolute; top: 1.4rem; z-index: 2; }
+.smash-broadcast-paywall > article { max-width: 740px; position: relative; z-index: 2; }
+.smash-broadcast-paywall__lock { align-items: center; background: rgba(166,83,53,.15); border: 1px solid rgba(166,83,53,.3); border-radius: 50%; color: #e3a786; display: flex; height: 54px; justify-content: center; margin-bottom: 1rem; width: 54px; }
+.smash-broadcast-paywall__lock svg { width: 22px; }
+.smash-broadcast-paywall h1 { font: 500 clamp(2.8rem,5vw,4.6rem)/.97 Georgia,serif; letter-spacing: -.045em; margin: .55rem 0 1rem; }
+.smash-broadcast-paywall > article > p { color: var(--nusantara-muted); font-size: .76rem; line-height: 1.75; max-width: 620px; }
+.smash-broadcast-paywall__facts { color: var(--nusantara-dim); display: flex; font-size: .58rem; gap: 1rem; margin: 1.1rem 0; }
+.smash-broadcast-paywall__facts span { align-items: center; display: flex; gap: .35rem; }
+.smash-broadcast-paywall__facts svg { width: 13px; }
+.smash-broadcast-paywall aside { background: var(--nusantara-up); border: 1px solid var(--nusantara-line); border-radius: 11px; margin-top: 1.5rem; max-width: 390px; padding: 1.3rem; }
+.smash-broadcast-paywall aside > small { color: var(--nusantara-gold); font-size: .52rem; font-weight: 800; letter-spacing: .15em; }
+.smash-broadcast-paywall aside h2 { font: 500 1.8rem Georgia,serif; margin: .35rem 0; }
+.smash-broadcast-paywall aside p { color: var(--nusantara-muted); font-size: .63rem; line-height: 1.6; }
+.smash-broadcast-paywall aside .nusantara-button { margin-top: 1rem; }
+
+@media (max-width: 760px) {
+  body { padding-bottom: 67px; }
+  .nusantara-nav { height: 61px; padding: 0 18px; }
+  .nusantara-nav__links, .nusantara-nav__account, .nusantara-nav__menu { display: none; }
+  .nusantara-nav__round { background: transparent; border: 0; }
+  .nusantara-logo { height: 54px; width: 86px; }
+  .nusantara-logo img { height: 54px; width: 86px; }
+  .nusantara-nav-spacer { height: 61px; }
+  .nusantara-home { margin-top: -61px; }
+  .nusantara-bottom-nav {
+    backdrop-filter: blur(16px);
+    background: rgba(30,27,19,.97);
+    border-top: 1px solid var(--nusantara-line);
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    height: 67px;
+    left: 0;
+    position: fixed;
+    right: 0;
+    z-index: 55;
+  }
+  .nusantara-bottom-nav a { align-items: center; color: var(--nusantara-dim); display: flex; flex-direction: column; font-size: .5rem; gap: 3px; justify-content: center; }
+  .nusantara-bottom-nav a.active { color: var(--nusantara-gold); }
+  .nusantara-bottom-nav svg { height: 18px; width: 18px; }
+  .nusantara-hero { height: 77vh; min-height: 615px; }
+  .nusantara-hero__art { background-position: 65% center; }
+  .nusantara-hero__wash { background: linear-gradient(0deg,var(--nusantara-bg) 0%,rgba(23,21,15,.9) 32%,transparent 68%),linear-gradient(180deg,rgba(15,14,10,.35),transparent 20%); }
+  .nusantara-hero__content { bottom: 3.1rem; left: 19px; max-width: none; right: 19px; top: auto; transform: none; }
+  .nusantara-hero h1 { font-size: 2.65rem; margin: .55rem 0 .85rem; }
+  .nusantara-hero__description { font-size: .72rem; line-height: 1.55; margin: .75rem 0 1rem; -webkit-line-clamp: 2; }
+  .nusantara-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .nusantara-button { font-size: .65rem; height: 43px; padding: 0 .65rem; }
+  .nusantara-hero__index { display: none; }
+  .nusantara-hero__dots { bottom: 22px; }
+  .nusantara-home__content { margin-top: -26px; }
+  .nusantara-section { padding: 2.25rem 0 .8rem 19px; }
+  .nusantara-section__head { margin-bottom: .8rem; padding-right: 18px; }
+  .nusantara-section__head h2 { font-size: 1.3rem; }
+  .nusantara-section__head > button { display: none; }
+  .nusantara-rail { gap: .7rem; padding-right: 19px; }
+  .nusantara-rail__item { flex-basis: 39vw; }
+  .nusantara-rail-arrow { display: none; }
+  .nusantara-poster-card__overlay { display: none; }
+  .nusantara-poster-card__copy strong { font-size: .68rem; }
+  .nusantara-live-feature { padding: 3.6rem 19px .8rem; }
+  .nusantara-live-feature > article { display: block; }
+  .nusantara-live-feature__art { min-height: 215px; }
+  .nusantara-live-feature__art::after { background: linear-gradient(0deg,var(--nusantara-surface),transparent 55%); }
+  .nusantara-live-feature__copy { padding: .8rem 1.25rem 1.5rem; }
+  .nusantara-live-feature__copy h3 { font-size: 1.8rem; }
+  .nusantara-editorial { display: block; margin: 3.8rem 19px 2rem; min-height: 0; }
+  .nusantara-editorial > div { height: 205px; }
+  .nusantara-editorial > div::after { background: linear-gradient(0deg,var(--nusantara-bg-2),transparent 55%); }
+  .nusantara-editorial article { padding: 1.6rem 1.3rem 2rem; }
+  .nusantara-editorial h2 { font-size: 1.8rem; }
+  .nusantara-footer { display: block; margin-top: 3rem; padding: 2.5rem 20px 1.8rem; text-align: center; }
+  .nusantara-footer > div { display: block; }
+  .nusantara-footer p { margin: .8rem 0 1.2rem; }
+  .nusantara-footer nav { justify-content: center; margin-bottom: 1.2rem; }
+  .nusantara-search { align-items: flex-start; padding-top: 24vh; }
+  .nusantara-search h2 { font-size: 1.55rem; }
+  .nusantara-search input { font-size: .78rem; }
+  .nusantara-search__close, .nusantara-detail__close { right: 13px; top: 11px; }
+  .nusantara-detail { background: var(--nusantara-surface); backdrop-filter: none; padding: 0; }
+  .nusantara-detail__card { border: 0; border-radius: 0; width: 100%; }
+  .nusantara-detail__media { height: 53vh; min-height: 390px; }
+  .nusantara-detail__title { bottom: 1.3rem; left: 19px; max-width: calc(100% - 38px); }
+  .nusantara-detail__title h2 { font-size: 2.55rem; }
+  .nusantara-trailer-controls { right: 15px; top: 62px; }
+  .nusantara-trailer-controls button { justify-content: center; padding: 0; width: 40px; }
+  .nusantara-trailer-controls span { display: none; }
+  .nusantara-detail__body { display: block; padding: 1.2rem 19px 8rem; }
+  .nusantara-detail__body aside { margin: 1.6rem 0 0; }
+  .nusantara-detail__body aside > .nusantara-button { display: none; }
+  .nusantara-detail__notice, .nusantara-detail__similar { display: none; }
+  .nusantara-detail__sticky {
+    align-items: center;
+    background: rgba(40,35,25,.98);
+    border-top: 1px solid var(--nusantara-line);
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    left: 0;
+    padding: .7rem 17px;
+    position: fixed;
+    right: 0;
+    z-index: 120;
+  }
+  .nusantara-detail__sticky p { display: flex; flex-direction: column; max-width: 55%; }
+  .nusantara-detail__sticky p small { color: var(--nusantara-dim); font-size: .5rem; }
+  .nusantara-detail__sticky p b { font-size: .7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nusantara-browse__intro { min-height: 440px; padding: 5rem 20px 3.2rem; }
+  .nusantara-browse__intro::after { height: 140px; right: 15px; top: 60px; width: 170px; }
+  .nusantara-browse__intro h1 { font-size: 2.5rem; }
+  .nusantara-browse__intro span { font-size: .72rem; }
+  .nusantara-browse__toolbar { display: block; padding: 1rem 19px; }
+  .nusantara-browse__toolbar form { margin-bottom: .8rem; width: 100%; }
+  .nusantara-browse__filters { margin-right: -19px; }
+  .nusantara-browse__catalog { padding: 2.5rem 19px 4.5rem; }
+  .nusantara-browse__catalog header h2 { font-size: 1.5rem; }
+  .nusantara-browse__grid { gap: 1.5rem .7rem; grid-template-columns: repeat(2,1fr); }
+  .smash-live__hero { height: 550px; padding: 0 20px; }
+  .smash-live__hero-wash { background: linear-gradient(0deg,var(--nusantara-bg) 0%,rgba(23,21,15,.87) 40%,rgba(23,21,15,.24) 75%); }
+  .smash-live__hero-content { align-self: flex-end; padding-bottom: 3.5rem; }
+  .smash-live__hero-content h1 { font-size: 2.55rem; }
+  .smash-live__hero-content > span { font-size: .72rem; }
+  .smash-live__tabs { overflow-x: auto; padding: 0 19px; scrollbar-width: none; }
+  .smash-live__events { padding: 2.5rem 19px 4.5rem; }
+  .smash-live__events > header { align-items: stretch; display: block; }
+  .smash-live__events header h2 { font-size: 1.5rem; }
+  .smash-live__events header label { margin-top: 1rem; width: 100%; }
+  .smash-live__grid { grid-template-columns: 1fr; }
+  .smash-live__grid > article { display: grid; grid-template-columns: 42% 58%; min-height: 150px; }
+  .smash-live-card__art { height: auto; min-height: 150px; }
+  .smash-live-card__art > button { display: none; }
+  .smash-live-card__copy { align-self: center; padding: .95rem; }
+  .smash-live-card__copy h3 { font-size: 1.12rem; }
+  .smash-live__timezone { justify-content: flex-start; }
+  .smash-broadcast { padding: 1rem 0 4.5rem; }
+  .smash-broadcast__topbar { padding: 0 19px; }
+  .smash-broadcast__topbar > div { display: none; }
+  .smash-broadcast__layout { display: block; }
+  .smash-broadcast__player { border-left: 0; border-radius: 0; border-right: 0; }
+  .smash-broadcast__stream-message { bottom: 3.6rem; font-size: .55rem; left: .7rem; right: .7rem; }
+  .smash-broadcast__controls { display: none; }
+  .smash-broadcast__info { padding: 1.5rem 19px 2rem; }
+  .smash-broadcast__info h1 { font-size: 2rem; }
+  .smash-broadcast__info > p { font-size: .7rem; }
+  .smash-chat { border-left: 0; border-radius: 0; border-right: 0; height: 520px; min-height: 0; position: static; }
+  .smash-broadcast-paywall { align-items: flex-end; min-height: calc(100vh - 61px); padding: 6rem 20px 2.5rem; }
+  .smash-broadcast-paywall__wash { background: linear-gradient(0deg,var(--nusantara-bg) 0%,rgba(23,21,15,.88) 50%,rgba(23,21,15,.25)); }
+  .smash-broadcast-paywall > .smash-broadcast__back { left: 20px; }
+  .smash-broadcast-paywall h1 { font-size: 2.65rem; }
+  .smash-broadcast-loading, .smash-broadcast-state { padding: 2.5rem 19px; }
+}
+
+@media (min-width: 761px) and (max-width: 1050px) {
+  .nusantara-browse__grid { grid-template-columns: repeat(4,1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nusantara-hero__art, .nusantara-button, .nusantara-poster-card__art img { transition: none; }
+}
+
 @layer base {
   * {
     @apply border-border;

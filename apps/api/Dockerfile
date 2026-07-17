@@ -30,4 +30,4 @@ RUN npm install tsx
 
 EXPOSE 3001
 
-CMD ["npx", "tsx", "dist/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx dist/server.js"]

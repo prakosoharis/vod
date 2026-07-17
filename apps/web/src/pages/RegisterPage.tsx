@@ -8,11 +8,11 @@ const RegisterPage = () => {
         <div className="bg-warm-charcoal-50 border-2 border-accent-500/20 rounded-2xl p-8 shadow-2xl shadow-accent-500/10">
           <div className="text-center mb-8">
             <img
-              src="https://api.mostara.id/api/uploads/logos/logo1.jpg"
-              alt="MOST Logo"
+              src="/smash-logo-transparent.png"
+              alt="SMASH"
               className="h-16 md:h-20 w-auto mx-auto mb-6 object-contain"
             />
-            <h1 className="text-2xl font-bold text-cream-50 mb-2">Bergabung dengan MOST</h1>
+            <h1 className="text-2xl font-bold text-cream-50 mb-2">Bergabung dengan SMASH</h1>
             <p className="text-cream-200 text-sm">Mulai petualangan menonton Anda</p>
           </div>
 

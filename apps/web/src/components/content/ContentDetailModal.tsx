@@ -1,21 +1,13 @@
-import { X, Play, Plus, Share2, Star, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Loader2, Pause, Play, Plus, Share2, Volume2, VolumeX, X } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import ContentRow from '../home/ContentRow'
 import PaymentOptionsModal from '../payment/PaymentOptionsModal'
+import ContentRow from '../home/ContentRow'
 import { paymentService } from '@/services/payment.service'
+import { userService } from '@/services/user.service'
 import { useAuthStore } from '@/stores/authStore'
 import type { Content } from '@/types'
-
-// Extended types for content with additional properties
-interface ContentWithDetails extends Omit<Content, 'cast'> {
-  cast?: Array<{
-    name: string
-    role: string
-    avatar_url?: string
-  }>
-}
 
 interface ContentDetailModalProps {
   content: Content | null
@@ -25,233 +17,322 @@ interface ContentDetailModalProps {
   onContentChange?: (content: Content) => void
 }
 
-const ContentDetailModal = ({ content, isOpen, onClose, similarContent = [], onContentChange }: ContentDetailModalProps) => {
+const formatRating = (rating: Content['rating']) => {
+  const value = Number(rating)
+  return Number.isFinite(value) ? value.toFixed(1) : null
+}
+
+const ContentDetailModal = ({
+  content,
+  isOpen,
+  onClose,
+  similarContent = [],
+  onContentChange,
+}: ContentDetailModalProps) => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const trailerRef = useRef<HTMLVideoElement>(null)
   const { isAuthenticated } = useAuthStore()
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [trailerPlaying, setTrailerPlaying] = useState(true)
+  const [trailerMuted, setTrailerMuted] = useState(true)
+  const [trailerFailed, setTrailerFailed] = useState(false)
+  const [inList, setInList] = useState(false)
+  const [selectedSeason, setSelectedSeason] = useState(1)
 
-  // Check if user has access to this content
   const { data: accessInfo, isLoading: checkingAccess } = useQuery({
     queryKey: ['content-access', content?.id],
     queryFn: () => content ? paymentService.checkContentAccess(content.id) : null,
     enabled: isOpen && !!content && isAuthenticated,
   })
+  const hasAccess = accessInfo?.data?.has_access ?? false
+  const { data: watchlist = [] } = useQuery({
+    queryKey: ['watchlist'],
+    queryFn: userService.getWatchlist,
+    enabled: isAuthenticated,
+  })
 
-  const hasAccess = accessInfo?.data?.has_access || false
+  const watchlistMutation = useMutation({
+    mutationFn: async () => {
+      if (!content) throw new Error('Konten tidak tersedia')
+      const removing = inList
+      if (removing) await userService.removeFromWatchlist(content.id)
+      else await userService.addToWatchlist(content.id)
+      return { removing }
+    },
+    onSuccess: ({ removing }) => {
+      queryClient.setQueryData<Content[]>(['watchlist'], (current = []) =>
+        removing
+          ? current.filter((item) => item.id !== content?.id)
+          : current.some((item) => item.id === content?.id) || !content
+            ? current
+            : [content, ...current],
+      )
+      setInList(!removing)
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+    },
+    onError: (error: any) => {
+      window.alert(error.response?.data?.error || 'Gagal memperbarui Daftar Saya')
+    },
+  })
 
-  // Close on ESC key and prevent background scroll
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+    if (!isOpen) return
+    setTrailerPlaying(true)
+    setTrailerMuted(true)
+    setTrailerFailed(false)
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
     }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEsc)
-      document.body.style.overflow = 'hidden' // Prevent background scroll
-    }
-
+    document.addEventListener('keydown', handleEscape)
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', handleEsc)
-      document.body.style.overflow = 'unset'
+      document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = ''
     }
-  }, [isOpen, onClose])
+  }, [content?.id, isOpen, onClose])
 
-  // Action button handlers
-  const handlePlayClick = () => {
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/watch/${content?.id}` } })
-      return
-    }
+  const seasons = useMemo(
+    () => Array.from(new Set((content?.episodes || []).map((episode) => episode.season_number))).sort((a, b) => a - b),
+    [content?.episodes],
+  )
+  const visibleEpisodes = useMemo(
+    () => (content?.episodes || []).filter((episode) => episode.season_number === selectedSeason),
+    [content?.episodes, selectedSeason],
+  )
 
-    if (!hasAccess) {
-      // Show payment options modal
-      setShowPaymentModal(true)
-      return
-    }
+  useEffect(() => {
+    if (seasons.length) setSelectedSeason(seasons[0])
+  }, [content?.id, seasons.join(',')])
 
-    // User has access, navigate to player
-    if (content) {
-      navigate(`/watch/${content.id}`)
-      onClose()
-    }
-  }
-
-  const handleAddToList = () => {
-    // Placeholder for watchlist functionality
-    if (content) {
-      // TODO: Implement watchlist API call
-      // Show feedback to user
-      alert(`"${content.title}" ditambahkan ke daftar menonton!`)
-    }
-  }
-
-  const handleShare = () => {
-    // Placeholder for share functionality
-    if (content && navigator.share) {
-      navigator.share({
-        title: content.title,
-        text: content.description || `Tonton ${content.title} di MOST!`,
-        url: `${window.location.origin}/watch/${content.id}`
-      }).catch(() => {
-        // Silently handle share cancellation
-      })
-    } else if (content) {
-      // Fallback: Copy to clipboard
-      navigator.clipboard.writeText(`${window.location.origin}/watch/${content.id}`)
-      alert('Link disalin ke clipboard!')
-    }
-  }
-
-  // Mock cast data if not provided
-  const mockCast = [
-    { name: 'John Doe', role: 'Director', avatar_url: undefined },
-    { name: 'Jane Smith', role: 'Producer', avatar_url: undefined },
-    { name: 'Bob Johnson', role: 'Main Actor', avatar_url: undefined },
-    { name: 'Alice Brown', role: 'Supporting Actor', avatar_url: undefined },
-    { name: 'Charlie Wilson', role: 'Writer', avatar_url: undefined },
-  ]
+  useEffect(() => {
+    setInList(Boolean(content && watchlist.some((item) => item.id === content.id)))
+  }, [content?.id, watchlist])
 
   if (!isOpen || !content) return null
 
-  const contentWithDetails = content as ContentWithDetails
-  const cast = contentWithDetails.cast || mockCast
+  const playOrPurchase = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/watch/${content.id}` } })
+      return
+    }
+    if (!hasAccess) {
+      setShowPaymentModal(true)
+      return
+    }
+    onClose()
+    const firstEpisode = content.type === 'SERIES' ? content.episodes?.[0] : null
+    navigate(`/watch/${content.id}${firstEpisode ? `?episode=${firstEpisode.id}` : ''}`)
+  }
+
+  const playEpisode = (episodeId: string) => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/watch/${content.id}?episode=${episodeId}` } })
+    } else if (!hasAccess) {
+      setShowPaymentModal(true)
+    } else {
+      onClose()
+      navigate(`/watch/${content.id}?episode=${episodeId}`)
+    }
+  }
+
+  const toggleTrailer = async () => {
+    const video = trailerRef.current
+    if (!video) return
+    if (video.paused) {
+      await video.play()
+      setTrailerPlaying(true)
+    } else {
+      video.pause()
+      setTrailerPlaying(false)
+    }
+  }
+
+  const share = async () => {
+    const url = `${window.location.origin}/watch/${content.id}`
+    if (navigator.share) {
+      await navigator.share({ title: content.title, text: content.description || undefined, url }).catch(() => undefined)
+    } else {
+      await navigator.clipboard.writeText(url)
+    }
+  }
+
+  const trailerAvailable = Boolean(content.trailer_url) && !trailerFailed
+  const seriesReady = content.type !== 'SERIES' || Boolean(content.episodes?.length)
+  const cast = content.cast || []
+  const rating = formatRating(content.rating)
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-start justify-center overflow-y-auto"
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-gray-900 max-w-6xl w-full my-4 md:my-6 mx-2 md:mx-4 rounded-lg shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full hover:bg-black/70 text-white transition-colors duration-200"
-          aria-label="Close modal"
-        >
-          <X size={24} />
+    <>
+      <div className="nusantara-detail" role="dialog" aria-modal="true" aria-labelledby="content-detail-title">
+        <button className="nusantara-detail__close" onClick={onClose} aria-label="Tutup detail">
+          <X />
         </button>
-
-        {/* Backdrop Section */}
-        <div className="relative h-[50vh] md:h-[60vh] rounded-t-lg overflow-hidden">
-          <img
-            src={contentWithDetails.backdrop_url || content.thumbnail_url}
-            alt={content.title}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = content.thumbnail_url || 'https://via.placeholder.com/1200x600?text=No+Backdrop'
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent" />
-
-          {/* Content Info on Backdrop */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 max-w-4xl">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">{content.title}</h1>
-            <div className="flex flex-wrap items-center gap-2 md:gap-4 mb-4 text-white/90 text-sm md:text-base">
-              <span>{content.year}</span>
-              <span className="flex items-center gap-1">
-                <Star size={16} className="text-yellow-400 fill-yellow-400" />
-                {content.rating ? (typeof content.rating === 'number' ? content.rating.toFixed(1) : content.rating) : 'N/A'}
-              </span>
-              {contentWithDetails.duration && <span>{contentWithDetails.duration}</span>}
-              {content.genre?.slice(0, 3).map(g => (
-                <span key={g} className="px-2 py-1 bg-white/20 rounded text-xs md:text-sm whitespace-nowrap">{g}</span>
-              ))}
+        <article className="nusantara-detail__card">
+          <div className="nusantara-detail__media">
+            {trailerAvailable ? (
+              <video
+                ref={trailerRef}
+                src={content.trailer_url || undefined}
+                poster={content.backdrop_url || content.thumbnail_url}
+                autoPlay
+                muted={trailerMuted}
+                loop
+                playsInline
+                onPlay={() => setTrailerPlaying(true)}
+                onPause={() => setTrailerPlaying(false)}
+                onError={() => setTrailerFailed(true)}
+              />
+            ) : (
+              <img src={content.backdrop_url || content.thumbnail_url} alt="" />
+            )}
+            <div className="nusantara-detail__wash" />
+            <div className="nusantara-detail__title">
+              <small>{trailerAvailable ? 'TRAILER · SMASH PREMIERE' : 'SMASH PILIHAN'}</small>
+              <h2 id="content-detail-title">{content.title}</h2>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handlePlayClick}
-                disabled={checkingAccess}
-                className="px-6 md:px-8 py-3 bg-red-600 hover:bg-red-700 rounded text-white font-semibold flex items-center gap-2 transition-colors duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {checkingAccess ? (
-                  <>
-                    <Loader2 size={20} className="animate-spin" />
-                    Memeriksa...
-                  </>
-                ) : hasAccess ? (
-                  <>
-                    <Play size={20} fill="white" />
-                    Putar
-                  </>
-                ) : (
-                  <>
-                    <Play size={20} fill="white" />
-                    {isAuthenticated ? 'Sewa/Berlangganan' : 'Login untuk Nonton'}
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleAddToList}
-                className="px-4 md:px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded text-white flex items-center gap-2 transition-colors duration-200 transform hover:scale-105 active:scale-95"
-              >
-                <Plus size={20} /> Daftar Saya
-              </button>
-              <button
-                onClick={handleShare}
-                className="px-4 md:px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded text-white flex items-center gap-2 transition-colors duration-200 transform hover:scale-105 active:scale-95"
-              >
-                <Share2 size={20} /> Bagikan
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Description Section */}
-        <div className="p-4 md:p-8">
-          <h2 className="text-xl md:text-2xl font-semibold mb-3 text-white">Sinopsis</h2>
-          <p className="text-gray-300 leading-relaxed text-sm md:text-base">
-            {content.description || 'Tidak ada deskripsi yang tersedia untuk konten ini.'}
-          </p>
-        </div>
-
-        {/* Cast Section */}
-        <div className="px-4 md:px-8 pb-8">
-          <h2 className="text-xl md:text-2xl font-semibold mb-4 text-white">Pemain & Kru</h2>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-            {cast.slice(0, 10).map((member, idx) => (
-              <div key={idx} className="flex-shrink-0 text-center">
-                <div className="w-16 md:w-24 h-16 md:h-24 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-gray-400">
-                  {member.avatar_url ? (
-                    <img
-                      src={member.avatar_url}
-                      alt={member.name}
-                      className="w-full h-full rounded-full object-cover"
-                      onError={() => {}}
-                    />
-                  ) : (
-                    <span className="text-lg md:text-xl font-bold">
-                      {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs md:text-sm font-medium text-white truncate w-16 md:w-24">{member.name}</p>
-                <p className="text-xs text-gray-400 truncate w-16 md:w-24">{member.role}</p>
+            {trailerAvailable && (
+              <div className="nusantara-trailer-controls">
+                <button onClick={toggleTrailer}>
+                  {trailerPlaying ? <Pause /> : <Play fill="currentColor" />}
+                  <span>{trailerPlaying ? 'Jeda' : 'Putar'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setTrailerMuted((value) => !value)
+                    if (trailerRef.current) trailerRef.current.muted = !trailerMuted
+                  }}
+                >
+                  {trailerMuted ? <VolumeX /> : <Volume2 />}
+                  <span>{trailerMuted ? 'Aktifkan suara' : 'Bisukan'}</span>
+                </button>
               </div>
-            ))}
+            )}
           </div>
-        </div>
 
-        {/* Similar Content Section */}
-        {similarContent && similarContent.length > 0 && (
-          <div className="px-4 md:px-8 pb-8">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-white">Lebih Seperti Ini</h2>
-            <ContentRow title="" contents={similarContent} onInfoClick={onContentChange} />
+          <div className="nusantara-detail__body">
+            <section>
+              <div className="nusantara-meta">
+                {content.year && <span>{content.year}</span>}
+                {rating && <b>{rating}</b>}
+                {content.duration && <span>{content.duration}</span>}
+                <b>{content.type === 'SERIES' ? 'SERIAL' : 'FILM'}</b>
+              </div>
+              <p className="nusantara-detail__synopsis">
+                {content.description || 'Sinopsis untuk tayangan ini belum tersedia.'}
+              </p>
+              {cast.length > 0 && (
+                <p className="nusantara-detail__credits">
+                  <b>Pemeran</b> {cast.slice(0, 5).map((member) => member.name).join(', ')}
+                </p>
+              )}
+              {content.genre?.length > 0 && (
+                <p className="nusantara-detail__credits">
+                  <b>Genre</b> {content.genre.join(', ')}
+                </p>
+              )}
+            </section>
+
+            <aside>
+              <small>{hasAccess ? 'SIAP DITONTON' : 'AKSES TAYANGAN'}</small>
+              <h3>{hasAccess ? 'Akses aktif' : 'Pilih cara menonton'}</h3>
+              <p>
+                {hasAccess
+                  ? 'Anda sudah memiliki akses penuh ke tayangan ini.'
+                  : `Sewa tayangan ini untuk akses selama ${content.rental_price?.duration_hours || 0} jam.`}
+              </p>
+              <button className="nusantara-button is-primary" onClick={playOrPurchase} disabled={checkingAccess || !seriesReady}>
+                {checkingAccess ? <Loader2 className="animate-spin" /> : <Play fill="currentColor" />}
+                {checkingAccess ? 'Memeriksa akses' : !seriesReady ? 'Episode Belum Tersedia' : hasAccess ? 'Tonton Sekarang' : isAuthenticated ? `Sewa ${content.type === 'SERIES' ? 'Series' : 'Film'}` : 'Masuk untuk Menonton'}
+              </button>
+              <div className="nusantara-detail__secondary-actions">
+                <button
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate('/login', { state: { from: window.location.pathname } })
+                      return
+                    }
+                    watchlistMutation.mutate()
+                  }}
+                  disabled={watchlistMutation.isPending}
+                >
+                  {inList ? <Check /> : <Plus />}
+                  {inList ? 'Tersimpan' : 'Daftar Saya'}
+                </button>
+                <button onClick={share}><Share2 /> Bagikan</button>
+              </div>
+            </aside>
           </div>
-        )}
+
+          {!hasAccess && (
+            <div className="nusantara-detail__notice">
+              <b>Tayangan tersedia melalui rental</b>
+              <span>Pilih opsi yang paling sesuai. Pembayaran diproses melalui metode pembayaran Indonesia.</span>
+            </div>
+          )}
+
+          {content.type === 'SERIES' && (
+            <section className="nusantara-detail__episodes">
+              <header>
+                <div><small>DAFTAR EPISODE</small><h3>{content.episodes?.length || 0} episode tersedia</h3></div>
+                {!hasAccess && <span>Sewa series untuk membuka semua episode</span>}
+              </header>
+              {seasons.length > 0 && (
+                <nav className="nusantara-detail__season-tabs" aria-label="Pilih season">
+                  {seasons.map((season) => (
+                    <button
+                      key={season}
+                      className={selectedSeason === season ? 'is-active' : ''}
+                      onClick={() => setSelectedSeason(season)}
+                    >
+                      Season {season}
+                      <small>{content.episodes?.filter((episode) => episode.season_number === season).length || 0} episode</small>
+                    </button>
+                  ))}
+                </nav>
+              )}
+              <div>
+                {visibleEpisodes.map((episode) => (
+                  <button key={episode.id} onClick={() => playEpisode(episode.id)}>
+                    <img src={episode.thumbnail_url || content.thumbnail_url} alt="" />
+                    <span><small>S{episode.season_number} · E{episode.episode_number}</small><b>{episode.title}</b><em>{episode.duration}</em></span>
+                    <Play fill="currentColor" />
+                  </button>
+                ))}
+                {!visibleEpisodes.length && <p>Episode untuk season ini belum tersedia.</p>}
+              </div>
+            </section>
+          )}
+
+          {similarContent.length > 0 && (
+            <div className="nusantara-detail__similar">
+              <ContentRow
+                title="Cerita Serupa"
+                contents={similarContent}
+                onInfoClick={onContentChange}
+                onPlayClick={(next) => {
+                  onClose()
+                  navigate(`/watch/${next.id}`)
+                }}
+              />
+            </div>
+          )}
+        </article>
+
+        <div className="nusantara-detail__sticky">
+          <p><small>{hasAccess ? 'Akses sewa aktif' : 'Perlu disewa'}</small><b>{content.title}</b></p>
+          <button className="nusantara-button is-primary" onClick={playOrPurchase} disabled={!seriesReady}>
+            <Play fill="currentColor" /> {!seriesReady ? 'Belum Tersedia' : hasAccess ? 'Tonton Sekarang' : `Sewa ${content.type === 'SERIES' ? 'Series' : 'Film'}`}
+          </button>
+        </div>
       </div>
 
-      {/* Payment Options Modal */}
-      {content && (
-        <PaymentOptionsModal
-          content={content}
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-        />
-      )}
-    </div>
+      <PaymentOptionsModal
+        content={content}
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+      />
+    </>
   )
 }
 

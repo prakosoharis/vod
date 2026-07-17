@@ -1,30 +1,5 @@
 import api from './api';
 
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  duration_days: number;
-  features: {
-    vod: boolean;
-    live_discount: number;
-  };
-  is_active: boolean;
-}
-
-export interface UserSubscription {
-  id: string;
-  user_id: string;
-  plan_id: string;
-  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
-  started_at: string;
-  expired_at: string;
-  auto_renew: boolean;
-  cancelled_at: string | null;
-  plan: SubscriptionPlan;
-}
-
 export interface UserRental {
   id: string;
   user_id: string;
@@ -83,7 +58,7 @@ export interface AccessInfo {
   success: boolean;
   data: {
     has_access: boolean;
-    access_type: 'subscription' | 'rental' | null;
+    access_type: 'rental' | null;
     expires_at: string | null;
   };
 }
@@ -100,31 +75,6 @@ export interface BroadcastAccessInfo {
 }
 
 class PaymentService {
-  // Get subscription plans
-  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-    const response = await api.get('/payment/subscription/plans');
-    return response.data.data;
-  }
-
-  // Subscribe to a plan
-  async subscribe(planId: string): Promise<PaymentResponse> {
-    const response = await api.post('/payment/subscription/subscribe', {
-      plan_id: planId,
-    });
-    return response.data;
-  }
-
-  // Get user subscription
-  async getUserSubscription(): Promise<UserSubscription | null> {
-    const response = await api.get('/payment/subscription/me');
-    return response.data.data;
-  }
-
-  // Cancel subscription
-  async cancelSubscription(): Promise<void> {
-    await api.post('/payment/subscription/cancel');
-  }
-
   // Rent content
   async rentContent(contentId: string): Promise<PaymentResponse> {
     const response = await api.post('/payment/rental/rent', {

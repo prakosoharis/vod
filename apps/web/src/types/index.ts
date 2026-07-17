@@ -21,7 +21,16 @@ export interface Content {
   cast: Array<{ name: string; role: string }>;
   type: 'MOVIE' | 'SERIES';
   featured: boolean;
+  show_in_latest: boolean;
+  show_in_movie_picks: boolean;
+  show_in_popular_series: boolean;
   created_at: string;
+  rental_price?: {
+    price: number | string;
+    duration_hours: number;
+    is_active: boolean;
+  } | null;
+  episodes?: Episode[];
 
   // HLS Transcoding Fields
   hls_video_id?: string | null;
@@ -29,6 +38,19 @@ export interface Content {
   hls_cdn_url?: string | null;
   transcoding_status?: string | null;
   transcoded_at?: string | null;
+}
+
+export interface Episode {
+  id: string;
+  season_number: number;
+  episode_number: number;
+  title: string;
+  description: string | null;
+  duration: string;
+  thumbnail_url: string | null;
+  video_url: string | null;
+  hls_url: string | null;
+  is_published: boolean;
 }
 
 export interface LiveEvent {

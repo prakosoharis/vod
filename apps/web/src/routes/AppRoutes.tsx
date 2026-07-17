@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
 import Layout from '../components/layout/Layout'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
@@ -16,7 +16,6 @@ const MyListPage = lazy(() => import('../pages/MyListPage'))
 const LiveStreamingPage = lazy(() => import('../pages/LiveStreamingPage'))
 const LiveEventsPage = lazy(() => import('../pages/LiveEventsPage'))
 const LiveBroadcastPage = lazy(() => import('../pages/LiveBroadcastPage'))
-const PricingPage = lazy(() => import('../pages/PricingPage'))
 const PaymentSuccessPage = lazy(() => import('../pages/PaymentSuccessPage'))
 const PaymentErrorPage = lazy(() => import('../pages/PaymentErrorPage'))
 const ProfilePage = lazy(() => import('../pages/ProfilePage'))
@@ -80,13 +79,7 @@ const AppRoutes = () => {
             </Suspense>
           </ProtectedRoute>
         } />
-        <Route path="/pricing" element={
-          <Layout>
-            <Suspense fallback={<LoadingSpinner />}>
-              <PricingPage />
-            </Suspense>
-          </Layout>
-        } />
+        <Route path="/pricing" element={<Navigate to="/browse" replace />} />
         <Route path="/payment/success" element={
           <Suspense fallback={<LoadingSpinner />}>
             <PaymentSuccessPage />

@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../config/database.js';
 
-// Check if user has access to VOD content (either subscription or rental)
+// VOD access is granted exclusively by an active rental.
 export const checkContentAccess = async (
   request: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply
@@ -16,22 +16,6 @@ export const checkContentAccess = async (
         error: 'Unauthorized',
         hasAccess: false,
       });
-    }
-
-    // Check subscription
-    const subscription = await prisma.userSubscription.findFirst({
-      where: {
-        user_id: userId,
-        status: 'ACTIVE',
-        expired_at: { gt: new Date() },
-      },
-    });
-
-    if (subscription) {
-      // User has active subscription, grant access
-      (request as any).accessType = 'subscription';
-      (request as any).expiresAt = subscription.expired_at;
-      return;
     }
 
     // Check rental
@@ -53,7 +37,7 @@ export const checkContentAccess = async (
     // No access
     return reply.status(403).send({
       success: false,
-      error: 'You need to subscribe or rent this content to watch',
+      error: 'Masa sewa tidak aktif. Silakan sewa film ini untuk menonton.',
       hasAccess: false,
       requiresPayment: true,
     });
@@ -66,7 +50,7 @@ export const checkContentAccess = async (
   }
 };
 
-// Check if user has access to live event (subscription or ticket)
+// Check if user has access to a live event (free event or ticket).
 export const checkEventAccess = async (
   request: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply
@@ -144,24 +128,6 @@ export const getAccessInfo = async (
 
     if (!userId) {
       (request as any).accessInfo = { hasAccess: false, accessType: null };
-      return;
-    }
-
-    // Check subscription
-    const subscription = await prisma.userSubscription.findFirst({
-      where: {
-        user_id: userId,
-        status: 'ACTIVE',
-        expired_at: { gt: new Date() },
-      },
-    });
-
-    if (subscription) {
-      (request as any).accessInfo = {
-        hasAccess: true,
-        accessType: 'subscription',
-        expiresAt: subscription.expired_at,
-      };
       return;
     }
 
