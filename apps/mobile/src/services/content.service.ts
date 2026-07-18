@@ -32,6 +32,22 @@ const normalizeContent = (content: Content): Content => ({
   trailer_url: resolveMediaUrl(content.trailer_url),
   hls_url: resolveMediaUrl(content.hls_url),
   hls_cdn_url: resolveMediaUrl(content.hls_cdn_url),
+  rating: content.rating == null ? null : Number(content.rating),
+  rental_price: content.rental_price
+    ? {
+        ...content.rental_price,
+        price: Number(content.rental_price.price || 0),
+        duration_hours: Number(content.rental_price.duration_hours || 0),
+      }
+    : null,
+  episodes: (content.episodes || []).map((episode) => ({
+    ...episode,
+    season_number: Number(episode.season_number || 1),
+    episode_number: Number(episode.episode_number || 1),
+    thumbnail_url: resolveMediaUrl(episode.thumbnail_url),
+    video_url: resolveMediaUrl(episode.video_url),
+    hls_url: resolveMediaUrl(episode.hls_url),
+  })),
 });
 
 const normalizeContentListResponse = (response: ContentListResponse): ContentListResponse => ({
@@ -64,6 +80,7 @@ export class ContentService {
     genre?: string;
     type?: string;
     search?: string;
+    homepage_section?: 'latest' | 'movie_picks' | 'popular_series';
   }): Promise<ContentListResponse> {
     try {
       const response = await apiService.getAllContent(params);
@@ -111,11 +128,29 @@ export class ContentService {
 
   async getNewReleases(limit: number = 20): Promise<Content[]> {
     try {
-      const response = await apiService.getAllContent({ limit });
+      const response = await apiService.getAllContent({ limit, homepage_section: 'latest' });
       return response.data.map(normalizeContent);
     } catch (error) {
       throw error;
     }
+  }
+
+  async getMoviePicks(limit: number = 10): Promise<Content[]> {
+    const response = await apiService.getAllContent({
+      limit,
+      type: 'MOVIE',
+      homepage_section: 'movie_picks',
+    });
+    return response.data.map(normalizeContent);
+  }
+
+  async getPopularSeries(limit: number = 10): Promise<Content[]> {
+    const response = await apiService.getAllContent({
+      limit,
+      type: 'SERIES',
+      homepage_section: 'popular_series',
+    });
+    return response.data.map(normalizeContent);
   }
 
   async getActionContent(limit: number = 20): Promise<Content[]> {

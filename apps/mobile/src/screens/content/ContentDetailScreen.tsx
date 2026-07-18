@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,27 +18,12 @@ import { SafeIcon } from '../../components/ui';
 import PaymentOptionsModal from '../../components/payment/PaymentOptionsModal';
 import { RootStackParamList } from '../../types';
 import { COLORS, THEME } from '../../constants';
-import { paymentService, userService, PaymentResponse } from '../../services';
+import { contentService, paymentService, userService, PaymentResponse } from '../../services';
 import { useAuthStore } from '../../store/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ContentDetail'>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const hasActiveSubscription = (subscription: any): boolean => {
-  if (!subscription) {
-    return false;
-  }
-
-  const status = String(subscription.status || '').toUpperCase();
-  const expiry = subscription.expired_at || subscription.end_date;
-
-  if (status !== 'ACTIVE' || !expiry) {
-    return false;
-  }
-
-  return new Date(expiry).getTime() > Date.now();
-};
 
 const hasActiveRentalForContent = (rentals: any[], contentId: string): boolean => {
   return rentals.some((rental) => {
@@ -48,12 +33,32 @@ const hasActiveRentalForContent = (rentals: any[], contentId: string): boolean =
 };
 
 const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { content } = route.params;
+  const { content: initialContent } = route.params;
   const { isAuthenticated, user } = useAuthStore();
   const queryClient = useQueryClient();
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | undefined>();
+
+  const { data: latestContent } = useQuery({
+    queryKey: ['content', initialContent.id],
+    queryFn: () => contentService.getContentById(initialContent.id),
+    initialData: initialContent,
+  });
+  const content = latestContent || initialContent;
+  const publishedEpisodes = (content.episodes || []).filter((episode) => episode.is_published);
+  const seasons = [...new Set(publishedEpisodes.map((episode) => episode.season_number))].sort((a, b) => a - b);
+  const selectedEpisode = publishedEpisodes.find((episode) => episode.id === selectedEpisodeId)
+    || publishedEpisodes.find((episode) => episode.season_number === selectedSeason);
+
+  useEffect(() => {
+    if (content.type === 'SERIES' && seasons.length > 0 && !seasons.includes(selectedSeason)) {
+      setSelectedSeason(seasons[0]);
+      setSelectedEpisodeId(undefined);
+    }
+  }, [content.type, seasons, selectedSeason]);
 
   // Check if content is in watchlist
   const { data: isInWatchlist } = useQuery({
@@ -136,7 +141,10 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
         if (accessInfo.has_access) {
           console.log('✅ Content access granted via API');
-          navigation.navigate('VideoPlayer', { contentId: content.id });
+          navigation.navigate('VideoPlayer', {
+            contentId: content.id,
+            episodeId: content.type === 'SERIES' ? selectedEpisode?.id : undefined,
+          });
           return;
         } else {
           console.log('⚠️ No access via content check API');
@@ -144,16 +152,6 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       } catch (accessError: any) {
         console.log('❌ Content access check failed:', accessError.message);
         contentAccessError = accessError;
-      }
-
-      const subscription = await paymentService.getMySubscription();
-      console.log('=== SUBSCRIPTION FALLBACK CHECK ===');
-      console.log('Raw subscription data:', JSON.stringify(subscription, null, 2));
-
-      if (hasActiveSubscription(subscription)) {
-        console.log('✅ Content access granted via active subscription fallback');
-        navigation.navigate('VideoPlayer', { contentId: content.id });
-        return;
       }
 
       const rentals = await paymentService.getMyRentals();
@@ -167,7 +165,10 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
       if (hasActiveRentalForContent(rentals, content.id)) {
         console.log('✅ Content access granted via active rental fallback');
-        navigation.navigate('VideoPlayer', { contentId: content.id });
+        navigation.navigate('VideoPlayer', {
+          contentId: content.id,
+          episodeId: content.type === 'SERIES' ? selectedEpisode?.id : undefined,
+        });
         return;
       }
 
@@ -207,7 +208,10 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handlePaymentSuccess = () => {
     // After successful payment, navigate to video player
-    navigation.navigate('VideoPlayer', { contentId: content.id });
+    navigation.navigate('VideoPlayer', {
+      contentId: content.id,
+      episodeId: content.type === 'SERIES' ? selectedEpisode?.id : undefined,
+    });
   };
 
   const handleRentalPaymentCreated = (paymentResponse: PaymentResponse) => {
@@ -217,11 +221,6 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       contentId: content.id,
       type: 'rental',
     });
-  };
-
-  const handleNavigateToSubscription = () => {
-    // Navigate to pricing/subscription screen
-    navigation.navigate('Pricing' as any);
   };
 
   const handleBackPress = () => {
@@ -330,6 +329,19 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
             {/* Action Buttons */}
             <View style={styles.actionsContainer}>
+              {content.trailer_url && (
+                <TouchableOpacity
+                  style={styles.trailerButton}
+                  onPress={() => navigation.navigate('VideoPlayer', {
+                    contentId: content.id,
+                    previewUrl: content.trailer_url!,
+                    previewTitle: `Trailer · ${content.title}`,
+                  })}
+                >
+                  <SafeIcon name="play-circle-outline" size={22} color={COLORS.cream[50]} />
+                  <Text style={styles.trailerButtonText}>Putar Trailer</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={styles.playButton}
                 onPress={handlePlayPress}
@@ -392,6 +404,50 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               </View>
             )}
 
+            {content.type === 'SERIES' && publishedEpisodes.length > 0 && (
+              <View style={styles.episodesContainer}>
+                <Text style={styles.sectionTitle}>Episode</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.seasonList}>
+                  {seasons.map((season) => (
+                    <TouchableOpacity
+                      key={season}
+                      style={[styles.seasonChip, selectedSeason === season && styles.seasonChipActive]}
+                      onPress={() => {
+                        setSelectedSeason(season);
+                        setSelectedEpisodeId(undefined);
+                      }}
+                    >
+                      <Text style={[styles.seasonText, selectedSeason === season && styles.seasonTextActive]}>
+                        Season {season}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+                {publishedEpisodes
+                  .filter((episode) => episode.season_number === selectedSeason)
+                  .sort((a, b) => a.episode_number - b.episode_number)
+                  .map((episode) => (
+                    <TouchableOpacity
+                      key={episode.id}
+                      style={[
+                        styles.episodeCard,
+                        selectedEpisode?.id === episode.id && styles.episodeCardActive,
+                      ]}
+                      onPress={() => setSelectedEpisodeId(episode.id)}
+                    >
+                      <View style={styles.episodeNumber}>
+                        <Text style={styles.episodeNumberText}>{episode.episode_number}</Text>
+                      </View>
+                      <View style={styles.episodeInfo}>
+                        <Text style={styles.episodeTitle}>{episode.title}</Text>
+                        {!!episode.duration && <Text style={styles.episodeDuration}>{episode.duration}</Text>}
+                      </View>
+                      <SafeIcon name="play-arrow" size={22} color={COLORS.accent[400]} />
+                    </TouchableOpacity>
+                  ))}
+              </View>
+            )}
+
             {/* Cast */}
             {content.cast && content.cast.length > 0 && (
               <View style={styles.castContainer}>
@@ -433,8 +489,9 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         onClose={() => setShowPaymentModal(false)}
         contentId={content.id}
         contentTitle={content.title}
+        price={content.rental_price?.price}
+        durationHours={content.rental_price?.duration_hours}
         onPaymentSuccess={handlePaymentSuccess}
-        onNavigateToSubscription={handleNavigateToSubscription}
         onRentalPaymentCreated={handleRentalPaymentCreated}
       />
     </>
@@ -535,6 +592,88 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     marginBottom: THEME.spacing.xl,
+  },
+  trailerButton: {
+    minHeight: 48,
+    marginBottom: THEME.spacing.md,
+    borderRadius: THEME.borderRadius.full,
+    borderWidth: 1,
+    borderColor: `${COLORS.cream[100]}35`,
+    backgroundColor: `${COLORS.cream[50]}12`,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: THEME.spacing.sm,
+  },
+  trailerButtonText: {
+    color: COLORS.cream[50],
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  episodesContainer: {
+    marginBottom: THEME.spacing.xl,
+  },
+  seasonList: {
+    marginBottom: THEME.spacing.md,
+  },
+  seasonChip: {
+    paddingVertical: THEME.spacing.sm,
+    paddingHorizontal: THEME.spacing.md,
+    marginRight: THEME.spacing.sm,
+    borderRadius: THEME.borderRadius.full,
+    backgroundColor: COLORS.warmCharcoal[50],
+    borderWidth: 1,
+    borderColor: `${COLORS.cream[200]}25`,
+  },
+  seasonChipActive: {
+    backgroundColor: COLORS.accent[500],
+    borderColor: COLORS.accent[500],
+  },
+  seasonText: {
+    color: COLORS.cream[200],
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  seasonTextActive: {
+    color: COLORS.cream[50],
+  },
+  episodeCard: {
+    minHeight: 68,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: THEME.spacing.md,
+    marginBottom: THEME.spacing.sm,
+    borderRadius: THEME.borderRadius.md,
+    backgroundColor: COLORS.warmCharcoal[50],
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  episodeCardActive: {
+    borderColor: COLORS.accent[500],
+    backgroundColor: `${COLORS.accent[500]}18`,
+  },
+  episodeNumber: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: `${COLORS.accent[500]}25`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: THEME.spacing.md,
+  },
+  episodeNumberText: {
+    color: COLORS.accent[300],
+    fontWeight: THEME.typography.fontWeight.bold,
+  },
+  episodeInfo: {
+    flex: 1,
+  },
+  episodeTitle: {
+    color: COLORS.cream[50],
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  episodeDuration: {
+    color: COLORS.cream[200],
+    fontSize: THEME.typography.fontSize.xs,
+    marginTop: 3,
   },
   playButton: {
     borderRadius: THEME.borderRadius.full,

@@ -45,8 +45,8 @@ const Input: React.FC<InputProps> = ({
         <TextInput
           style={[
             styles.input,
-            leftIcon && styles.inputWithLeftIcon,
-            rightIcon && styles.inputWithRightIcon,
+            Boolean(leftIcon) && styles.inputWithLeftIcon,
+            Boolean(rightIcon) && styles.inputWithRightIcon,
           ]}
           placeholderTextColor={COLORS.cream[200]}
           onFocus={() => setIsFocused(true)}
@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: 'rgba(139, 126, 116, 0.3)', // cream[200] with 30% opacity
-    borderRadius: THEME.borderRadius.md,
-    backgroundColor: COLORS.warmCharcoal[100],
-    minHeight: 48,
+    borderRadius: THEME.borderRadius.lg,
+    backgroundColor: COLORS.warmCharcoal[200],
+    minHeight: 52,
   },
   inputFocused: {
     borderColor: COLORS.accent[500], // Burnt sienna on focus

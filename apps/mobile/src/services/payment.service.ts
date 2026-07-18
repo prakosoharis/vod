@@ -23,7 +23,7 @@ export interface PaymentResponse {
 
 export interface AccessCheckResponse {
   has_access: boolean;
-  access_type: 'subscription' | 'rental' | 'free' | 'ticket' | null;
+  access_type: 'rental' | 'free' | 'ticket' | null;
   expires_at: string | null;
   ticket_price?: number;
   can_buy_ticket?: boolean;

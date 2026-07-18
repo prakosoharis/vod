@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Platform, TouchableOpacity } from 'react-native';
+import { Image, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { SafeIcon } from '../components/ui';
@@ -12,6 +12,7 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import { MainTabParamList, RootStackParamList } from '../types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const smashLogo = require('../assets/smash-logo-transparent.png');
 
 const TabNavigator = () => {
   const navigation = useNavigation();
@@ -60,8 +61,8 @@ const TabNavigator = () => {
         tabBarActiveTintColor: COLORS.accent[500],
         tabBarInactiveTintColor: COLORS.cream[200],
         tabBarStyle: {
-          backgroundColor: COLORS.warmCharcoal[100],
-          borderTopColor: `${COLORS.warmCharcoal[50]}80`,
+          backgroundColor: COLORS.warmCharcoal[50],
+          borderTopColor: `${COLORS.cream[50]}14`,
           borderTopWidth: 1,
           height: 65,
           paddingBottom: 6,
@@ -86,7 +87,7 @@ const TabNavigator = () => {
         },
         headerStyle: {
           backgroundColor: COLORS.warmCharcoal[100],
-          borderBottomColor: COLORS.warmCharcoal[50],
+          borderBottomColor: `${COLORS.cream[50]}12`,
           borderBottomWidth: 1,
           elevation: 0,
           shadowOpacity: 0,
@@ -104,6 +105,13 @@ const TabNavigator = () => {
         options={{
           title: 'Beranda',
           headerShown: true,
+          headerTitle: () => (
+            <Image
+              source={smashLogo}
+              resizeMode="contain"
+              style={{ width: 92, height: 54 }}
+            />
+          ),
           headerRight: () => <SearchButton />,
         }}
       />

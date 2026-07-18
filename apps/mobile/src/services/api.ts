@@ -99,6 +99,7 @@ class ApiService {
     genre?: string;
     type?: string;
     search?: string;
+    homepage_section?: 'latest' | 'movie_picks' | 'popular_series';
   }) {
     const response = await this.client.get('/content', { params });
     return response.data;

@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { SafeIcon } from '../ui';
 import { COLORS, THEME } from '../../constants';
 import { paymentService, PaymentResponse } from '../../services';
@@ -18,8 +17,9 @@ interface PaymentOptionsModalProps {
   onClose: () => void;
   contentId: string;
   contentTitle: string;
+  price?: number;
+  durationHours?: number;
   onPaymentSuccess: () => void;
-  onNavigateToSubscription: () => void;
   onRentalPaymentCreated?: (paymentResponse: PaymentResponse) => void;
 }
 
@@ -28,17 +28,16 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
   onClose,
   contentId,
   contentTitle,
+  price = 0,
+  durationHours = 24,
   onPaymentSuccess,
-  onNavigateToSubscription,
   onRentalPaymentCreated,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingType, setProcessingType] = useState<'rent' | 'subscribe' | null>(null);
 
   const handleRentContent = async () => {
     try {
       setIsProcessing(true);
-      setProcessingType('rent');
 
       // Call backend to create rental payment session
       const paymentResponse = await paymentService.rentContent(contentId);
@@ -65,13 +64,7 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
       );
     } finally {
       setIsProcessing(false);
-      setProcessingType(null);
     }
-  };
-
-  const handleNavigateToSubscription = () => {
-    onClose();
-    onNavigateToSubscription();
   };
 
   return (
@@ -87,9 +80,9 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <SafeIcon name="lock" size={48} color={COLORS.accent[500]} />
-            <Text style={styles.title}>Konten Premium</Text>
+            <Text style={styles.title}>Sewa Tayangan</Text>
             <Text style={styles.subtitle}>
-              Pilih cara untuk menonton "{contentTitle}"
+              Akses penuh untuk "{contentTitle}" selama masa sewa aktif.
             </Text>
           </View>
 
@@ -106,10 +99,12 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
                 <SafeIcon name="play-circle-outline" size={32} color={COLORS.accent[500]} />
                 <View style={styles.optionInfo}>
                   <Text style={styles.optionTitle}>Sewa</Text>
-                  <Text style={styles.optionDescription}>Tonton selama 24 jam</Text>
-                  <Text style={styles.optionPrice}>Rp 10.000</Text>
+                  <Text style={styles.optionDescription}>Tonton selama {durationHours} jam</Text>
+                  <Text style={styles.optionPrice}>
+                    Rp {Math.max(0, Number(price)).toLocaleString('id-ID')}
+                  </Text>
                 </View>
-                {isProcessing && processingType === 'rent' ? (
+                {isProcessing ? (
                   <ActivityIndicator size="small" color={COLORS.accent[500]} />
                 ) : (
                   <SafeIcon name="chevron-right" size={24} color={COLORS.cream[200]} />
@@ -117,34 +112,6 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
               </View>
             </TouchableOpacity>
 
-            {/* Subscription Option */}
-            <TouchableOpacity
-              style={styles.optionCard}
-              onPress={handleNavigateToSubscription}
-              disabled={isProcessing}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={[COLORS.accent[500], COLORS.accent[600]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.optionGradient}
-              >
-                <SafeIcon name="stars" size={32} color={COLORS.cream[50]} />
-                <View style={styles.optionInfo}>
-                  <Text style={[styles.optionTitle, styles.optionTitleLight]}>
-                    Berlangganan
-                  </Text>
-                  <Text style={[styles.optionDescription, styles.optionDescriptionLight]}>
-                    Akses unlimited semua konten
-                  </Text>
-                  <Text style={[styles.optionPrice, styles.optionPriceLight]}>
-                    Mulai Rp 49.000/bulan
-                  </Text>
-                </View>
-                <SafeIcon name="chevron-right" size={24} color={COLORS.cream[50]} />
-              </LinearGradient>
-            </TouchableOpacity>
           </View>
 
           {/* Close Button */}

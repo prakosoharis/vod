@@ -24,6 +24,7 @@ const BrowseScreen: React.FC = () => {
   const { width } = useWindowDimensions();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<'ALL' | 'MOVIE' | 'SERIES'>('ALL');
   const gridGap = THEME.spacing.sm;
   const gridPadding = THEME.spacing.sm;
   const columnCount = width >= 900 ? 6 : width >= 700 ? 5 : width >= 520 ? 4 : 3;
@@ -64,8 +65,11 @@ const BrowseScreen: React.FC = () => {
   });
 
   const { data: allContent, isLoading: allLoading } = useQuery({
-    queryKey: ['all-content'],
-    queryFn: () => contentService.getAllContent({ limit: 50 }),
+    queryKey: ['all-content', selectedType],
+    queryFn: () => contentService.getAllContent({
+      limit: 50,
+      type: selectedType === 'ALL' ? undefined : selectedType,
+    }),
     enabled: !searchQuery && (!selectedGenre || selectedGenre === 'Semua'),
   });
 
@@ -114,7 +118,7 @@ const BrowseScreen: React.FC = () => {
   const renderContentItem = ({ item }: { item: Content }) => (
     <ContentCard
       content={item}
-      onPress={() => navigation.navigate('VideoPlayer', { contentId: item.id })}
+      onPress={() => navigation.navigate('ContentDetail', { content: item })}
       onInfoPress={() => navigation.navigate('ContentDetail', { content: item })}
       size="small"
       dimensions={cardDimensions}
@@ -148,6 +152,24 @@ const BrowseScreen: React.FC = () => {
               </TouchableOpacity>
             )}
           </View>
+        </View>
+
+        <View style={styles.typeTabs}>
+          {([
+            ['ALL', 'Semua'],
+            ['MOVIE', 'Film'],
+            ['SERIES', 'Serial'],
+          ] as const).map(([value, label]) => (
+            <TouchableOpacity
+              key={value}
+              style={[styles.typeTab, selectedType === value && styles.typeTabActive]}
+              onPress={() => setSelectedType(value)}
+            >
+              <Text style={[styles.typeTabText, selectedType === value && styles.typeTabTextActive]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
       {/* Genre Filter */}
@@ -209,6 +231,30 @@ const styles = StyleSheet.create({
     paddingBottom: THEME.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: `${COLORS.warmCharcoal[50]}80`,
+  },
+  typeTabs: {
+    flexDirection: 'row',
+    marginHorizontal: THEME.spacing.lg,
+    marginTop: THEME.spacing.md,
+    padding: 4,
+    borderRadius: THEME.borderRadius.full,
+    backgroundColor: COLORS.warmCharcoal[50],
+  },
+  typeTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: THEME.spacing.sm,
+    borderRadius: THEME.borderRadius.full,
+  },
+  typeTabActive: {
+    backgroundColor: COLORS.accent[500],
+  },
+  typeTabText: {
+    color: COLORS.cream[200],
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  typeTabTextActive: {
+    color: COLORS.cream[50],
   },
   genreList: {
     paddingHorizontal: THEME.spacing.lg,

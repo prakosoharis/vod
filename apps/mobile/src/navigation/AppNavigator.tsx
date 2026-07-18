@@ -11,21 +11,18 @@ import SearchScreen from '../screens/search/SearchScreen';
 import VideoPlayerScreen from '../screens/player/VideoPlayerScreen';
 import LiveStreamScreen from '../screens/live/LiveStreamScreen';
 import ContentDetailScreen from '../screens/content/ContentDetailScreen';
-import PricingScreen from '../screens/payment/PricingScreen';
 import PaymentWebViewScreen from '../screens/payment/PaymentWebViewScreen';
 import PaymentSuccessScreen from '../screens/payment/PaymentSuccessScreen';
 import PaymentErrorScreen from '../screens/payment/PaymentErrorScreen';
 import MyListScreen from '../screens/mylist/MyListScreen';
 import WatchHistoryScreen from '../screens/history/WatchHistoryScreen';
-import SubscriptionScreen from '../screens/subscription/SubscriptionScreen';
 import RentalHistoryScreen from '../screens/rentals/RentalHistoryScreen';
 import LiveEventsScreen from '../screens/live/LiveEventsScreen';
-import UpcomingScreen from '../screens/upcoming/UpcomingScreen';
 import { RootStackParamList } from '../types';
 import { COLORS } from '../constants';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const mostaraLogo = require('../assets/logo.png');
+const smashLogo = require('../assets/smash-logo-transparent.png');
 let hasShownInitialSplash = false;
 
 const AppNavigator = () => {
@@ -46,14 +43,16 @@ const AppNavigator = () => {
     const splashTimer = setTimeout(() => {
       hasShownInitialSplash = true;
       setShowSplash(false);
-    }, 5000);
+    }, 1800);
     return () => clearTimeout(splashTimer);
   }, [showSplash]);
 
   if (showSplash || isLoading || !hasHydrated) {
     return (
       <View style={styles.splashContainer}>
-        <Image source={mostaraLogo} style={styles.splashLogo} resizeMode="contain" />
+        <View style={styles.splashMark}>
+          <Image source={smashLogo} style={styles.splashLogo} resizeMode="contain" />
+        </View>
       </View>
     );
   }
@@ -114,11 +113,6 @@ const AppNavigator = () => {
             }}
           />
           <Stack.Screen
-            name="Pricing"
-            component={PricingScreen}
-            options={screenOptions}
-          />
-          <Stack.Screen
             name="PaymentWebView"
             component={PaymentWebViewScreen}
             options={{
@@ -147,11 +141,6 @@ const AppNavigator = () => {
             options={screenOptions}
           />
           <Stack.Screen
-            name="Subscription"
-            component={SubscriptionScreen}
-            options={screenOptions}
-          />
-          <Stack.Screen
             name="RentalHistory"
             component={RentalHistoryScreen}
             options={screenOptions}
@@ -159,11 +148,6 @@ const AppNavigator = () => {
           <Stack.Screen
             name="LiveEvents"
             component={LiveEventsScreen}
-            options={screenOptions}
-          />
-          <Stack.Screen
-            name="Upcoming"
-            component={UpcomingScreen}
             options={screenOptions}
           />
         </>
@@ -181,9 +165,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLORS.warmCharcoal[100],
   },
+  splashMark: {
+    alignItems: 'center',
+  },
   splashLogo: {
-    width: 150,
-    height: 150,
+    width: 210,
+    height: 164,
   },
 });
 

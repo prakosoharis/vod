@@ -86,7 +86,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
       <View style={[styles.contentContainer, { maxWidth: contentMaxWidth }]}>
         {/* Badge */}
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>Pilihan Untuk Anda</Text>
+          <Text style={styles.badgeText}>SMASH ORIGINAL</Text>
         </View>
 
         {/* Title */}
@@ -133,7 +133,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
               style={styles.playButtonGradient}
             >
               <SafeIcon name="play-arrow" size={24} color={COLORS.cream[50]} />
-              <Text style={styles.playButtonText}>Tonton Sekarang</Text>
+              <Text style={styles.playButtonText}>Lihat Tayangan</Text>
             </LinearGradient>
           </TouchableOpacity>
 

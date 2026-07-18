@@ -9,16 +9,16 @@ export const COLORS = {
   // PRIMARY: Deep Espresso Brown (Main Brand Color)
   primary: {
     50: '#F4EDE3',   // Lightest latte
-    100: '#E9DBD1',
-    200: '#D3B7A3',
-    300: '#BD9375',
-    400: '#A76F47',
-    500: '#914B19',  // Deep espresso - Main brand
-    600: '#743C14',
-    700: '#572D0F',
-    800: '#3A1E0A',
-    900: '#1D0F05',
-    950: '#0F0803',  // Almost black
+    100: '#E8D9C9',
+    200: '#D4B89A',
+    300: '#B8956B',
+    400: '#9C7447',
+    500: '#2C1810',
+    600: '#24140D',
+    700: '#1D100A',
+    800: '#160C08',
+    900: '#0F0805',
+    950: '#080403',
   },
 
   // ACCENT: Burnt Sienna (CTAs, Highlights, Buttons)
@@ -29,10 +29,10 @@ export const COLORS = {
     300: '#E7B193',
     400: '#DF976F',
     500: '#C67D4B',  // PRIMARY ACCENT - Use for CTAs
-    600: '#9E643C',
-    700: '#774B2D',
-    800: '#4F321E',
-    900: '#28190F',
+    600: '#A86739',
+    700: '#7E4D2B',
+    800: '#54331D',
+    900: '#2A1A0E',
     950: '#150D07',
   },
 

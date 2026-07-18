@@ -23,7 +23,29 @@ export interface Content {
   cast: Array<{ name: string; role: string }>;
   type: 'MOVIE' | 'SERIES';
   featured: boolean;
+  show_in_latest?: boolean;
+  show_in_movie_picks?: boolean;
+  show_in_popular_series?: boolean;
+  rental_price?: {
+    price: number;
+    duration_hours: number;
+    is_active: boolean;
+  } | null;
+  episodes?: Episode[];
   created_at: string;
+}
+
+export interface Episode {
+  id: string;
+  season_number: number;
+  episode_number: number;
+  title: string;
+  description: string | null;
+  duration: string | null;
+  thumbnail_url: string | null;
+  video_url: string | null;
+  hls_url: string | null;
+  is_published: boolean;
 }
 
 export interface ContentListResponse {
@@ -54,9 +76,15 @@ export type RootStackParamList = {
   Auth: undefined;
   Main: { screen?: keyof MainTabParamList } | undefined;
   Search: undefined;
-  VideoPlayer: { contentId: string };
+  VideoPlayer: {
+    contentId: string;
+    episodeId?: string;
+    previewUrl?: string;
+    previewTitle?: string;
+  };
   LiveStream: { broadcastId?: string } | undefined;
   ContentDetail: { content: Content };
+  /** Legacy route retained for source compatibility; no longer registered in the app navigator. */
   Pricing: undefined;
   PaymentWebView: {
     url: string;
@@ -69,9 +97,11 @@ export type RootStackParamList = {
   PaymentError: { errorMessage?: string };
   MyList: undefined;
   WatchHistory: undefined;
+  /** Legacy route retained for source compatibility; no longer registered in the app navigator. */
   Subscription: undefined;
   RentalHistory: undefined;
   LiveEvents: undefined;
+  /** Legacy route retained for source compatibility; no longer registered in the app navigator. */
   Upcoming: undefined;
 };
 

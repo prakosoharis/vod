@@ -59,9 +59,9 @@ const HomeScreen: React.FC = () => {
   });
 
   // Priority 2: Load after 1 second delay
-  const { data: indonesian, isLoading: loadingIndonesian } = useQuery({
-    queryKey: ['indonesian'],
-    queryFn: () => contentService.getIndonesianContent(),
+  const { data: moviePicks, isLoading: loadingMoviePicks } = useQuery({
+    queryKey: ['homepage', 'movie-picks'],
+    queryFn: () => contentService.getMoviePicks(10),
     enabled: loadSecondary,
   });
 
@@ -72,9 +72,9 @@ const HomeScreen: React.FC = () => {
   });
 
   // Priority 3: Load after 2 seconds delay
-  const { data: action, isLoading: loadingAction } = useQuery({
-    queryKey: ['genre', 'Action'],
-    queryFn: () => contentService.getActionContent(),
+  const { data: popularSeries, isLoading: loadingPopularSeries } = useQuery({
+    queryKey: ['homepage', 'popular-series'],
+    queryFn: () => contentService.getPopularSeries(10),
     enabled: loadGenre,
   });
 
@@ -181,15 +181,15 @@ const HomeScreen: React.FC = () => {
           </View>
         )}
 
-      {/* Made in Indonesia */}
+      {/* Curated movie picks */}
       {loadSecondary && (
         <View style={styles.section}>
-          {loadingIndonesian ? (
+          {loadingMoviePicks ? (
             renderLoadingSkeleton()
-          ) : indonesian && indonesian.length > 0 ? (
+          ) : moviePicks && moviePicks.length > 0 ? (
             <>
-              {renderSectionHeader('Buatan Indonesia')}
-              {renderContentList(indonesian, !isAuthenticated)}
+              {renderSectionHeader('Film Pilihan')}
+              {renderContentList(moviePicks, !isAuthenticated)}
             </>
           ) : null}
         </View>
@@ -209,15 +209,15 @@ const HomeScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Action Movies */}
+      {/* Curated popular series */}
       {loadGenre && (
         <View style={styles.section}>
-          {loadingAction ? (
+          {loadingPopularSeries ? (
             renderLoadingSkeleton()
-          ) : action && action.length > 0 ? (
+          ) : popularSeries && popularSeries.length > 0 ? (
             <>
-              {renderSectionHeader('Aksi')}
-              {renderContentList(action, !isAuthenticated)}
+              {renderSectionHeader('Serial Populer')}
+              {renderContentList(popularSeries, !isAuthenticated)}
             </>
           ) : null}
         </View>
@@ -283,6 +283,10 @@ const styles = StyleSheet.create({
     marginHorizontal: THEME.spacing.lg,
     marginBottom: THEME.spacing.md,
     opacity: 0.3,
+  },
+  skeleton: {
+    backgroundColor: COLORS.warmCharcoal[50],
+    opacity: 0.32,
   },
   skeletonList: {
     flexDirection: 'row',

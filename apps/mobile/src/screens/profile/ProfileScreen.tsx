@@ -50,21 +50,15 @@ const ProfileScreen: React.FC = () => {
       onPress: () => navigation.navigate('WatchHistory'),
     },
     {
-      icon: 'workspace-premium',
-      title: 'Langganan',
-      subtitle: 'Kelola langganan Anda',
-      onPress: () => navigation.navigate('Subscription'),
-    },
-    {
       icon: 'local-movies',
-      title: 'Film Disewa',
-      subtitle: 'Lihat film yang Anda sewa',
+      title: 'Tayangan Disewa',
+      subtitle: 'Lihat film dan serial beserta masa sewanya',
       onPress: () => navigation.navigate('RentalHistory'),
     },
     {
       icon: 'event',
-      title: 'Live Events',
-      subtitle: 'Lihat siaran langsung dan jadwal',
+      title: 'Live Event',
+      subtitle: 'Lihat siaran langsung yang tersedia',
       onPress: () => navigation.navigate('LiveEvents'),
     },
     {

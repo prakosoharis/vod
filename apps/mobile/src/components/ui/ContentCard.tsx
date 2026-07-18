@@ -126,6 +126,11 @@ const ContentCard: React.FC<ContentCardProps> = ({
         ]}
         resizeMode="cover"
       />
+      <View style={styles.typeBadge}>
+        <Text style={styles.typeBadgeText}>
+          {content.type === 'SERIES' ? 'SERIAL' : 'FILM'}
+        </Text>
+      </View>
 
       {/* Lock overlay for unauthenticated users */}
       {showLock && (
@@ -152,6 +157,23 @@ const styles = StyleSheet.create({
   },
   image: {
     borderRadius: THEME.borderRadius.md,
+  },
+  typeBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: THEME.borderRadius.full,
+    backgroundColor: `${COLORS.warmCharcoal[200]}E6`,
+    borderWidth: 1,
+    borderColor: `${COLORS.cream[50]}20`,
+  },
+  typeBadgeText: {
+    color: COLORS.cream[100],
+    fontSize: 8,
+    fontWeight: THEME.typography.fontWeight.bold,
+    letterSpacing: 0.8,
   },
   lockOverlay: {
     ...StyleSheet.absoluteFillObject,

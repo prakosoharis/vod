@@ -11,12 +11,12 @@ import HLSPlayer from '../../components/video/HLSPlayer';
 type Props = NativeStackScreenProps<RootStackParamList, 'VideoPlayer'>;
 
 const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { contentId } = route.params;
+  const { contentId, episodeId, previewUrl, previewTitle } = route.params;
   const { isAuthenticated } = useAuthStore();
 
   // Watch progress tracking
   const [lastSyncTime, setLastSyncTime] = useState(0);
-  const progressSyncTimeout = useRef<NodeJS.Timeout | null>(null);
+  const progressSyncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch content data
   const { data: content, isLoading, error } = useQuery({
@@ -103,7 +103,13 @@ const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
   }
 
   // Determine video URL (prioritize HLS)
-  const videoUrl = content.hls_cdn_url || content.hls_url || content.video_url;
+  const selectedEpisode = content.episodes?.find((episode) => episode.id === episodeId);
+  const videoUrl = previewUrl
+    || selectedEpisode?.hls_url
+    || selectedEpisode?.video_url
+    || content.hls_cdn_url
+    || content.hls_url
+    || content.video_url;
 
   console.log('=== VIDEO URL SELECTION ===');
   console.log('Selected videoUrl:', videoUrl);
@@ -133,9 +139,9 @@ const VideoPlayerScreen: React.FC<Props> = ({ route, navigation }) => {
     <HLSPlayer
       source={videoUrl}
       onBack={() => navigation.goBack()}
-      title={content.title}
+      title={previewTitle || selectedEpisode?.title || content.title}
       contentId={contentId}
-      onProgress={handleProgress}
+      onProgress={previewUrl ? undefined : handleProgress}
     />
   );
 };
