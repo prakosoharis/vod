@@ -122,7 +122,20 @@ export async function getWatchlist(
 
     const items = await prisma.watchlist.findMany({
       where: { user_id: currentUser.userId },
-      include: { content: true },
+      include: {
+        content: {
+          include: {
+            rental_price: true,
+            episodes: {
+              where: { is_published: true },
+              orderBy: [
+                { season_number: 'asc' },
+                { episode_number: 'asc' },
+              ],
+            },
+          },
+        },
+      },
       orderBy: { added_at: 'desc' },
     });
 
@@ -169,7 +182,20 @@ export async function addToWatchlist(
 
     const created = await prisma.watchlist.create({
       data: { user_id: currentUser.userId, content_id: contentId },
-      include: { content: true },
+      include: {
+        content: {
+          include: {
+            rental_price: true,
+            episodes: {
+              where: { is_published: true },
+              orderBy: [
+                { season_number: 'asc' },
+                { episode_number: 'asc' },
+              ],
+            },
+          },
+        },
+      },
     });
 
     reply.code(201).send(created);
@@ -325,7 +351,20 @@ export async function getContinueWatching(
 
     const progresses = await prisma.watchProgress.findMany({
       where: { user_id: currentUser.userId },
-      include: { content: true },
+      include: {
+        content: {
+          include: {
+            rental_price: true,
+            episodes: {
+              where: { is_published: true },
+              orderBy: [
+                { season_number: 'asc' },
+                { episode_number: 'asc' },
+              ],
+            },
+          },
+        },
+      },
       orderBy: { last_watched: 'desc' },
       take: 100, // fetch more, filter in app, then limit 10
     });
