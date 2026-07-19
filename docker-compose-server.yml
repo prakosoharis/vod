@@ -41,7 +41,7 @@ services:
       - WEBSOCKET_PATH=/socket.io/
       - DATABASE_URL=postgresql://${POSTGRES_USER:-streamkita}:${POSTGRES_PASSWORD:-streamkita123}@postgres:5432/${POSTGRES_DB:-streamkita_dev}?schema=public
       - JWT_SECRET=${JWT_SECRET}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-https://smashstream.id}
       - IVS_STREAM_KEY=${IVS_STREAM_KEY}
       - IVS_RTMP_URL=${IVS_RTMP_URL}
       - IVS_PLAYBACK_URL=${IVS_PLAYBACK_URL}

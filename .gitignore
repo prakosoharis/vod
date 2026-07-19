@@ -62,6 +62,8 @@ Thumbs.db
 *secret*
 *credential*
 *auth*
+!apps/mobile/src/screens/auth/
+!apps/mobile/src/screens/auth/*.tsx
 *.env.local
 *.env.production
 *.env.staging
