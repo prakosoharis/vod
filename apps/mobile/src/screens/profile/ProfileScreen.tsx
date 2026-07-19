@@ -16,7 +16,7 @@ import Button from '../../components/ui/Button';
 
 const ProfileScreen: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuthStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   const handleLogout = () => {
     Alert.alert(

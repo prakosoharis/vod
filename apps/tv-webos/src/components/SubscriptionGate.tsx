@@ -244,7 +244,7 @@ export function SubscriptionGate({
                 lineHeight: 1.5,
               }}
             >
-              Buka aplikasi Mostara di HP Anda, login dengan akun yang sama,
+              Buka aplikasi SMASH di HP Anda, login dengan akun yang sama,
               lalu pilih paket berlangganan.
             </p>
           </div>
@@ -392,7 +392,7 @@ export function SubscriptionGate({
             margin: '24px auto 0',
           }}
         >
-          Butuh bantuan? Email support@mostara.id
+          Butuh bantuan? Email support@smashstream.id
         </p>
       </div>
     </div>

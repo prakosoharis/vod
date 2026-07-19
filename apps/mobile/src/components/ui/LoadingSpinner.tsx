@@ -10,7 +10,7 @@ interface LoadingSpinnerProps {
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'large',
-  color = COLORS.primary,
+  color = COLORS.accent[500],
   fullScreen = false,
 }) => {
   if (fullScreen) {

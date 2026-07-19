@@ -1,5 +1,5 @@
 /**
- * Mostara Mobile App
+ * SMASH Mobile App
  * @format
  */
 

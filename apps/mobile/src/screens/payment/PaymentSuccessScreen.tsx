@@ -94,7 +94,7 @@ const PaymentSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
               // Navigate to home and reset stack
               navigation.reset({
                 index: 0,
-                routes: [{ name: 'MainTabs' }],
+                routes: [{ name: 'Main' }],
               });
             }}
           >
@@ -108,7 +108,7 @@ const PaymentSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
 
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => navigation.navigate('Main', { screen: 'Profile' })}
           >
             <Text style={styles.secondaryButtonText}>Lihat Profil</Text>
           </TouchableOpacity>

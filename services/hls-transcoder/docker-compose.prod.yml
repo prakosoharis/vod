@@ -19,8 +19,8 @@ version: '3.8'
 # - Cloudflare SSL/DDoS protection enabled
 #
 # Domains:
-# - transcode.mostara.id -> localhost:8089 (via Nginx host)
-# - minio.mostara.id -> localhost:9001 (via Nginx host)
+# - transcode.smashstream.id -> localhost:8089 (via Nginx host)
+# - minio.smashstream.id -> localhost:9001 (via Nginx host)
 # ================================================================
 
 services:
@@ -31,7 +31,7 @@ services:
     ports:
       # Bind ONLY to localhost - not accessible from internet
       - "127.0.0.1:9000:9000"  # API - Internal only
-      - "127.0.0.1:9001:9001"  # Console - Admin access via minio.mostara.id
+      - "127.0.0.1:9001:9001"  # Console - Admin access via minio.smashstream.id
     environment:
       # Use strong credentials from .env.production
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -88,7 +88,7 @@ services:
       - TEMP_BUCKET=${TEMP_BUCKET:-temp-raw-aws}
       - PERM_BUCKET=${PERM_BUCKET:-perm-storage-wasabi}
       # Public URLs (for response generation)
-      - CDN_BASE_URL=${CDN_BASE_URL:-https://transcode.mostara.id}
+      - CDN_BASE_URL=${CDN_BASE_URL:-https://transcode.smashstream.id}
       # Production optimizations
       - NODE_OPTIONS=--max-old-space-size=2048
     volumes:

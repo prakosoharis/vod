@@ -11,7 +11,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeIcon } from '../../components/ui';
-import { contentService, Content } from '../../services';
+import { contentService } from '../../services';
+import { Content } from '../../types';
 import { COLORS, THEME } from '../../constants';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 

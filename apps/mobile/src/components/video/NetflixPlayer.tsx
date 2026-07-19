@@ -32,15 +32,15 @@ const SEEK_AMOUNT = 10; // seconds
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const NetflixPlayer: React.FC<NetflixPlayerProps> = ({ source, onBack, title, contentId }) => {
-  const videoRef = useRef<Video>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<any>(null);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasLoadedRef = useRef(false);
   const lastErrorSignatureRef = useRef<string | null>(null);
   const lastTapRef = useRef<{ time: number; side: 'left' | 'right' | null }>({
     time: 0,
     side: null,
   });
-  const progressSyncInterval = useRef<NodeJS.Timeout | null>(null);
+  const progressSyncInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auth state
   const { isAuthenticated } = useAuthStore();

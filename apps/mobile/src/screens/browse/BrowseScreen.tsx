@@ -26,13 +26,13 @@ const BrowseScreen: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState<string>('');
   const [selectedType, setSelectedType] = useState<'ALL' | 'MOVIE' | 'SERIES'>('ALL');
   const gridGap = THEME.spacing.sm;
-  const gridPadding = THEME.spacing.sm;
-  const columnCount = width >= 900 ? 6 : width >= 700 ? 5 : width >= 520 ? 4 : 3;
+  const gridPadding = 16;
+  const columnCount = width >= 900 ? 5 : width >= 700 ? 4 : width >= 520 ? 3 : 2;
   const availableGridWidth = width - (gridPadding * 2) - (gridGap * (columnCount - 1));
   const cardWidth = Math.max(108, Math.min(150, Math.floor(availableGridWidth / columnCount)));
   const cardDimensions = {
     width: cardWidth,
-    height: Math.round(cardWidth * 1.5),
+    height: Math.round(cardWidth * 1.48),
   };
 
   const genres = [
@@ -133,6 +133,13 @@ const BrowseScreen: React.FC = () => {
     <>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.warmCharcoal[100]} />
       <View style={styles.container}>
+        <View style={styles.pageHeader}>
+          <View>
+            <Text style={styles.eyebrow}>KEPULAUAN CERITA</Text>
+            <Text style={styles.pageTitle}>Jelajah</Text>
+          </View>
+          <Text style={styles.resultCount}>{displayContent.length} tayangan</Text>
+        </View>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <View style={styles.searchInputContainer}>
@@ -204,17 +211,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.warmCharcoal[100],
   },
+  pageHeader: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  eyebrow: { color: COLORS.accent[500], fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
+  pageTitle: { color: COLORS.cream[50], fontSize: 31, fontWeight: '800', marginTop: 3 },
+  resultCount: { color: COLORS.cream[200], fontSize: 11, marginBottom: 5 },
   searchContainer: {
-    padding: THEME.spacing.lg,
-    backgroundColor: COLORS.warmCharcoal[50],
-    borderBottomWidth: 1,
-    borderBottomColor: `${COLORS.warmCharcoal[50]}80`,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.warmCharcoal[100],
-    borderRadius: THEME.borderRadius.full,
+    backgroundColor: COLORS.warmCharcoal[50],
+    borderRadius: 12,
     paddingHorizontal: THEME.spacing.md,
     paddingVertical: THEME.spacing.sm + 2,
     borderWidth: 1,
@@ -227,24 +243,22 @@ const styles = StyleSheet.create({
     color: COLORS.cream[50],
   },
   genreContainer: {
-    backgroundColor: COLORS.warmCharcoal[50],
-    paddingBottom: THEME.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: `${COLORS.warmCharcoal[50]}80`,
+    paddingTop: 12,
+    paddingBottom: 14,
   },
   typeTabs: {
     flexDirection: 'row',
     marginHorizontal: THEME.spacing.lg,
     marginTop: THEME.spacing.md,
     padding: 4,
-    borderRadius: THEME.borderRadius.full,
+    borderRadius: 10,
     backgroundColor: COLORS.warmCharcoal[50],
   },
   typeTab: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: THEME.spacing.sm,
-    borderRadius: THEME.borderRadius.full,
+    borderRadius: 7,
   },
   typeTabActive: {
     backgroundColor: COLORS.accent[500],
@@ -260,10 +274,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: THEME.spacing.lg,
   },
   genreChip: {
-    backgroundColor: COLORS.warmCharcoal[100],
+    backgroundColor: COLORS.warmCharcoal[50],
     paddingHorizontal: THEME.spacing.lg,
     paddingVertical: THEME.spacing.sm,
-    borderRadius: THEME.borderRadius.full,
+    borderRadius: 9,
     marginRight: THEME.spacing.sm,
     borderWidth: 1,
     borderColor: `${COLORS.cream[200]}40`,
@@ -282,7 +296,8 @@ const styles = StyleSheet.create({
     fontWeight: THEME.typography.fontWeight.bold,
   },
   contentList: {
-    padding: THEME.spacing.sm,
+    padding: 16,
+    paddingBottom: 100,
   },
   contentRow: {
     gap: THEME.spacing.sm,

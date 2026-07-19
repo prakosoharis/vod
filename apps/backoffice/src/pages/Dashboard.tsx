@@ -39,7 +39,7 @@ export default function Dashboard() {
 
   const stats: StatCard[] = [
     {
-      title: 'Total User MOST',
+      title: 'Total User SMASH',
       value: users.length,
       icon: UserGroupIcon,
       color: 'bg-blue-500',

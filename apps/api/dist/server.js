@@ -25,7 +25,7 @@ async function build() {
     });
     // CORS
     await fastify.register(cors, {
-        origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id', 'https://broadcaster.mostara.id', '*'],
+        origin: ['https://smashstream.id', 'https://api.smashstream.id', 'https://backoffice.smashstream.id', 'https://broadcaster.smashstream.id', '*'],
         credentials: true,
     });
     // Multipart for file uploads

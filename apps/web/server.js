@@ -90,7 +90,7 @@ app.use((req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`🚀 MOST Web server running on port ${port}`);
+  console.log(`🚀 SMASH Web server running on port ${port}`);
   console.log(`📁 Serving from: ${path.join(__dirname, 'dist')}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Access at: http://localhost:${port}`);

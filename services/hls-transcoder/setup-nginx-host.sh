@@ -43,14 +43,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "Step 1: Installing Nginx configurations"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ ! -f "nginx-configs/transcode.mostara.id" ]; then
-    echo -e "${RED}Error: nginx-configs/transcode.mostara.id not found${NC}"
+if [ ! -f "nginx-configs/transcode.smashstream.id" ]; then
+    echo -e "${RED}Error: nginx-configs/transcode.smashstream.id not found${NC}"
     echo "Please run this script from /var/www/vod/services/hls-transcoder/"
     exit 1
 fi
 
 # Backup existing configs if they exist
-for config in transcode.mostara.id minio.mostara.id; do
+for config in transcode.smashstream.id minio.smashstream.id; do
     if [ -f "/etc/nginx/sites-available/$config" ]; then
         echo "  Backing up existing $config..."
         cp "/etc/nginx/sites-available/$config" "/etc/nginx/sites-available/$config.backup.$(date +%Y%m%d_%H%M%S)"
@@ -58,8 +58,8 @@ for config in transcode.mostara.id minio.mostara.id; do
 done
 
 # Copy new configs
-cp nginx-configs/transcode.mostara.id /etc/nginx/sites-available/
-cp nginx-configs/minio.mostara.id /etc/nginx/sites-available/
+cp nginx-configs/transcode.smashstream.id /etc/nginx/sites-available/
+cp nginx-configs/minio.smashstream.id /etc/nginx/sites-available/
 
 echo -e "${GREEN}✓ Configuration files copied${NC}"
 
@@ -69,7 +69,7 @@ echo "Step 2: Enabling sites"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Enable sites (create symlinks)
-for config in transcode.mostara.id minio.mostara.id; do
+for config in transcode.smashstream.id minio.smashstream.id; do
     if [ ! -L "/etc/nginx/sites-enabled/$config" ]; then
         ln -s "/etc/nginx/sites-available/$config" "/etc/nginx/sites-enabled/"
         echo "  ✓ Enabled $config"
@@ -151,19 +151,19 @@ echo "==========================================${NC}"
 echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo "  1. Ensure DNS records are configured:"
-echo "     • transcode.mostara.id → Server IP"
-echo "     • minio.mostara.id → Server IP"
+echo "     • transcode.smashstream.id → Server IP"
+echo "     • minio.smashstream.id → Server IP"
 echo ""
 echo "  2. Test from your local machine:"
-echo "     • http://transcode.mostara.id/health"
-echo "     • http://minio.mostara.id"
+echo "     • http://transcode.smashstream.id/health"
+echo "     • http://minio.smashstream.id"
 echo ""
 echo "  3. If using Cloudflare, ensure:"
 echo "     • Proxy is enabled (orange cloud)"
 echo "     • SSL mode is 'Full' or 'Flexible'"
 echo ""
 echo -e "${YELLOW}Troubleshooting:${NC}"
-echo "  • View Nginx logs: tail -f /var/log/nginx/transcode.mostara.id.error.log"
+echo "  • View Nginx logs: tail -f /var/log/nginx/transcode.smashstream.id.error.log"
 echo "  • Check Nginx status: systemctl status nginx"
 echo "  • Test config: nginx -t"
 echo ""

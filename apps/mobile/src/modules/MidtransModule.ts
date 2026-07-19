@@ -105,7 +105,7 @@ class Midtrans {
       }
 
       // Set up listener for payment result
-      this.listener = eventEmitter.addListener(
+      this.listener = eventEmitter!.addListener(
         'MidtransPaymentResult',
         (result: PaymentResult) => {
           console.log('Payment result received:', result);

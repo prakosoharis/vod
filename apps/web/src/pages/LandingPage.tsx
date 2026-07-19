@@ -12,7 +12,7 @@ import { userService, type ContentWithProgress } from '@/services/user.service'
 import { useAuthStore } from '@/stores/authStore'
 import type { Content } from '@/types'
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.mostara.id/api'
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.smashstream.id/api'
 
 interface BroadcastSummary {
   id: string

@@ -10,19 +10,15 @@ import {
   Alert,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeIcon } from '../../components/ui';
 import { userService } from '../../services';
 import { Content } from '../../types';
 import { COLORS, THEME } from '../../constants';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
-type Props = {
-  navigation: NativeStackNavigationProp<any>;
-};
-
-const MyListScreen: React.FC<Props> = ({ navigation }) => {
+const MyListScreen: React.FC<any> = ({ navigation, route }) => {
   const queryClient = useQueryClient();
+  const isTab = route?.name === 'Collection';
 
   // Fetch watchlist
   const { data: watchlist, isLoading, error } = useQuery({
@@ -131,13 +127,15 @@ const MyListScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <SafeIcon name="arrow-back" size={24} color={COLORS.cream[50]} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Daftar Saya</Text>
+          {isTab ? <View style={styles.backButton} /> : (
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <SafeIcon name="arrow-back" size={24} color={COLORS.cream[50]} />
+            </TouchableOpacity>
+          )}
+          <View style={styles.headerCopy}>
+            <Text style={styles.headerEyebrow}>TERSIMPAN UNTUK ANDA</Text>
+            <Text style={styles.headerTitle}>Koleksi</Text>
+          </View>
           <View style={{ width: 40 }} />
         </View>
 
@@ -151,7 +149,9 @@ const MyListScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
             <TouchableOpacity
               style={styles.browseButton}
-              onPress={() => navigation.navigate('MainTabs', { screen: 'Browse' })}
+              onPress={() => isTab
+                ? navigation.navigate('Browse')
+                : navigation.navigate('Main', { screen: 'Browse' })}
             >
               <Text style={styles.browseButtonText}>Jelajahi Konten</Text>
             </TouchableOpacity>
@@ -192,12 +192,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: THEME.typography.fontSize.xxl,
+    fontSize: 28,
     fontWeight: THEME.typography.fontWeight.bold,
     color: COLORS.cream[50],
-    flex: 1,
     textAlign: 'center',
   },
+  headerCopy: { flex: 1, alignItems: 'center' },
+  headerEyebrow: { color: COLORS.accent[500], fontSize: 8, fontWeight: '800', letterSpacing: 1.4, marginBottom: 2 },
   listContent: {
     padding: THEME.spacing.lg,
   },

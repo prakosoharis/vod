@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: THEME.spacing.xxxl,
+    paddingVertical: THEME.spacing.xxl,
     paddingHorizontal: THEME.spacing.xl,
   },
   emptyTitle: {

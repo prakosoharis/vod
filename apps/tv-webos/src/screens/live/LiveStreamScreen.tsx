@@ -61,7 +61,7 @@ export function LiveStreamScreen() {
             Live event ini membutuhkan tiket seharga Rp {Number(broadcast.ticket_price).toLocaleString('id-ID')}.
           </p>
           <p style={{ color: COLORS.accent[400], fontSize: 24, lineHeight: 1.5, margin: 0 }}>
-            Silakan beli tiket melalui mostara.id atau aplikasi Android, lalu buka kembali event ini.
+            Silakan beli tiket melalui smashstream.id atau aplikasi Android, lalu buka kembali event ini.
           </p>
         </div>
         <Focusable focusKey="live-ticket-back" onEnter={() => navigate(-1)} focusScale={1.05}>

@@ -45,8 +45,8 @@ const SPEED_OPTIONS = [
 ];
 
 const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId, onProgress }) => {
-  const videoRef = useRef<Video>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<any>(null);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasLoadedRef = useRef(false);
   const lastErrorSignatureRef = useRef<string | null>(null);
   const lastTapRef = useRef<{ time: number; side: 'left' | 'right' | null }>({

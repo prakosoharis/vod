@@ -3,9 +3,11 @@ import { Suspense, lazy } from 'react'
 import Layout from '../components/layout/Layout'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import { useAuthStore } from '@/stores/authStore'
 
 // Lazy load pages untuk code splitting
 const LandingPage = lazy(() => import('../pages/LandingPage').then(module => ({ default: module.LandingPage })))
+const PublicLandingPage = lazy(() => import('../pages/PublicLandingPage'))
 const LoginPage = lazy(() => import('../pages/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/RegisterPage'))
 const BrowsePage = lazy(() => import('../pages/BrowsePage'))
@@ -22,16 +24,16 @@ const ProfilePage = lazy(() => import('../pages/ProfilePage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
 
 const AppRoutes = () => {
+  const { isAuthenticated, hasHydrated } = useAuthStore()
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
-        <Route path="/" element={
+        <Route path="/" element={!hasHydrated ? <LoadingSpinner /> : isAuthenticated ? (
           <Layout>
-            <Suspense fallback={<LoadingSpinner />}>
-              <LandingPage />
-            </Suspense>
+            <LandingPage />
           </Layout>
-        } />
+        ) : <PublicLandingPage />} />
         <Route path="/login" element={
           <Suspense fallback={<LoadingSpinner />}>
             <LoginPage />

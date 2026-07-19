@@ -101,9 +101,9 @@ GET /api/uploads/{type}/{filename}
 - **Web App:** `http://localhost:5173`
 
 ### Production:
-- **API:** `https://api.mostara.id`
-- **Backoffice:** `https://mostara.id:3006`
-- **Web App:** `https://mostara.id`
+- **API:** `https://api.smashstream.id`
+- **Backoffice:** `https://backoffice.smashstream.id`
+- **Web App:** `https://smashstream.id`
 
 ## 📊 Collection Structure
 

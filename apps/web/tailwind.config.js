@@ -9,10 +9,10 @@ export default {
   	extend: {
   		colors: {
   			// ═══════════════════════════════════════════
-  			// MOST DESIGN SYSTEM - WARM COFFEE HOUSE CINEMA
+  			// SMASH DESIGN SYSTEM - WARM COFFEE HOUSE CINEMA
   			// ═══════════════════════════════════════════
 
-  			// PRIMARY: Deep Espresso Brown (MOST's signature color)
+  			// PRIMARY: Deep Espresso Brown (SMASH's signature color)
   			primary: {
   				'50': '#F4EDE3',
   				'100': '#E8D9C9',

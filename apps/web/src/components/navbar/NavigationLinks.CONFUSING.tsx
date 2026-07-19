@@ -101,7 +101,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         title="Login untuk Mengakses"
-        subtitle="Daftar untuk menikmati semua fitur MOST"
+        subtitle="Daftar untuk menikmati semua fitur SMASH"
       />
     </>
   )

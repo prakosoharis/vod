@@ -2,7 +2,7 @@
  * Live Chat Component - WebSocket-based chat for live broadcasts
  *
  * Matches Android mobile app behavior:
- *   - Connects to SOCKET_URL/api.mostara.id
+ *   - Connects to SOCKET_URL/api.smashstream.id
  *   - Events: join-broadcast, recent-messages, chat-message
  *   - ChatMessage shape: { id, broadcast_id, username, message, is_host_message, created_at }
  *

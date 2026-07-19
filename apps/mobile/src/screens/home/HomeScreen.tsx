@@ -8,7 +8,10 @@ import {
   RefreshControl,
   Dimensions,
   StatusBar,
+  Image,
+  TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { SafeIcon } from '../../components/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
@@ -22,6 +25,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import FeaturedCarousel from '../../components/home/FeaturedCarousel';
 
 const { width: screenWidth } = Dimensions.get('window');
+const smashLogo = require('../../assets/smash-logo-transparent.png');
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -105,9 +109,15 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('ContentDetail', { content });
   };
 
-  const renderSectionHeader = (title: string) => (
+  const renderSectionHeader = (title: string, eyebrow?: string) => (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View>
+        {eyebrow && <Text style={styles.sectionEyebrow}>{eyebrow}</Text>}
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
+      <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'Browse' })}>
+        <Text style={styles.seeAll}>Lihat semua  →</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -141,6 +151,32 @@ const HomeScreen: React.FC = () => {
     </View>
   );
 
+  const renderContinueWatching = (contents: any[] = []) => (
+    <FlatList
+      data={contents}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={styles.continueList}
+      renderItem={({ item }) => {
+        const durationMinutes = Number.parseInt(item.duration || '0', 10) || 90;
+        const totalSeconds = durationMinutes * 60;
+        const progress = Math.min(100, Math.max(4, ((item.progress_seconds || 0) / totalSeconds) * 100));
+        return (
+          <TouchableOpacity style={styles.continueCard} onPress={() => handleContentPress(item)} activeOpacity={0.88}>
+            <Image source={{ uri: item.backdrop_url || item.thumbnail_url }} style={styles.continueImage} />
+            <View style={styles.continuePlay}><SafeIcon name="play-arrow" size={22} color={COLORS.cream[50]} /></View>
+            <View style={styles.continueCopy}>
+              <Text style={styles.continueTitle} numberOfLines={1}>{item.title}</Text>
+              <Text style={styles.continueMeta}>{item.type === 'SERIES' ? 'Lanjutkan episode' : 'Lanjutkan film'}</Text>
+            </View>
+            <View style={styles.progressTrack}><View style={[styles.progressBar, { width: `${progress}%` }]} /></View>
+          </TouchableOpacity>
+        );
+      }}
+    />
+  );
+
   // Only show initial loading for priority 1 content
   const isLoadingInitial = loadingFeatured;
 
@@ -149,8 +185,19 @@ const HomeScreen: React.FC = () => {
   }
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.warmCharcoal[100]} />
+      <View style={styles.appHeader}>
+        <Image source={smashLogo} resizeMode="contain" style={styles.logo} />
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Search')}>
+            <SafeIcon name="search" size={23} color={COLORS.cream[50]} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('Main', { screen: 'Profile' })}>
+            <Text style={styles.avatarText}>SM</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -176,8 +223,8 @@ const HomeScreen: React.FC = () => {
         {/* Continue Watching - Only for authenticated users */}
         {isAuthenticated && continueWatching && continueWatching.length > 0 && (
           <View style={styles.section}>
-            {renderSectionHeader('Lanjut Tonton')}
-            {renderContentList(continueWatching)}
+            {renderSectionHeader('Lanjutkan Menonton')}
+            {renderContinueWatching(continueWatching)}
           </View>
         )}
 
@@ -188,7 +235,7 @@ const HomeScreen: React.FC = () => {
             renderLoadingSkeleton()
           ) : moviePicks && moviePicks.length > 0 ? (
             <>
-              {renderSectionHeader('Film Pilihan')}
+              {renderSectionHeader('Film Pilihan', 'PILIHAN EDITOR')}
               {renderContentList(moviePicks, !isAuthenticated)}
             </>
           ) : null}
@@ -202,7 +249,7 @@ const HomeScreen: React.FC = () => {
             renderLoadingSkeleton()
           ) : newReleases && newReleases.length > 0 ? (
             <>
-              {renderSectionHeader('Rilis Terbaru')}
+              {renderSectionHeader('Rilis Terbaru', 'BARU DI SMASH')}
               {renderContentList(newReleases, !isAuthenticated)}
             </>
           ) : null}
@@ -216,7 +263,7 @@ const HomeScreen: React.FC = () => {
             renderLoadingSkeleton()
           ) : popularSeries && popularSeries.length > 0 ? (
             <>
-              {renderSectionHeader('Serial Populer')}
+              {renderSectionHeader('Serial Populer', 'CERITA BERSAMBUNG')}
               {renderContentList(popularSeries, !isAuthenticated)}
             </>
           ) : null}
@@ -230,7 +277,7 @@ const HomeScreen: React.FC = () => {
             renderLoadingSkeleton()
           ) : drama && drama.length > 0 ? (
             <>
-              {renderSectionHeader('Drama')}
+              {renderSectionHeader('Drama', 'KOLEKSI NUSANTARA')}
               {renderContentList(drama, !isAuthenticated)}
             </>
           ) : null}
@@ -240,11 +287,30 @@ const HomeScreen: React.FC = () => {
         {/* Bottom padding */}
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: COLORS.warmCharcoal[100] },
+  appHeader: {
+    height: 58,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.warmCharcoal[100],
+  },
+  logo: { width: 94, height: 50 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerButton: {
+    width: 44, height: 44, alignItems: 'center', justifyContent: 'center',
+  },
+  avatar: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.accent[500],
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: `${COLORS.cream[50]}30`,
+  },
+  avatarText: { color: COLORS.cream[50], fontSize: 11, fontWeight: '800' },
   container: {
     flex: 1,
     backgroundColor: COLORS.warmCharcoal[100],
@@ -263,15 +329,39 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  sectionEyebrow: {
+    color: COLORS.accent[500], fontSize: 9, fontWeight: '800', letterSpacing: 1.5, marginBottom: 4,
+  },
   sectionTitle: {
-    fontSize: THEME.typography.fontSize.xl,
+    fontSize: 21,
     fontWeight: THEME.typography.fontWeight.bold,
     color: COLORS.cream[50],
     letterSpacing: 0.5,
   },
+  seeAll: { color: COLORS.cream[100], fontSize: 12, fontWeight: '600' },
   contentList: {
-    paddingHorizontal: THEME.spacing.md,
+    paddingHorizontal: 12,
   },
+  continueList: { paddingHorizontal: 16, gap: 12 },
+  continueCard: {
+    width: screenWidth * 0.72,
+    backgroundColor: COLORS.warmCharcoal[50],
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: `${COLORS.cream[50]}14`,
+  },
+  continueImage: { width: '100%', height: 132 },
+  continuePlay: {
+    position: 'absolute', top: 48, left: '45%', width: 38, height: 38, borderRadius: 19,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23,21,15,.72)',
+    borderWidth: 1, borderColor: `${COLORS.cream[50]}55`,
+  },
+  continueCopy: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 13 },
+  continueTitle: { color: COLORS.cream[50], fontWeight: '700', fontSize: 14 },
+  continueMeta: { color: COLORS.cream[200], fontSize: 11, marginTop: 3 },
+  progressTrack: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, backgroundColor: COLORS.warmCharcoal[300] },
+  progressBar: { height: 3, backgroundColor: COLORS.accent[500] },
   loadingSection: {
     marginBottom: THEME.spacing.xl,
   },

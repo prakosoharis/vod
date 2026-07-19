@@ -6,7 +6,7 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════
-   MOST DESIGN SYSTEM - WARM COFFEE HOUSE CINEMA
+   SMASH DESIGN SYSTEM - WARM COFFEE HOUSE CINEMA
    ═══════════════════════════════════════════════════════ */
 
 :root {
@@ -142,7 +142,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════
-   UTILITY CLASSES - MOST Specific
+   UTILITY CLASSES - SMASH Specific
    ═══════════════════════════════════════════════════════ */
 
 @layer utilities {
@@ -250,7 +250,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════
-   MOST NUSANTARA — EDITORIAL CINEMA REDESIGN
+   SMASH NUSANTARA — EDITORIAL CINEMA REDESIGN
    ═══════════════════════════════════════════════════════ */
 :root {
   --nusantara-bg: #17150f;
@@ -1365,6 +1365,240 @@ button { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   .nusantara-hero__art, .nusantara-button, .nusantara-poster-card__art img { transition: none; }
+}
+
+/* SMASH public introduction */
+.smash-guest {
+  --guest-bg: #17150f;
+  --guest-bg-soft: #1e1b13;
+  --guest-surface: #282319;
+  --guest-cream: #f4ecd9;
+  --guest-muted: #d2c3a5;
+  --guest-dim: #9e9175;
+  --guest-gold: #c98431;
+  --guest-line: rgba(244, 236, 217, .13);
+  background: var(--guest-bg);
+  color: var(--guest-cream);
+  min-height: 100vh;
+  overflow: hidden;
+}
+.smash-guest button, .smash-guest a { color: inherit; }
+.smash-guest__nav {
+  align-items: center;
+  border-bottom: 1px solid var(--guest-line);
+  display: flex;
+  height: 82px;
+  left: 0;
+  padding: 0 6.5vw;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 20;
+}
+.smash-guest__nav .nusantara-logo img { height: 42px; width: auto; }
+.smash-guest__nav > nav { display: flex; gap: 28px; margin-left: 8vw; }
+.smash-guest__nav > nav a { color: var(--guest-muted); font-size: 12px; }
+.smash-guest__nav > nav a:hover { color: var(--guest-cream); }
+.smash-guest__nav > div { align-items: center; display: flex; gap: 10px; margin-left: auto; }
+.smash-guest__nav > div > button {
+  background: var(--guest-cream); border: 0; border-radius: 7px; color: var(--guest-bg);
+  font-size: 11px; font-weight: 800; height: 40px; padding: 0 19px;
+}
+.smash-guest__language {
+  align-items: center; border: 1px solid var(--guest-line); border-radius: 7px;
+  color: var(--guest-muted); display: flex; font-size: 10px; gap: 7px; height: 40px; padding: 0 14px;
+}
+.smash-guest__language svg { height: 14px; width: 14px; }
+.smash-guest__hero { height: min(900px, 96vh); min-height: 700px; position: relative; }
+.smash-guest__hero-art {
+  background-image: linear-gradient(90deg, #12110cf7 0%, #12110cc7 38%, #12110c12 72%),
+    linear-gradient(0deg, var(--guest-bg), transparent 45%), url('/smash-guest-hero.png');
+  background-position: center; background-size: cover; filter: sepia(.12) saturate(.82); inset: 0; position: absolute;
+}
+.smash-guest__hero > article {
+  left: 6.5vw; max-width: 760px; position: absolute; top: 51%; transform: translateY(-42%); z-index: 2;
+}
+.smash-guest__hero article > p, .smash-guest__intro > p, .smash-guest__story article > p,
+.smash-guest__access > div:first-child > p, .smash-guest__faq > div:first-child > p,
+.smash-guest__final > p {
+  color: var(--guest-gold); font-size: 10px; font-weight: 900; letter-spacing: .25em;
+}
+.smash-guest__hero h1 {
+  font: 500 clamp(52px, 6.3vw, 92px)/.94 Georgia, serif; letter-spacing: -.055em; margin: 17px 0 26px;
+}
+.smash-guest__hero h1 em { color: #dec793; font-weight: 400; }
+.smash-guest__hero article > span {
+  color: var(--guest-muted); display: block; font-size: 15px; line-height: 1.75; max-width: 610px;
+}
+.smash-guest__hero article > div { align-items: center; display: flex; gap: 25px; margin: 29px 0 18px; }
+.smash-guest__hero article > div > a { border-bottom: 1px solid var(--guest-muted); font-size: 11px; padding-bottom: 5px; }
+.smash-guest__hero article > small { color: var(--guest-dim); font-size: 10px; }
+.smash-guest__primary {
+  align-items: center; background: var(--guest-gold); border: 0; border-radius: 8px; color: #17120b !important;
+  display: inline-flex; font-size: 12px; font-weight: 850; gap: 16px; height: 51px; justify-content: center; padding: 0 23px;
+}
+.smash-guest__primary svg { height: 17px; transition: transform .2s; width: 17px; }
+.smash-guest__primary:hover svg { transform: translateX(4px); }
+.smash-guest__hero > aside {
+  align-items: center; bottom: 70px; display: grid; gap: 8px; grid-template-columns: 32px 1fr;
+  position: absolute; right: 6.5vw; width: 260px; z-index: 2;
+}
+.smash-guest__hero > aside b { color: var(--guest-gold); font: 500 22px Georgia, serif; }
+.smash-guest__hero > aside i { background: var(--guest-line); height: 1px; }
+.smash-guest__hero > aside small { color: var(--guest-muted); font-size: 7px; grid-column: 2; letter-spacing: .2em; }
+.smash-guest__intro {
+  align-items: start; display: grid; gap: 6vw; grid-template-columns: 1fr 1.4fr 1fr; padding: 120px 7vw 80px;
+}
+.smash-guest__intro h2, .smash-guest__story h2, .smash-guest__access h2,
+.smash-guest__faq h2, .smash-guest__final h2 {
+  font: 500 clamp(35px, 4vw, 58px)/1.04 Georgia, serif; letter-spacing: -.035em; margin: 0;
+}
+.smash-guest__intro > span, .smash-guest__access > div:first-child > span {
+  color: var(--guest-muted); font-size: 13px; line-height: 1.8;
+}
+.smash-guest__steps {
+  border-top: 1px solid var(--guest-line); display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 7vw 130px;
+}
+.smash-guest__steps article { border-right: 1px solid var(--guest-line); padding: 32px 9% 30px 0; }
+.smash-guest__steps article + article { padding-left: 9%; }
+.smash-guest__steps article:last-child { border-right: 0; }
+.smash-guest__steps b { color: #675d48; float: right; font: 500 25px Georgia, serif; }
+.smash-guest__steps small, .smash-guest__access-cards small {
+  color: var(--guest-gold); display: block; font-size: 8px; letter-spacing: .18em; margin-top: 45px;
+}
+.smash-guest__steps h3, .smash-guest__access-cards h3 { font: 500 28px Georgia, serif; margin: 10px 0 14px; }
+.smash-guest__steps p, .smash-guest__access-cards p {
+  color: var(--guest-dim); font-size: 11px; line-height: 1.75; max-width: 340px;
+}
+.smash-guest__story { background: var(--guest-bg-soft); display: grid; grid-template-columns: 1.25fr .75fr; min-height: 680px; }
+.smash-guest__story-art {
+  background-image: linear-gradient(90deg, transparent 55%, var(--guest-bg-soft)), url('/smash-guest-story.png');
+  background-position: center; background-size: cover; filter: saturate(.72) sepia(.08);
+}
+.smash-guest__story article { align-self: center; padding: 105px 7vw 80px 2vw; }
+.smash-guest__story h2 { font-size: 45px; margin: 18px 0 25px; }
+.smash-guest__story article > span { color: var(--guest-muted); font-size: 12px; line-height: 1.8; }
+.smash-guest__story ul { border-top: 1px solid var(--guest-line); color: var(--guest-dim); font-size: 10px; line-height: 2.3; margin-top: 25px; padding-top: 24px; }
+.smash-guest__story li { align-items: center; display: flex; gap: 10px; }
+.smash-guest__story li svg { color: var(--guest-gold); height: 13px; width: 13px; }
+.smash-guest__access { display: grid; gap: 8vw; grid-template-columns: .8fr 1.2fr; padding: 130px 7vw; }
+.smash-guest__access > div:first-child > span { display: block; margin-top: 25px; max-width: 440px; }
+.smash-guest__access-cards { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); }
+.smash-guest__access-cards article {
+  background: linear-gradient(145deg, var(--guest-surface), rgba(40, 35, 25, .35));
+  border: 1px solid var(--guest-line); border-radius: 11px; display: flex; flex-direction: column; min-height: 330px; padding: 35px 30px;
+}
+.smash-guest__access-cards article > svg { color: var(--guest-gold); height: 25px; margin-bottom: -25px; margin-left: auto; width: 25px; }
+.smash-guest__access-cards small { margin-top: 0; }
+.smash-guest__access-cards h3 { font-size: 30px; margin-top: 20px; }
+.smash-guest__access-cards button {
+  align-items: center; border: 0; border-top: 1px solid var(--guest-line); color: var(--guest-muted);
+  display: flex; font-size: 10px; gap: 10px; margin-top: auto; padding: 20px 0 0; text-align: left;
+}
+.smash-guest__access-cards button svg { height: 14px; width: 14px; }
+.smash-guest__faq { background: #1c1912; display: grid; gap: 8vw; grid-template-columns: .8fr 1.2fr; padding: 110px 7vw 130px; }
+.smash-guest__faq > div:last-child { border-top: 1px solid var(--guest-line); }
+.smash-guest__faq article { border-bottom: 1px solid var(--guest-line); }
+.smash-guest__faq article > button {
+  align-items: center; background: transparent; border: 0; display: flex; font-size: 13px;
+  justify-content: space-between; min-height: 72px; text-align: left; width: 100%;
+}
+.smash-guest__faq article > button svg { color: var(--guest-gold); height: 19px; transition: transform .2s; width: 19px; }
+.smash-guest__faq article > button svg.is-open { transform: rotate(180deg); }
+.smash-guest__faq article > p { color: var(--guest-dim); font-size: 11px; line-height: 1.75; margin: -4px 55px 25px 0; }
+.smash-guest__final {
+  background: radial-gradient(circle at 50% 100%, rgba(201, 132, 49, .13), transparent 44%);
+  padding: 145px 20px; text-align: center;
+}
+.smash-guest__final h2 { font-size: 57px; margin: 17px 0 30px; }
+.smash-guest__footer {
+  align-items: center; background: #11100c; border-top: 1px solid var(--guest-line);
+  color: var(--guest-dim); display: grid; font-size: 11px; gap: 30px; grid-template-columns: auto 1fr auto; padding: 45px 6.7vw 60px;
+}
+.smash-guest__footer .nusantara-logo img { height: 38px; width: auto; }
+.smash-guest__footer p { margin: 0; }
+.smash-guest__footer nav { display: flex; gap: 22px; }
+.smash-guest__footer > small { grid-column: 1 / -1; }
+.smash-login {
+  align-items: center; backdrop-filter: blur(16px); background: rgba(10, 9, 7, .88);
+  display: flex; inset: 0; justify-content: center; padding: 20px; position: fixed; z-index: 200;
+}
+.smash-login form {
+  background: var(--guest-surface); border: 1px solid var(--guest-line); border-radius: 14px;
+  box-shadow: 0 30px 90px #000; padding: 45px; position: relative; width: min(430px, 100%);
+}
+.smash-login form > .nusantara-logo {
+  display: flex;
+  height: 112px;
+  justify-content: center;
+  margin: 0 auto 30px;
+  overflow: visible;
+  width: 144px;
+}
+.smash-login form > .nusantara-logo img {
+  height: 112px;
+  object-fit: contain;
+  width: 144px;
+}
+.smash-login form > small { color: var(--guest-gold); display: block; font-size: 8px; letter-spacing: .19em; }
+.smash-login h2 { font: 500 35px Georgia, serif; margin: 10px 0; }
+.smash-login form > p { color: var(--guest-dim); font-size: 11px; margin-bottom: 28px; }
+.smash-login label { color: var(--guest-muted); display: block; font-size: 10px; margin: 14px 0; }
+.smash-login input {
+  background: var(--guest-bg); border: 1px solid var(--guest-line); border-radius: 7px; color: var(--guest-cream);
+  display: block; height: 48px; margin-top: 7px; outline: 0; padding: 0 13px; width: 100%;
+}
+.smash-login input:focus { border-color: var(--guest-gold); box-shadow: 0 0 0 3px rgba(201, 132, 49, .12); }
+.smash-login form > .smash-guest__primary { margin-top: 11px; width: 100%; }
+.smash-login form > .smash-guest__primary:disabled { cursor: wait; opacity: .65; }
+.smash-login form > span { color: var(--guest-dim); display: block; font-size: 9px; margin-top: 15px; text-align: center; }
+.smash-login form > span a { color: var(--guest-gold); }
+.smash-login__close { background: transparent; border: 0; color: var(--guest-muted); position: absolute; right: 15px; top: 15px; }
+.smash-login__close svg { height: 21px; width: 21px; }
+.smash-login__error { background: rgba(166, 83, 53, .15); border: 1px solid rgba(166, 83, 53, .45); border-radius: 6px; color: #e8aa94; font-size: 10px; margin: 10px 0; padding: 10px; }
+
+@media (max-width: 760px) {
+  body:has(.smash-guest) { padding-bottom: 0; }
+  .smash-guest__nav { height: 65px; padding: 0 19px; }
+  .smash-guest__nav .nusantara-logo img { height: 34px; }
+  .smash-guest__nav > nav, .smash-guest__language { display: none; }
+  .smash-guest__nav > div > button { height: 35px; }
+  .smash-guest__hero { height: 790px; min-height: 0; }
+  .smash-guest__hero-art {
+    background-image: linear-gradient(0deg, var(--guest-bg) 3%, rgba(21,20,15,.7) 40%, transparent 68%), url('/smash-guest-hero.png');
+    background-position: 66% center;
+  }
+  .smash-guest__hero > article { bottom: 70px; left: 19px; max-width: none; right: 19px; top: auto; transform: none; }
+  .smash-guest__hero h1 { font-size: 46px; }
+  .smash-guest__hero article > span { font-size: 12px; }
+  .smash-guest__hero article > div { align-items: flex-start; flex-direction: column; gap: 16px; margin: 23px 0 14px; }
+  .smash-guest__hero > aside { display: none; }
+  .smash-guest__intro { display: block; padding: 80px 19px 50px; }
+  .smash-guest__intro h2 { font-size: 39px; margin: 14px 0 22px; }
+  .smash-guest__intro > span { font-size: 12px; }
+  .smash-guest__steps { display: block; margin: 0 19px 80px; }
+  .smash-guest__steps article, .smash-guest__steps article + article { border-bottom: 1px solid var(--guest-line); border-right: 0; padding: 25px 0; }
+  .smash-guest__steps small { margin-top: 8px; }
+  .smash-guest__story { display: block; min-height: 0; }
+  .smash-guest__story-art {
+    background-image: linear-gradient(0deg, var(--guest-bg-soft), transparent 55%), url('/smash-guest-story.png');
+    background-position: center; height: 370px;
+  }
+  .smash-guest__story article { padding: 25px 20px 70px; }
+  .smash-guest__story h2 { font-size: 36px; }
+  .smash-guest__access, .smash-guest__faq { display: block; padding: 75px 19px; }
+  .smash-guest__access-cards { display: block; margin-top: 40px; }
+  .smash-guest__access-cards article { margin-top: 12px; min-height: 270px; }
+  .smash-guest__faq > div:last-child { margin-top: 42px; }
+  .smash-guest__faq h2 { font-size: 38px; }
+  .smash-guest__final { padding: 90px 19px; }
+  .smash-guest__final h2 { font-size: 40px; }
+  .smash-guest__footer { display: block; padding: 40px 19px 45px; text-align: center; }
+  .smash-guest__footer p { margin: 14px 0 20px; }
+  .smash-guest__footer nav { justify-content: center; margin-bottom: 22px; }
+  .smash-login form { padding: 35px 24px; }
+  .smash-login form > .nusantara-logo,
+  .smash-login form > .nusantara-logo img { height: 96px; width: 123px; }
 }
 
 @layer base {

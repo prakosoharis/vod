@@ -1,4 +1,4 @@
-# Mostara VOD - LG webOS TV App
+# SMASH VOD - LG webOS TV App
 
 Aplikasi streaming VOD (Video On Demand) dan Live Event untuk **LG webOS TV** (model 2020+, webOS 5.0+).
 
@@ -199,7 +199,7 @@ Karena TV tidak punya kemampuan input kartu kredit via remote dengan baik, flow 
 
 1. Saat user mau nonton konten, app cek status subscription
 2. Jika belum aktif → tampilkan halaman Subscription Gate
-3. User scan QR code dengan HP → buka halaman subscribe di `mostara.id`
+3. User scan QR code dengan HP → buka halaman subscribe di `smashstream.id`
 4. App auto-poll status subscription setiap 30 detik
 5. Begitu status jadi `active` → otomatis lanjut ke player
 
@@ -243,7 +243,7 @@ Bug compatibility Node 22 dengan ares-cli 3.x. Fix (sudah di-applied otomatis sa
 
 ### Video tidak muncul / CORS error
 
-1. Pastikan backend `api.mostara.id` mengizinkan CORS origin:
+1. Pastikan backend `api.smashstream.id` mengizinkan CORS origin:
    - `null` (untuk `file://` origin dari webOS)
    - Domain web TV app
 2. Pastikan HLS URL mengembalikan `Access-Control-Allow-Origin: *`

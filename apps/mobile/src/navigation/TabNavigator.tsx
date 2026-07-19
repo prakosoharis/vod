@@ -1,31 +1,19 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Image, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { SafeIcon } from '../components/ui';
 import { COLORS, THEME } from '../constants';
 import HomeScreen from '../screens/home/HomeScreen';
 import BrowseScreen from '../screens/browse/BrowseScreen';
 import LiveScreen from '../screens/live/LiveScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
-import { MainTabParamList, RootStackParamList } from '../types';
+import MyListScreen from '../screens/mylist/MyListScreen';
+import { MainTabParamList } from '../types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
-const smashLogo = require('../assets/smash-logo-transparent.png');
 
 const TabNavigator = () => {
-  const navigation = useNavigation();
-
-  const SearchButton = () => (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('Search' as never)}
-      style={{ marginRight: 16 }}
-    >
-      <SafeIcon name="search" size={24} color={COLORS.cream[50]} />
-    </TouchableOpacity>
-  );
-
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -37,10 +25,13 @@ const TabNavigator = () => {
               iconName = 'home';
               break;
             case 'Browse':
-              iconName = 'search';
+              iconName = 'grid-view';
               break;
             case 'Live':
               iconName = 'live-tv';
+              break;
+            case 'Collection':
+              iconName = 'bookmark-border';
               break;
             case 'Profile':
               iconName = 'person';
@@ -52,7 +43,7 @@ const TabNavigator = () => {
           return (
             <SafeIcon
               name={iconName}
-              size={focused ? 28 : 24}
+              size={focused ? 25 : 23}
               color={color}
               style={{ marginBottom: -2 }}
             />
@@ -61,17 +52,17 @@ const TabNavigator = () => {
         tabBarActiveTintColor: COLORS.accent[500],
         tabBarInactiveTintColor: COLORS.cream[200],
         tabBarStyle: {
-          backgroundColor: COLORS.warmCharcoal[50],
+          backgroundColor: COLORS.warmCharcoal[200],
           borderTopColor: `${COLORS.cream[50]}14`,
           borderTopWidth: 1,
-          height: 65,
-          paddingBottom: 6,
-          paddingTop: 6,
+          height: 72 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 8,
           elevation: 0,
           shadowOpacity: 0,
         },
         tabBarLabelStyle: {
-          fontSize: THEME.typography.fontSize.xs,
+          fontSize: 10,
           fontWeight: THEME.typography.fontWeight.semibold,
           marginTop: 2,
           marginBottom: 2,
@@ -104,15 +95,7 @@ const TabNavigator = () => {
         component={HomeScreen}
         options={{
           title: 'Beranda',
-          headerShown: true,
-          headerTitle: () => (
-            <Image
-              source={smashLogo}
-              resizeMode="contain"
-              style={{ width: 92, height: 54 }}
-            />
-          ),
-          headerRight: () => <SearchButton />,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -128,6 +111,14 @@ const TabNavigator = () => {
         component={LiveScreen}
         options={{
           title: 'Live',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        name="Collection"
+        component={MyListScreen}
+        options={{
+          title: 'Koleksi',
           headerShown: false,
         }}
       />

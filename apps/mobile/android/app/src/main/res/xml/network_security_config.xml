@@ -10,7 +10,7 @@
 
     <!-- Allow cleartext traffic for specific domains in debug builds -->
     <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">api.mostara.id</domain>
+        <domain includeSubdomains="true">api.smashstream.id</domain>
     </domain-config>
 
     <!-- Base configuration for production -->

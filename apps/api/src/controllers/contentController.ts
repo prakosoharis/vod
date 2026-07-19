@@ -11,7 +11,7 @@ function transformMediaUrls(content: any) {
     return content;
   }
 
-  const PRODUCTION_HLS_URL = process.env.HLS_CDN_URL || 'https://upload.transcode.mostara.id';
+  const PRODUCTION_HLS_URL = process.env.HLS_CDN_URL || 'https://upload.transcode.smashstream.id';
   const LOCALHOST_PATTERNS = [
     'http://localhost:8080',
     'http://localhost:8089',

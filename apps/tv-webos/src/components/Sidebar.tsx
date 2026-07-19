@@ -96,7 +96,7 @@ export function Sidebar({ activeKey: activeKeyProp }: SidebarProps) {
               color: COLORS.cream[50],
             }}
           >
-            Mostara
+            SMASH
           </div>
           <div
             style={{

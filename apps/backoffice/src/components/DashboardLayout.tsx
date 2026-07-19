@@ -13,7 +13,7 @@ import { useAuth } from '../hooks/useAuth'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'User MOST', href: '/users', icon: UserGroupIcon },
+  { name: 'User SMASH', href: '/users', icon: UserGroupIcon },
   { name: 'Konten Film', href: '/movies', icon: FilmIcon },
   { name: 'Upload Assets', href: '/uploads', icon: CloudArrowUpIcon },
 ]

@@ -21,7 +21,7 @@ Before deployment, ensure you have:
 ```
 ☑️ Server with Docker & Docker Compose installed
 ☑️ Nginx installed on host server
-☑️ DNS records configured (transcode.mostara.id, minio.mostara.id)
+☑️ DNS records configured (transcode.smashstream.id, minio.smashstream.id)
 ☑️ Cloudflare proxy enabled for SSL/DDoS protection
 ```
 
@@ -58,13 +58,13 @@ nano .env.production
 **Required updates in `.env.production`:**
 ```bash
 # CRITICAL: Use strong passwords (minimum 20 characters)
-MINIO_ROOT_USER=admin_mostara_prod_2025
+MINIO_ROOT_USER=admin_smash_prod_2025
 MINIO_ROOT_PASSWORD=YourSuperStrongP@ssw0rd!2025
-MINIO_ACCESS_KEY=admin_mostara_prod_2025
+MINIO_ACCESS_KEY=admin_smash_prod_2025
 MINIO_SECRET_KEY=YourSuperStrongP@ssw0rd!2025
 
 # Update domain
-CDN_BASE_URL=https://transcode.mostara.id
+CDN_BASE_URL=https://transcode.smashstream.id
 ```
 
 **Save:** Press `Ctrl+O`, `Enter`, then `Ctrl+X`
@@ -73,12 +73,12 @@ CDN_BASE_URL=https://transcode.mostara.id
 
 ```bash
 # Copy nginx configs
-sudo cp nginx-configs/transcode.mostara.id /etc/nginx/sites-available/
-sudo cp nginx-configs/minio.mostara.id /etc/nginx/sites-available/
+sudo cp nginx-configs/transcode.smashstream.id /etc/nginx/sites-available/
+sudo cp nginx-configs/minio.smashstream.id /etc/nginx/sites-available/
 
 # Enable sites
-sudo ln -s /etc/nginx/sites-available/transcode.mostara.id /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/minio.mostara.id /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/transcode.smashstream.id /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/minio.smashstream.id /etc/nginx/sites-enabled/
 
 # Test configuration
 sudo nginx -t
@@ -112,8 +112,8 @@ The script will:
 docker-compose -f docker-compose.prod.yml --env-file .env.production ps
 
 # Test public access
-curl https://transcode.mostara.id/health
-curl -I https://minio.mostara.id
+curl https://transcode.smashstream.id/health
+curl -I https://minio.smashstream.id
 
 # View logs
 docker-compose -f docker-compose.prod.yml --env-file .env.production logs -f
@@ -211,7 +211,7 @@ sudo systemctl status nginx
 sudo nginx -t
 
 # Check DNS
-nslookup transcode.mostara.id
+nslookup transcode.smashstream.id
 
 # Check containers are running
 docker-compose -f docker-compose.prod.yml --env-file .env.production ps
@@ -231,7 +231,7 @@ docker-compose -f docker-compose.prod.yml --env-file .env.production logs backen
 netstat -tlnp | grep -E '8089|9000|9001'
 
 # Check Nginx host error logs
-sudo tail -f /var/log/nginx/transcode.mostara.id.error.log
+sudo tail -f /var/log/nginx/transcode.smashstream.id.error.log
 ```
 
 ---
@@ -246,7 +246,7 @@ After deployment, verify:
 ☑️ Ports 8089, 9000, 9001 only bind to 127.0.0.1 (localhost)
 ☑️ Firewall allows only 80/443 from internet
 ☑️ Cloudflare proxy is enabled (orange cloud in DNS)
-☑️ Can access https://transcode.mostara.id (public)
+☑️ Can access https://transcode.smashstream.id (public)
 ☑️ Cannot access http://SERVER_IP:8089 (should fail - good!)
 ☑️ Nginx host reverse proxy is working
 ☑️ SSL certificate is valid (Cloudflare handles this)
@@ -264,8 +264,8 @@ Cloudflare (SSL + DDoS + CDN)
 Your Server (161.97.65.21)
   ↓
 Nginx Host (:80/:443)
-  ├─ transcode.mostara.id → 127.0.0.1:8089
-  └─ minio.mostara.id → 127.0.0.1:9001
+  ├─ transcode.smashstream.id → 127.0.0.1:8089
+  └─ minio.smashstream.id → 127.0.0.1:9001
        ↓
 Docker Network (Internal)
   ├─ hls-nginx:80 (port 8089 on host)
@@ -279,7 +279,7 @@ Docker Network (Internal)
 
 - Check logs: `docker-compose -f docker-compose.prod.yml --env-file .env.production logs -f`
 - Verify Nginx: `sudo nginx -t && sudo systemctl status nginx`
-- Check DNS: `nslookup transcode.mostara.id`
+- Check DNS: `nslookup transcode.smashstream.id`
 - Test localhost: `curl http://127.0.0.1:8089/health`
 
 ---
@@ -289,8 +289,8 @@ Docker Network (Internal)
 ```
 ☑️ Containers are running (docker-compose ps shows "Up")
 ☑️ Health checks passing (MinIO, Nginx, Backend)
-☑️ Public access works: https://transcode.mostara.id/health returns 200
-☑️ MinIO Console accessible: https://minio.mostara.id
+☑️ Public access works: https://transcode.smashstream.id/health returns 200
+☑️ MinIO Console accessible: https://minio.smashstream.id
 ☑️ Can upload test video
 ☑️ Video transcoding works
 ☑️ Streaming works: /videos/{id}/master.m3u8

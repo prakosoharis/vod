@@ -1,4 +1,4 @@
-// MOST Design System - Warm Coffee House Cinema
+// SMASH Design System - Warm Coffee House Cinema
 // Copy these colors to tailwind.config.js
 
 export const mostColors = {

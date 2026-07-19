@@ -28,7 +28,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const isLandscape = screenWidth > screenHeight;
-  const carouselHeight = Math.round(screenHeight * (isLandscape ? 0.68 : 0.70));
+  const carouselHeight = Math.round(screenHeight * (isLandscape ? 0.68 : 0.58));
   const contentMaxWidth = isLandscape ? Math.min(screenWidth * 0.58, 760) : screenWidth;
 
   // Auto-rotate carousel every 5 seconds
@@ -133,7 +133,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
               style={styles.playButtonGradient}
             >
               <SafeIcon name="play-arrow" size={24} color={COLORS.cream[50]} />
-              <Text style={styles.playButtonText}>Lihat Tayangan</Text>
+              <Text style={styles.playButtonText}>Tonton</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -143,7 +143,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
               onPress={() => onInfoPress(currentContent)}
             >
               <SafeIcon name="info-outline" size={24} color={COLORS.cream[50]} />
-              <Text style={styles.infoButtonText}>Info Lebih Lanjut</Text>
+              <Text style={styles.infoButtonText}>Detail</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -189,18 +189,17 @@ const styles = StyleSheet.create({
     left: 0,
     width: '100%',
     paddingHorizontal: THEME.spacing.lg,
-    paddingBottom: THEME.spacing.xl,
+    paddingBottom: 24,
   },
   badge: {
     alignSelf: 'flex-start',
     backgroundColor: `${COLORS.accent[500]}50`, // 50% opacity
     paddingHorizontal: THEME.spacing.md,
     paddingVertical: THEME.spacing.xs,
-    borderRadius: THEME.borderRadius.full,
-    borderWidth: 2,
-    borderColor: `${COLORS.accent[400]}99`, // 60% opacity
-    marginBottom: THEME.spacing.md,
-    ...THEME.shadows.medium,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: `${COLORS.accent[400]}80`,
+    marginBottom: 10,
   },
   badgeText: {
     fontSize: THEME.typography.fontSize.xs,
@@ -209,7 +208,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: THEME.typography.fontWeight.bold,
     color: COLORS.cream[50],
     marginBottom: THEME.spacing.sm,
@@ -220,7 +219,7 @@ const styles = StyleSheet.create({
   metadata: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: THEME.spacing.md,
+    marginBottom: 10,
     gap: THEME.spacing.xs,
   },
   metadataText: {
@@ -236,17 +235,16 @@ const styles = StyleSheet.create({
     fontSize: THEME.typography.fontSize.sm,
     color: COLORS.cream[100],
     lineHeight: THEME.typography.lineHeight.relaxed * THEME.typography.fontSize.sm,
-    marginBottom: THEME.spacing.lg,
+    marginBottom: 14,
     opacity: 0.95,
   },
   actions: {
     flexDirection: 'row',
-    gap: THEME.spacing.md,
-    marginBottom: THEME.spacing.lg,
+    gap: 10,
+    marginBottom: 12,
   },
   playButton: {
-    flex: 1,
-    borderRadius: THEME.borderRadius.full,
+    borderRadius: 9,
     overflow: 'hidden',
     ...THEME.shadows.large,
   },
@@ -255,7 +253,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: THEME.spacing.md,
-    paddingHorizontal: THEME.spacing.lg,
+    paddingHorizontal: 22,
     gap: THEME.spacing.sm,
   },
   playButtonText: {
@@ -264,15 +262,15 @@ const styles = StyleSheet.create({
     color: COLORS.cream[50],
   },
   infoButton: {
-    flex: 1,
+    minWidth: 110,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: THEME.spacing.md,
     paddingHorizontal: THEME.spacing.lg,
     backgroundColor: `${COLORS.warmCharcoal[50]}CC`, // 80% opacity
-    borderRadius: THEME.borderRadius.full,
-    borderWidth: 2,
+    borderRadius: 9,
+    borderWidth: 1,
     borderColor: `${COLORS.cream[100]}30`, // 30% opacity
     gap: THEME.spacing.sm,
     ...THEME.shadows.medium,

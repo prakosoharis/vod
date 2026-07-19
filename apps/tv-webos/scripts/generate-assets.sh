@@ -40,7 +40,7 @@ cat > /tmp/largeIcon.svg << 'EOF'
   <rect width="520" height="400" fill="url(#bg)"/>
   <circle cx="260" cy="200" r="180" fill="url(#glow)"/>
   <text x="260" y="220" font-family="-apple-system, sans-serif" font-size="180" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="-8">M</text>
-  <text x="260" y="320" font-family="-apple-system, sans-serif" font-size="36" font-weight="700" fill="#fff" text-anchor="middle" opacity="0.9">MOSTARA VOD</text>
+  <text x="260" y="320" font-family="-apple-system, sans-serif" font-size="36" font-weight="700" fill="#fff" text-anchor="middle" opacity="0.9">SMASH VOD</text>
 </svg>
 EOF
 magick -background none -density 300 /tmp/largeIcon.svg -resize 520x400 largeIcon.png
@@ -65,7 +65,7 @@ cat > /tmp/splash.svg << 'EOF'
   <g transform="translate(960, 540)">
     <rect x="-120" y="-120" width="240" height="240" rx="40" fill="url(#logoBg)"/>
     <text x="0" y="40" font-family="-apple-system, sans-serif" font-size="180" font-weight="800" fill="#fff" text-anchor="middle">M</text>
-    <text x="0" y="220" font-family="-apple-system, sans-serif" font-size="56" font-weight="700" fill="#F4EDE3" text-anchor="middle">MOSTARA VOD</text>
+    <text x="0" y="220" font-family="-apple-system, sans-serif" font-size="56" font-weight="700" fill="#F4EDE3" text-anchor="middle">SMASH VOD</text>
     <text x="0" y="280" font-family="-apple-system, sans-serif" font-size="28" font-weight="400" fill="#8B7E74" text-anchor="middle">Streaming, Film &amp; Live Event</text>
   </g>
 </svg>

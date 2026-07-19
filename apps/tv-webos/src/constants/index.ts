@@ -5,11 +5,11 @@ import { COLORS, NETFLIX_RED } from './colors';
 import THEME from './theme';
 
 // API Configuration (Production)
-export const API_BASE_URL = 'https://api.mostara.id/api';
-export const SOCKET_URL = 'https://api.mostara.id';
+export const API_BASE_URL = 'https://api.smashstream.id/api';
+export const SOCKET_URL = 'https://api.smashstream.id';
 
 // Web URL for QR code (user scans to subscribe via web/mobile)
-export const WEB_APP_URL = 'https://mostara.id';
+export const WEB_APP_URL = 'https://smashstream.id';
 
 // Subscription check polling interval (ms)
 export const SUBSCRIPTION_POLL_INTERVAL = 30000; // 30 seconds

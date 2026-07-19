@@ -335,7 +335,7 @@ export function ProfileScreen() {
             >
               {WEB_APP_URL}
             </a>{' '}
-            atau email support@mostara.id
+            atau email support@smashstream.id
           </div>
         </div>
       </div>

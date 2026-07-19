@@ -65,7 +65,7 @@ export const PaymentErrorPage: React.FC = () => {
         <div className="mt-8 pt-6 border-t border-cream-100/10">
           <p className="text-cream-100 text-sm">
             Butuh bantuan?{' '}
-            <a href="mailto:support@mostara.id" className="text-accent-400 hover:text-accent-300 underline">
+            <a href="mailto:support@smashstream.id" className="text-accent-400 hover:text-accent-300 underline">
               Hubungi kami
             </a>
           </p>

@@ -30,7 +30,18 @@ async function build(): Promise<FastifyInstance> {
 
   // CORS
   await fastify.register(cors, {
-    origin: ['https://mostara.id', 'https://api.mostara.id', 'https://backoffice.mostara.id', 'https://broadcaster.mostara.id', '*'],
+    origin: [
+      'https://smashstream.id',
+      'https://api.smashstream.id',
+      'https://backoffice.smashstream.id',
+      'https://broadcaster.smashstream.id',
+      // Keep legacy domains during the branding/domain migration.
+      'https://mostara.id',
+      'https://api.mostara.id',
+      'https://backoffice.mostara.id',
+      'https://broadcaster.mostara.id',
+      '*',
+    ],
     credentials: true,
   });
 
@@ -179,4 +190,3 @@ process.on('SIGTERM', shutdown);
 
 // Start the server
 start();
-
