@@ -49,7 +49,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       const apiMessage = error?.response?.data?.error || error?.response?.data?.message;
       const networkCode = error?.code ? ` (${error.code})` : '';
       const message = apiMessage || (error?.request
-        ? `Tidak dapat menghubungi server${networkCode}.\n\nEndpoint: ${API_BASE_URL}\n\nPeriksa internet atau DNS perangkat, lalu coba buka https://api.smashstream.id/health di browser perangkat.`
+        ? `Tidak dapat menghubungi server${networkCode}.\n\nEndpoint: ${API_BASE_URL}\n\nPeriksa internet atau DNS perangkat, lalu coba buka https://smashstream.id/health di browser perangkat.`
         : 'Gagal membuat akun. Coba lagi.');
       Alert.alert('Pendaftaran Gagal', message);
     }

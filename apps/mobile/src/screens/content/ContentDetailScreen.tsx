@@ -14,6 +14,8 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import LinearGradient from 'react-native-linear-gradient';
+import Video from 'react-native-video';
+import { useIsFocused } from '@react-navigation/native';
 import { SafeIcon } from '../../components/ui';
 import PaymentOptionsModal from '../../components/payment/PaymentOptionsModal';
 import { RootStackParamList } from '../../types';
@@ -36,11 +38,15 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { content: initialContent } = route.params;
   const { isAuthenticated, user } = useAuthStore();
   const queryClient = useQueryClient();
+  const isScreenFocused = useIsFocused();
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | undefined>();
+  const [trailerPaused, setTrailerPaused] = useState(false);
+  const [trailerMuted, setTrailerMuted] = useState(true);
+  const [trailerFailed, setTrailerFailed] = useState(false);
 
   const { data: latestContent } = useQuery({
     queryKey: ['content', initialContent.id],
@@ -268,11 +274,25 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         >
           {/* Backdrop Image with Gradient */}
           <View style={styles.backdropContainer}>
-            <Image
-              source={{ uri: content.backdrop_url || content.thumbnail_url }}
-              style={styles.backdropImage}
-              resizeMode="cover"
-            />
+            {content.trailer_url && !trailerFailed ? (
+              <Video
+                source={{ uri: content.trailer_url }}
+                style={styles.backdropImage}
+                resizeMode="cover"
+                repeat
+                muted={trailerMuted}
+                paused={trailerPaused || !isScreenFocused}
+                poster={content.backdrop_url || content.thumbnail_url}
+                posterResizeMode="cover"
+                onError={() => setTrailerFailed(true)}
+              />
+            ) : (
+              <Image
+                source={{ uri: content.backdrop_url || content.thumbnail_url }}
+                style={styles.backdropImage}
+                resizeMode="cover"
+              />
+            )}
             <LinearGradient
               colors={[
                 'transparent',
@@ -287,6 +307,37 @@ const ContentDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
               <SafeIcon name="arrow-back" size={24} color={COLORS.cream[50]} />
             </TouchableOpacity>
+
+            {content.trailer_url && !trailerFailed && (
+              <View style={styles.trailerOverlay}>
+                <View style={styles.trailerLabel}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.trailerLabelText}>TRAILER</Text>
+                </View>
+                <View style={styles.trailerControls}>
+                  <TouchableOpacity
+                    style={styles.trailerControlButton}
+                    onPress={() => setTrailerPaused((value) => !value)}
+                  >
+                    <SafeIcon
+                      name={trailerPaused ? 'play-arrow' : 'pause'}
+                      size={19}
+                      color={COLORS.cream[50]}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.trailerControlButton}
+                    onPress={() => setTrailerMuted((value) => !value)}
+                  >
+                    <SafeIcon
+                      name={trailerMuted ? 'volume-off' : 'volume-up'}
+                      size={19}
+                      color={COLORS.cream[50]}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Content Details */}
@@ -533,6 +584,52 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     ...THEME.shadows.medium,
+  },
+  trailerOverlay: {
+    position: 'absolute',
+    left: THEME.spacing.lg,
+    right: THEME.spacing.lg,
+    bottom: THEME.spacing.xl + THEME.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  trailerLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: THEME.borderRadius.full,
+    backgroundColor: `${COLORS.warmCharcoal[100]}B8`,
+    borderWidth: 1,
+    borderColor: `${COLORS.cream[50]}20`,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 7,
+    backgroundColor: COLORS.accent[500],
+  },
+  trailerLabelText: {
+    color: COLORS.cream[50],
+    fontSize: 9,
+    fontWeight: THEME.typography.fontWeight.bold,
+    letterSpacing: 1.2,
+  },
+  trailerControls: {
+    flexDirection: 'row',
+    gap: THEME.spacing.sm,
+  },
+  trailerControlButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${COLORS.warmCharcoal[100]}C8`,
+    borderWidth: 1,
+    borderColor: `${COLORS.cream[50]}28`,
   },
   contentSection: {
     paddingHorizontal: THEME.spacing.lg,

@@ -11,7 +11,7 @@ import { COLORS, NETFLIX_RED } from './colors';
 import THEME from './theme';
 
 // API Configuration
-export const API_BASE_URL = Config.API_BASE_URL || 'https://api.smashstream.id/api';
+export const API_BASE_URL = Config.API_BASE_URL || 'https://smashstream.id/api';
 export const SOCKET_URL = Config.SOCKET_URL || 'https://api.smashstream.id';
 
 // Midtrans Configuration (SANDBOX mode)
@@ -19,7 +19,7 @@ export const MIDTRANS_CONFIG = {
   clientKey: Config.MIDTRANS_CLIENT_KEY || 'Mid-client-VMvBYBwPbEvGFUO3',
   merchantId: Config.MIDTRANS_MERCHANT_ID || 'G136369276',
   isProduction: (Config.MIDTRANS_IS_PRODUCTION || 'false') === 'true',
-  merchantBaseUrl: Config.MIDTRANS_MERCHANT_BASE_URL || 'https://api.smashstream.id/api/payment/',
+  merchantBaseUrl: Config.MIDTRANS_MERCHANT_BASE_URL || 'https://smashstream.id/api/payment/',
 };
 
 // Re-export design system

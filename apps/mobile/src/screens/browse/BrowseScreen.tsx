@@ -26,10 +26,10 @@ const BrowseScreen: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState<string>('');
   const [selectedType, setSelectedType] = useState<'ALL' | 'MOVIE' | 'SERIES'>('ALL');
   const gridGap = THEME.spacing.sm;
-  const gridPadding = 16;
+  const gridPadding = 18;
   const columnCount = width >= 900 ? 5 : width >= 700 ? 4 : width >= 520 ? 3 : 2;
   const availableGridWidth = width - (gridPadding * 2) - (gridGap * (columnCount - 1));
-  const cardWidth = Math.max(108, Math.min(150, Math.floor(availableGridWidth / columnCount)));
+  const cardWidth = Math.max(108, Math.floor(availableGridWidth / columnCount));
   const cardDimensions = {
     width: cardWidth,
     height: Math.round(cardWidth * 1.48),
@@ -200,6 +200,22 @@ const BrowseScreen: React.FC = () => {
             </Text>
           </View>
         )}
+        ListHeaderComponent={
+          displayContent.length > 0 ? (
+            <View style={styles.collectionHeader}>
+              <Text style={styles.collectionTitle}>
+                {searchQuery.length > 2
+                  ? 'Hasil pencarian'
+                  : selectedType === 'MOVIE'
+                  ? 'Koleksi film'
+                  : selectedType === 'SERIES'
+                  ? 'Koleksi serial'
+                  : 'Semua tayangan'}
+              </Text>
+              <Text style={styles.collectionCount}>{displayContent.length}</Text>
+            </View>
+          ) : null
+        }
       />
       </View>
     </>
@@ -296,13 +312,38 @@ const styles = StyleSheet.create({
     fontWeight: THEME.typography.fontWeight.bold,
   },
   contentList: {
-    padding: 16,
+    paddingHorizontal: 18,
+    paddingTop: 4,
     paddingBottom: 100,
   },
   contentRow: {
     gap: THEME.spacing.sm,
-    justifyContent: 'flex-start',
-    marginBottom: THEME.spacing.sm,
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  collectionHeader: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  collectionTitle: {
+    color: COLORS.cream[50],
+    fontSize: THEME.typography.fontSize.md,
+    fontWeight: THEME.typography.fontWeight.bold,
+  },
+  collectionCount: {
+    minWidth: 28,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: THEME.borderRadius.full,
+    overflow: 'hidden',
+    textAlign: 'center',
+    color: COLORS.accent[300],
+    backgroundColor: `${COLORS.accent[500]}20`,
+    fontSize: THEME.typography.fontSize.xs,
+    fontWeight: THEME.typography.fontWeight.bold,
   },
   emptyContainer: {
     flex: 1,
