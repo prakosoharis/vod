@@ -40,6 +40,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   const qualityButtonRef = useRef<HTMLButtonElement>(null);
   const moreOptionsButtonRef = useRef<HTMLButtonElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [currentQuality, setCurrentQuality] = useState<string>('Auto');
   const [availableQualities, setAvailableQualities] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +108,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
       hls.attachMedia(video);
 
       // Event: Manifest loaded
-      hls.on(Hls.Events.MANIFEST_PARSED, (_event, data) => {
+      hls.on(Hls.Events.MANIFEST_PARSED, async (_event, data) => {
         console.log('[HLS] Manifest parsed, levels:', data.levels.length);
 
         // Extract available qualities
@@ -121,16 +122,26 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
         console.log('[HLS] Available qualities:', allQualities);
         setAvailableQualities(allQualities);
 
-        // Set loading false and ensure controls are visible
-        setIsLoading(false);
+        // Keep the loading state until the media actually produces a frame.
         setShowControls(true);
         console.log('[HLS] Controls visible, qualities:', allQualities.length);
 
         // Auto-play if enabled
         if (autoPlay) {
-          video.play().catch(err => {
-            console.warn('[HLS] Autoplay failed:', err);
-          });
+          try {
+            await video.play();
+          } catch (err) {
+            // Browsers often reject delayed autoplay with sound because the
+            // HLS manifest resolves after the original button gesture. Retry
+            // muted so playback still starts inline, and let the user unmute.
+            console.warn('[HLS] Autoplay with sound blocked, retrying muted:', err);
+            video.muted = true;
+            setIsMuted(true);
+            await video.play().catch(playError => {
+              console.warn('[HLS] Muted autoplay failed:', playError);
+              setIsLoading(false);
+            });
+          }
         }
       });
 
@@ -283,18 +294,22 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
     }
   }, [isPlaying]);
 
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-        setIsPlaying(true);
-        // Start auto-hide timer
-        handleMouseMove();
-      } else {
-        videoRef.current.pause();
+  const togglePlay = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      try {
+        await video.play();
+      } catch (playError) {
+        console.error('[HLS] Playback failed:', playError);
         setIsPlaying(false);
-        setShowControls(true); // Always show controls when paused
+        setIsBuffering(false);
+        setError('Video tidak dapat diputar. Silakan coba lagi.');
       }
+    } else {
+      video.pause();
+      setShowControls(true);
     }
   };
 
@@ -401,10 +416,23 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
           onClick={togglePlay}
           onPlay={() => {
             setIsPlaying(true);
+            setIsLoading(false);
             handleMouseMove();
+          }}
+          onPlaying={() => {
+            setIsPlaying(true);
+            setIsLoading(false);
+            setIsBuffering(false);
+          }}
+          onWaiting={() => setIsBuffering(true)}
+          onStalled={() => setIsBuffering(true)}
+          onCanPlay={() => {
+            setIsLoading(false);
+            setIsBuffering(false);
           }}
           onPause={() => {
             setIsPlaying(false);
+            setIsBuffering(false);
             setShowControls(true);
           }}
         />
@@ -416,6 +444,12 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
               <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-600 mb-4 mx-auto"></div>
               <p className="text-lg">Loading video...</p>
             </div>
+          </div>
+        )}
+
+        {!isLoading && isBuffering && !error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/25 z-20 pointer-events-none">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-red-600" />
           </div>
         )}
 
