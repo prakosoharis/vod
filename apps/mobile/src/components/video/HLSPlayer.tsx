@@ -27,6 +27,13 @@ interface HLSPlayerProps {
   onProgress?: (progress: number) => void;
 }
 
+interface SubtitleTrack {
+  index: number;
+  title?: string;
+  language?: string;
+  type?: string;
+}
+
 const CONTROL_TIMEOUT = 3000;
 const SEEK_AMOUNT = 10;
 
@@ -73,7 +80,10 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [showMoreModal, setShowMoreModal] = useState(false);
   const [showSpeedModal, setShowSpeedModal] = useState(false);
+  const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState('Auto');
+  const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>([]);
+  const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState<number | null>(null);
 
   // Animation States
   const controlsOpacity = useRef(new Animated.Value(1)).current;
@@ -97,7 +107,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
 
   // Auto-hide controls
   useEffect(() => {
-    if (showControls && !isScrubbing && isPlaying && !showQualityModal && !showMoreModal && !showSpeedModal) {
+    if (showControls && !isScrubbing && isPlaying && !showQualityModal && !showMoreModal && !showSpeedModal && !showSubtitleModal) {
       resetControlsTimer();
     }
 
@@ -106,7 +116,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [showControls, isScrubbing, isPlaying, showQualityModal, showMoreModal, showSpeedModal]);
+  }, [showControls, isScrubbing, isPlaying, showQualityModal, showMoreModal, showSpeedModal, showSubtitleModal]);
 
   // Animate controls visibility
   useEffect(() => {
@@ -208,6 +218,8 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
     hasLoadedRef.current = true;
     lastErrorSignatureRef.current = null;
     setDuration(Number.isFinite(data.duration) && data.duration > 0 ? data.duration : 0);
+    setSubtitleTracks(Array.isArray(data.textTracks) ? data.textTracks : []);
+    setSelectedSubtitleIndex(null);
     setIsLoading(false);
   };
 
@@ -286,6 +298,13 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
     setPlaybackRate(speed);
     setShowSpeedModal(false);
     setShowMoreModal(false);
+    setShowControls(true);
+    resetControlsTimer();
+  };
+
+  const handleSubtitleSelect = (index: number | null) => {
+    setSelectedSubtitleIndex(index);
+    setShowSubtitleModal(false);
     setShowControls(true);
     resetControlsTimer();
   };
@@ -410,6 +429,73 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
     </Modal>
   );
 
+  const renderSubtitleModal = () => (
+    <Modal
+      visible={showSubtitleModal}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setShowSubtitleModal(false)}
+    >
+      <TouchableWithoutFeedback onPress={() => setShowSubtitleModal(false)}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback>
+            <View style={styles.modalContent}>
+              <LinearGradient
+                colors={[COLORS.warmCharcoal[50], COLORS.warmCharcoal[100]]}
+                style={styles.modalGradient}
+              >
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Subtitle</Text>
+                  <TouchableOpacity onPress={() => setShowSubtitleModal(false)}>
+                    <SafeIcon name="close" size={28} color={COLORS.cream[50]} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView style={styles.modalScroll}>
+                  <TouchableOpacity
+                    style={styles.modalOption}
+                    onPress={() => handleSubtitleSelect(null)}
+                  >
+                    <Text style={[
+                      styles.modalOptionText,
+                      selectedSubtitleIndex === null && styles.modalOptionTextActive,
+                    ]}>
+                      Off
+                    </Text>
+                    {selectedSubtitleIndex === null && (
+                      <SafeIcon name="check" size={20} color={COLORS.accent[500]} />
+                    )}
+                  </TouchableOpacity>
+                  {subtitleTracks.map((track) => (
+                    <TouchableOpacity
+                      key={track.index}
+                      style={styles.modalOption}
+                      onPress={() => handleSubtitleSelect(track.index)}
+                    >
+                      <View style={styles.modalOptionTextContainer}>
+                        <Text style={[
+                          styles.modalOptionText,
+                          selectedSubtitleIndex === track.index && styles.modalOptionTextActive,
+                        ]}>
+                          {track.title || track.language || `Subtitle ${track.index + 1}`}
+                        </Text>
+                        {!!track.language && !!track.title && (
+                          <Text style={styles.modalOptionSubtext}>{track.language}</Text>
+                        )}
+                      </View>
+                      {selectedSubtitleIndex === track.index && (
+                        <SafeIcon name="check" size={20} color={COLORS.accent[500]} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </LinearGradient>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+
   const renderMoreModal = () => (
     <Modal
       visible={showMoreModal}
@@ -479,6 +565,11 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
           progressUpdateInterval={250}
           repeat={false}
           reportBandwidth={true}
+          selectedTextTrack={
+            selectedSubtitleIndex === null
+              ? { type: 'disabled' }
+              : { type: 'index', value: selectedSubtitleIndex }
+          }
         />
       </View>
 
@@ -659,6 +750,26 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
               </View>
 
               <View style={styles.rightControls}>
+                {subtitleTracks.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => {
+                      setShowSubtitleModal(true);
+                      setShowControls(true);
+                    }}
+                  >
+                    <SafeIcon
+                      name="closed-caption"
+                      size={28}
+                      color={
+                        selectedSubtitleIndex === null
+                          ? COLORS.cream[50]
+                          : COLORS.accent[500]
+                      }
+                    />
+                  </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
                   style={styles.controlBtn}
                   onPress={() => {
@@ -699,6 +810,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
       {renderQualityModal()}
       {renderMoreModal()}
       {renderSpeedModal()}
+      {renderSubtitleModal()}
     </View>
   );
 };

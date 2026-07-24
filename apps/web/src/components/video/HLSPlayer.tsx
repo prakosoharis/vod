@@ -19,6 +19,12 @@ interface HLSPlayerProps {
   onQualityChange?: (quality: string) => void;
 }
 
+interface SubtitleOption {
+  index: number;
+  label: string;
+  language?: string;
+}
+
 export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   hlsUrl,
   poster,
@@ -38,6 +44,9 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   const [availableQualities, setAvailableQualities] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
+  const [subtitleOptions, setSubtitleOptions] = useState<SubtitleOption[]>([]);
+  const [selectedSubtitle, setSelectedSubtitle] = useState<number | null>(null);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showPlaybackSpeedMenu, setShowPlaybackSpeedMenu] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -125,6 +134,18 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
         }
       });
 
+      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, (_event, data) => {
+        const tracks = data.subtitleTracks.map((track, index) => ({
+          index,
+          label: track.name || track.lang || `Subtitle ${index + 1}`,
+          language: track.lang,
+        }));
+        setSubtitleOptions(tracks);
+        setSelectedSubtitle(null);
+        hls.subtitleDisplay = false;
+        hls.subtitleTrack = -1;
+      });
+
       // Event: Level switched (quality change)
       hls.on(Hls.Events.LEVEL_SWITCHED, (_event, data) => {
         const level = hls.levels[data.level];
@@ -178,6 +199,16 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
       video.addEventListener('loadedmetadata', () => {
         setIsLoading(false);
         setShowControls(true);
+        const tracks = Array.from(video.textTracks).map((track, index) => ({
+          index,
+          label: track.label || track.language || `Subtitle ${index + 1}`,
+          language: track.language,
+        }));
+        tracks.forEach((_, index) => {
+          video.textTracks[index].mode = 'disabled';
+        });
+        setSubtitleOptions(tracks);
+        setSelectedSubtitle(null);
         if (autoPlay) {
           video.play().catch(err => {
             console.warn('[HLS] Autoplay failed:', err);
@@ -216,6 +247,23 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
         setCurrentQuality(quality);
       }
     }
+  };
+
+  const changeSubtitle = (index: number | null) => {
+    const hls = hlsRef.current;
+    const video = videoRef.current;
+
+    if (hls) {
+      hls.subtitleDisplay = index !== null;
+      hls.subtitleTrack = index ?? -1;
+    } else if (video) {
+      Array.from(video.textTracks).forEach((track, trackIndex) => {
+        track.mode = index === trackIndex ? 'showing' : 'disabled';
+      });
+    }
+
+    setSelectedSubtitle(index);
+    setShowSubtitleMenu(false);
   };
 
   // Auto-hide controls after 3 seconds of inactivity
@@ -466,9 +514,10 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                   <div className="relative" style={{ zIndex: 9999 }}>
                     <button
                       ref={qualityButtonRef}
-                      onClick={() => {
-                        setShowQualityMenu(!showQualityMenu);
-                        setShowMoreOptions(false);
+                    onClick={() => {
+                      setShowQualityMenu(!showQualityMenu);
+                      setShowSubtitleMenu(false);
+                      setShowMoreOptions(false);
                       }}
                       className="flex items-center gap-2 px-3 py-2 bg-black/50 hover:bg-black/70 rounded text-white text-sm font-medium transition-colors border border-white/20"
                       style={{
@@ -522,6 +571,61 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                   </div>
                 )}
 
+                {/* Subtitle Selector */}
+                {subtitleOptions.length > 0 && (
+                  <div className="relative" style={{ zIndex: 9999 }}>
+                    <button
+                      onClick={() => {
+                        setShowSubtitleMenu(!showSubtitleMenu);
+                        setShowQualityMenu(false);
+                        setShowMoreOptions(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 bg-black/50 hover:bg-black/70 rounded text-white text-sm font-medium transition-colors border border-white/20"
+                      title="Subtitle"
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      <span className="rounded border border-current px-1 text-[10px] font-bold leading-4">
+                        CC
+                      </span>
+                      <span className="max-w-24 truncate">
+                        {selectedSubtitle === null
+                          ? 'Off'
+                          : subtitleOptions.find(track => track.index === selectedSubtitle)?.label}
+                      </span>
+                    </button>
+
+                    {showSubtitleMenu && (
+                      <div
+                        className="absolute bg-black/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 min-w-[180px]"
+                        style={{
+                          bottom: '100%',
+                          right: 0,
+                          marginBottom: '8px',
+                          zIndex: 2147483647,
+                          pointerEvents: 'auto'
+                        }}
+                      >
+                        {[{ index: null, label: 'Off' }, ...subtitleOptions].map(option => (
+                          <button
+                            key={option.index ?? 'off'}
+                            onClick={() => changeSubtitle(option.index)}
+                            className={`w-full text-left px-4 py-3 hover:bg-red-600 transition-colors text-sm font-medium ${
+                              selectedSubtitle === option.index
+                                ? 'bg-red-700 text-white'
+                                : 'text-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <span>{option.label}</span>
+                              {selectedSubtitle === option.index && <span>✓</span>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Fullscreen Button */}
                 <button
                   onClick={toggleFullscreen}
@@ -544,6 +648,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
                     onClick={() => {
                       setShowMoreOptions(!showMoreOptions);
                       setShowQualityMenu(false);
+                      setShowSubtitleMenu(false);
                     }}
                     className="flex items-center justify-center w-10 h-10 bg-black/50 hover:bg-black/70 rounded text-white transition-colors border border-white/20"
                     title="More Options"

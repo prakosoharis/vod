@@ -5,6 +5,14 @@
 @tailwind components;
 @tailwind utilities;
 
+video::cue {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.78);
+  font-family: Arial, sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
 /* ═══════════════════════════════════════════════════════
    SMASH DESIGN SYSTEM - WARM COFFEE HOUSE CINEMA
    ═══════════════════════════════════════════════════════ */
