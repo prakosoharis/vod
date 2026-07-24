@@ -89,6 +89,11 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
+    // Master manifests are tiny and may change when tracks are corrected.
+    // Use a fresh URL per player mount so the browser cannot keep an outdated
+    // manifest that still references an invalid subtitle resource.
+    const manifestUrl = `${hlsUrl}${hlsUrl.includes('?') ? '&' : '?'}_manifest=${Date.now()}`;
+
     // Check if HLS is supported
     if (Hls.isSupported()) {
       console.log('[HLS] Initializing HLS.js player');
@@ -110,7 +115,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
       hlsRef.current = hls;
 
       // Load source
-      hls.loadSource(hlsUrl);
+      hls.loadSource(manifestUrl);
       hls.attachMedia(video);
 
       // Event: Manifest loaded
@@ -242,7 +247,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Native HLS support (Safari)
       console.log('[HLS] Using native HLS support');
-      video.src = hlsUrl;
+      video.src = manifestUrl;
 
       video.addEventListener('loadedmetadata', () => {
         setIsLoading(false);
