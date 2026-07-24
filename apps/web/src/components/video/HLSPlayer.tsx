@@ -25,6 +25,18 @@ interface SubtitleOption {
   language?: string;
 }
 
+const getQualityLabel = (level: { width?: number; height?: number }) => {
+  const width = level.width ?? 0;
+  const height = level.height ?? 0;
+
+  if (width >= 3840 || height >= 2160) return '4K';
+  if (width >= 2560 || height >= 1440) return '2K';
+  if (height >= 1080) return '1080p';
+  if (height >= 720) return '720p';
+  if (height >= 480) return '480p';
+  return '360p';
+};
+
 export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   hlsUrl,
   poster,
@@ -132,12 +144,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
         hls.startLoad();
 
         // Extract available qualities
-        const qualities = data.levels.map(level => {
-          if (level.height >= 1080) return '1080p';
-          if (level.height >= 720) return '720p';
-          if (level.height >= 480) return '480p';
-          return '360p';
-        });
+        const qualities = data.levels.map(getQualityLabel);
         const allQualities = ['Auto', ...qualities];
         console.log('[HLS] Available qualities:', allQualities);
         setAvailableQualities(allQualities);
@@ -180,10 +187,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
       // Event: Level switched (quality change)
       hls.on(Hls.Events.LEVEL_SWITCHED, (_event, data) => {
         const level = hls.levels[data.level];
-        const quality = level.height >= 1080 ? '1080p'
-          : level.height >= 720 ? '720p'
-          : level.height >= 480 ? '480p'
-          : '360p';
+        const quality = getQualityLabel(level);
 
         console.log('[HLS] Quality switched to:', quality);
         setCurrentQuality(quality);
@@ -291,9 +295,9 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
       hls.currentLevel = -1; // Auto quality
       setCurrentQuality('Auto');
     } else {
-      // Find level index for selected quality
-      const qualityHeight = parseInt(quality);
-      const levelIndex = hls.levels.findIndex(level => level.height === qualityHeight);
+      const levelIndex = hls.levels.findIndex(
+        level => getQualityLabel(level) === quality
+      );
 
       if (levelIndex !== -1) {
         hls.currentLevel = levelIndex;
