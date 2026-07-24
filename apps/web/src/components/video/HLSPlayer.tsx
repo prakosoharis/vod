@@ -37,6 +37,8 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const networkRecoveryAttemptsRef = useRef(0);
+  const networkRecoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const qualityButtonRef = useRef<HTMLButtonElement>(null);
   const moreOptionsButtonRef = useRef<HTMLButtonElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -183,6 +185,10 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
         onQualityChange?.(quality);
       });
 
+      hls.on(Hls.Events.FRAG_LOADED, () => {
+        networkRecoveryAttemptsRef.current = 0;
+      });
+
       // Event: Error handling
       hls.on(Hls.Events.ERROR, (_event, data) => {
         console.error('[HLS] Error:', data.type, data.details, data.fatal);
@@ -190,8 +196,22 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              console.error('[HLS] Fatal network error, trying to recover...');
-              hls.startLoad();
+              if (networkRecoveryAttemptsRef.current >= 3) {
+                console.error('[HLS] Network recovery limit reached');
+                setIsLoading(false);
+                setIsBuffering(false);
+                setError('Video gagal dimuat. Silakan coba kembali.');
+                onError?.(new Error(data.details));
+                break;
+              }
+
+              networkRecoveryAttemptsRef.current += 1;
+              console.error(
+                `[HLS] Fatal network error, recovery attempt ${networkRecoveryAttemptsRef.current}/3`
+              );
+              networkRecoveryTimerRef.current = setTimeout(() => {
+                hls.startLoad();
+              }, 750 * networkRecoveryAttemptsRef.current);
               break;
 
             case Hls.ErrorTypes.MEDIA_ERROR:
@@ -212,6 +232,10 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
       // Cleanup
       return () => {
         console.log('[HLS] Cleaning up HLS instance');
+        if (networkRecoveryTimerRef.current) {
+          clearTimeout(networkRecoveryTimerRef.current);
+          networkRecoveryTimerRef.current = null;
+        }
         hls.destroy();
       };
 
