@@ -94,6 +94,10 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
       const hls = new Hls({
         debug: false,
         enableWorker: true,
+        // Parse the master first so startup can be pinned to the safest
+        // rendition. This prevents a 4K-first master playlist from exhausting
+        // its buffer after the first segment before ABR has enough samples.
+        autoStartLoad: false,
         lowLatencyMode: false,
         backBufferLength: 90,
         maxBufferLength: 30,
@@ -110,6 +114,15 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
       // Event: Manifest loaded
       hls.on(Hls.Events.MANIFEST_PARSED, async (_event, data) => {
         console.log('[HLS] Manifest parsed, levels:', data.levels.length);
+
+        const safestStartLevel = data.levels.reduce(
+          (lowestIndex, level, index, levels) =>
+            level.bitrate < levels[lowestIndex].bitrate ? index : lowestIndex,
+          0
+        );
+        hls.startLevel = safestStartLevel;
+        hls.nextLoadLevel = safestStartLevel;
+        hls.startLoad();
 
         // Extract available qualities
         const qualities = data.levels.map(level => {
