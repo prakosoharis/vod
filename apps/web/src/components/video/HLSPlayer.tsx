@@ -380,7 +380,7 @@ export const HLSPlayer: React.FC<HLSPlayerProps> = ({
     <div className={`hls-player-wrapper ${className} relative overflow-visible`}>
       <div
         ref={containerRef}
-        className="relative bg-black overflow-visible"
+        className="relative h-full bg-black overflow-visible"
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => {

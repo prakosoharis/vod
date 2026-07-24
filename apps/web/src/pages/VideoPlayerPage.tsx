@@ -336,13 +336,12 @@ const VideoPlayerPage = () => {
   }
 
   return (
-    <div className="bg-black min-h-screen" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>
+    <div className="bg-[#090806] min-h-screen pt-4 md:pt-8" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>
       {/* Video Player Container */}
       <div
-        className="relative w-full bg-black"
+        className="relative mx-auto aspect-video w-full max-w-6xl overflow-hidden bg-black shadow-2xl md:w-[calc(100%-3rem)] md:rounded-xl md:ring-1 md:ring-white/10"
         onMouseMove={videoActions.showControls}
         style={{
-          paddingTop: '56.25%',
           WebkitTouchCallout: 'none',
           WebkitUserSelect: 'none',
           KhtmlUserSelect: 'none',
@@ -384,7 +383,7 @@ const VideoPlayerPage = () => {
               key={currentEpisode?.id || content.id}
               hlsUrl={playbackHlsUrl}
               poster={currentEpisode?.thumbnail_url || content.backdrop_url || content.thumbnail_url}
-              autoPlay={false}
+              autoPlay
               controls={true}
               className="w-full h-full"
             />
@@ -408,6 +407,8 @@ const VideoPlayerPage = () => {
               controlsList="nodownload"
               disablePictureInPicture
               controls={false}
+              autoPlay
+              playsInline
               preload="metadata"
             />
           )}
