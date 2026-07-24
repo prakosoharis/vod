@@ -7,10 +7,12 @@
 
 video::cue {
   color: #ffffff;
-  background: rgba(0, 0, 0, 0.78);
-  font-family: Arial, sans-serif;
-  font-size: 1.05rem;
-  line-height: 1.35;
+  background: rgba(0, 0, 0, 0.72);
+  font-family: Inter, Arial, sans-serif;
+  font-size: clamp(1.35rem, 2.2vw, 2rem);
+  font-weight: 600;
+  line-height: 1.4;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.95);
 }
 
 /* ═══════════════════════════════════════════════════════
