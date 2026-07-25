@@ -58,17 +58,21 @@ export interface ContentListResponse {
 export interface AuthResponse {
   user: User;
   token: string;
+  refresh_token?: string;
 }
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  email: string;
+  method: 'email' | 'phone';
+  email?: string;
+  phone?: string;
+  username: string;
   password: string;
-  full_name?: string;
+  full_name: string;
 }
 
 // Navigation types

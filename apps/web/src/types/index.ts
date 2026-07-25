@@ -1,6 +1,9 @@
 export interface User {
   id: string;
-  email: string;
+  email: string | null;
+  username?: string | null;
+  phone?: string | null;
+  account_status?: string;
   full_name: string | null;
   avatar_url: string | null;
   created_at: string;
@@ -79,17 +82,24 @@ export interface ContentListResponse {
 export interface AuthResponse {
   user: User;
   token: string;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
+  source_platform: 'web';
+  device_name?: string;
 }
 
 export interface RegisterRequest {
-  email: string;
+  method: 'email' | 'phone';
+  email?: string;
+  phone?: string;
+  username: string;
   password: string;
-  full_name?: string;
+  full_name: string;
   legal_consent: true;
   terms_version: string;
   privacy_version: string;

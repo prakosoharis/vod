@@ -24,23 +24,23 @@ interface Props {
 }
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const { login, isLoading } = useAuthStore();
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Email dan password harus diisi');
+    if (!identifier.trim() || !password) {
+      Alert.alert('Error', 'Nomor HP, email, atau username dan password harus diisi');
       return;
     }
     try {
-      await login(email.trim(), password);
+      await login(identifier.trim(), password);
     } catch (error: any) {
       const apiMessage = error?.response?.data?.error || error?.response?.data?.message;
       const networkCode = error?.code ? ` (${error.code})` : '';
       const message = apiMessage || (error?.request
         ? `Tidak dapat menghubungi server${networkCode}.\n\nEndpoint: ${API_BASE_URL}\n\nPeriksa internet atau DNS perangkat, lalu coba buka https://smashstream.id/health di browser perangkat.`
-        : 'Periksa email dan password Anda.');
+        : 'Data login tidak sesuai. Periksa kembali dan coba lagi.');
       Alert.alert('Login Gagal', message);
     }
   };
@@ -66,11 +66,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.form}>
             <Input
-              label="Email"
-              placeholder="email@contoh.com"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              label="Nomor HP, Email, atau Username"
+              placeholder="0812…, email, atau username"
+              value={identifier}
+              onChangeText={setIdentifier}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -89,6 +88,22 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               disabled={isLoading}
               style={styles.button}
             />
+
+            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+              <Text style={[styles.registerLink, { textAlign: 'center', marginBottom: 18 }]}>Lupa password?</Text>
+            </TouchableOpacity>
+            <Text style={{ color: COLORS.cream[200], textAlign: 'center', marginBottom: 12 }}>atau</Text>
+            {(['google', 'facebook'] as const).map((provider) => (
+              <TouchableOpacity
+                key={provider}
+                style={{ borderWidth: 1, borderColor: `${COLORS.cream[50]}30`, borderRadius: 12, padding: 13, marginBottom: 10 }}
+                onPress={() => Alert.alert('Belum tersedia', `Continue with ${provider === 'google' ? 'Google' : 'Facebook'} menunggu konfigurasi provider.`)}
+              >
+                <Text style={{ color: COLORS.cream[50], textAlign: 'center', fontWeight: '600' }}>
+                  Continue with {provider === 'google' ? 'Google' : 'Facebook'}
+                </Text>
+              </TouchableOpacity>
+            ))}
 
             <View style={styles.registerRow}>
               <Text style={styles.registerText}>Belum punya akun? </Text>

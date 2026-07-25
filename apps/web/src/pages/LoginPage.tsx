@@ -20,7 +20,7 @@ const LoginPage = () => {
 
           <div className="mt-6 text-center space-y-3">
             <Link
-              to="#"
+              to="/forgot-password"
               className="block text-sm text-cream-200 hover:text-accent-400 transition-colors"
             >
               Lupa password?

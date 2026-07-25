@@ -232,7 +232,7 @@ export async function legalRoutes(fastify: FastifyInstance): Promise<void> {
       }).parse(request.body);
       const userId = (request.user as any).userId;
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (!user || !(await bcrypt.compare(body.password, user.password_hash))) {
+      if (!user || !user.password_hash || !(await bcrypt.compare(body.password, user.password_hash))) {
         return reply.code(401).send({ error: 'Autentikasi ulang gagal.' });
       }
       const existing = await prisma.accountDeletionRequest.findFirst({

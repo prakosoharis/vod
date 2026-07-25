@@ -1,7 +1,6 @@
 import api from './api';
 import type { RegisterRequest, LoginRequest, AuthResponse, User } from '../types';
-
-const TOKEN_KEY = 'token';
+import { getAccessToken, setAccessToken } from './accessToken';
 
 export const authService = {
   /**
@@ -9,21 +8,22 @@ export const authService = {
    * @param data - Registration data
    * @returns Auth response with user data and token
    */
-  async register(data: RegisterRequest): Promise<AuthResponse> {
-    try {
-      const response = await api.post<AuthResponse>('/auth/register', data);
-      const { token, user } = response.data;
-      
-      // Save token to localStorage
-      if (token) {
-        this.setToken(token);
-      }
-      
-      return { user, token };
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
+  async register(data: RegisterRequest) {
+    const response = await api.post('/auth/register/start', data);
+    return response.data;
+  },
+
+  async verifyRegistration(challengeId: string, otp: string): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth/register/verify', {
+      challenge_id: challengeId, otp, source_platform: 'web',
+    });
+    setAccessToken(response.data.token);
+    return response.data;
+  },
+
+  async resendRegistration(challengeId: string) {
+    const response = await api.post('/auth/register/resend', { challenge_id: challengeId });
+    return response.data;
   },
 
   /**
@@ -32,33 +32,17 @@ export const authService = {
    * @returns Auth response with user data and token
    */
   async login(data: LoginRequest): Promise<AuthResponse> {
-    try {
-      const response = await api.post<AuthResponse>('/auth/login', data);
-      const { token, user } = response.data;
-      
-      // Save token to localStorage
-      if (token) {
-        this.setToken(token);
-      }
-      
-      return { user, token };
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+    const response = await api.post<AuthResponse>('/auth/login', data);
+    setAccessToken(response.data.token);
+    return response.data;
   },
 
   /**
    * Logout user
    * Removes token from localStorage
    */
-  logout(): void {
-    try {
-      // Remove token from localStorage
-      localStorage.removeItem(TOKEN_KEY);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  async logout(): Promise<void> {
+    try { await api.post('/auth/logout'); } finally { setAccessToken(null); }
   },
 
   /**
@@ -67,8 +51,8 @@ export const authService = {
    */
   async getMe(): Promise<User> {
     try {
-      const response = await api.get<User>('/auth/me');
-      return response.data;
+      const response = await api.get<{ user: User }>('/auth/me');
+      return response.data.user;
     } catch (error) {
       console.error('Get current user error:', error);
       throw error;
@@ -80,14 +64,7 @@ export const authService = {
    * @returns Token string or null if not found
    */
   getToken(): string | null {
-    try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      console.log('🔍 [AuthService] getToken:', token ? 'found' : 'not found');
-      return token;
-    } catch (error) {
-      console.error('Get token error:', error);
-      return null;
-    }
+    return getAccessToken();
   },
 
   /**
@@ -95,14 +72,23 @@ export const authService = {
    * @param token - Authentication token
    */
   setToken(token: string): void {
-    try {
-      console.log('💾 [AuthService] setToken: saving token');
-      localStorage.setItem(TOKEN_KEY, token);
-      console.log('✅ [AuthService] setToken: token saved successfully');
-    } catch (error) {
-      console.error('Set token error:', error);
-      throw error;
-    }
+    setAccessToken(token);
+  },
+
+  async refresh(): Promise<string> {
+    const response = await api.post<{ token: string }>('/auth/refresh', {});
+    setAccessToken(response.data.token);
+    return response.data.token;
+  },
+
+  async forgotPassword(identifier: string) {
+    const response = await api.post('/auth/forgot-password', { identifier });
+    return response.data;
+  },
+
+  async social(provider: 'google' | 'facebook') {
+    const response = await api.post(`/auth/oauth/${provider}`, {});
+    return response.data;
   },
 
   /**
@@ -165,4 +151,3 @@ export const authService = {
 };
 
 export const userService = authService;
-

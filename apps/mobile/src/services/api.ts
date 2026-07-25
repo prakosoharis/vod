@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { API_BASE_URL } from '../constants';
+import { clearTokens, getTokens, refreshAccessToken, saveTokens } from './secureAuthStorage';
 
 class ApiService {
   private client: AxiosInstance;
@@ -18,9 +19,9 @@ class ApiService {
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       async (config) => {
-        const token = await AsyncStorage.getItem('@auth_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        const tokens = await getTokens();
+        if (tokens?.accessToken) {
+          config.headers.Authorization = `Bearer ${tokens.accessToken}`;
         }
         return config;
       },
@@ -32,9 +33,19 @@ class ApiService {
       (response: AxiosResponse) => response,
       async (error) => {
         const requestUrl = String(error.config?.url || '');
+        if (error.response?.status === 401 && !error.config?._authRetry &&
+            !requestUrl.includes('/auth/login') && !requestUrl.includes('/auth/refresh')) {
+          const nextToken = await refreshAccessToken();
+          if (nextToken) {
+            error.config._authRetry = true;
+            error.config.headers.Authorization = `Bearer ${nextToken}`;
+            return this.client.request(error.config);
+          }
+        }
         if (error.response?.status === 401 && !requestUrl.includes('/account-deletion')) {
           // Token expired or invalid, clear storage
-          await AsyncStorage.multiRemove(['@auth_token', '@user_data']);
+          await clearTokens();
+          await AsyncStorage.removeItem('@user_data');
           // You could navigate to login screen here
         }
         return Promise.reject(error);
@@ -43,30 +54,61 @@ class ApiService {
   }
 
   // Auth methods
-  async login(email: string, password: string) {
-    const response = await this.client.post('/auth/login', { email, password });
+  async login(identifier: string, password: string) {
+    const response = await this.client.post('/auth/login', {
+      identifier, password, source_platform: Platform.OS === 'ios' ? 'ios' : 'android',
+    });
     if (response.data.token) {
-      await AsyncStorage.setItem('@auth_token', response.data.token);
+      await saveTokens({
+        accessToken: response.data.token,
+        refreshToken: response.data.refresh_token,
+      });
       await AsyncStorage.setItem('@user_data', JSON.stringify(response.data.user));
     }
     return response.data;
   }
 
-  async register(email: string, password: string, fullName?: string) {
-    const response = await this.client.post('/auth/register', {
-      email,
-      password,
-      full_name: fullName,
+  async startRegistration(input: {
+    method: 'email' | 'phone'; fullName: string; username: string;
+    destination: string; password: string;
+  }) {
+    const response = await this.client.post('/auth/register/start', {
+      method: input.method,
+      ...(input.method === 'email' ? { email: input.destination } : { phone: input.destination }),
+      username: input.username,
+      password: input.password,
+      full_name: input.fullName,
       legal_consent: true,
       terms_version: '2026-07-25',
       privacy_version: '2026-07-25',
       source_platform: Platform.OS === 'ios' ? 'ios' : 'android',
     });
-    if (response.data.token) {
-      await AsyncStorage.setItem('@auth_token', response.data.token);
-      await AsyncStorage.setItem('@user_data', JSON.stringify(response.data.user));
-    }
     return response.data;
+  }
+
+  async verifyRegistration(challengeId: string, otp: string) {
+    const response = await this.client.post('/auth/register/verify', {
+      challenge_id: challengeId, otp,
+      source_platform: Platform.OS === 'ios' ? 'ios' : 'android',
+    });
+    await saveTokens({
+      accessToken: response.data.token,
+      refreshToken: response.data.refresh_token,
+    });
+    await AsyncStorage.setItem('@user_data', JSON.stringify(response.data.user));
+    return response.data;
+  }
+
+  async resendRegistration(challengeId: string) {
+    return (await this.client.post('/auth/register/resend', { challenge_id: challengeId })).data;
+  }
+
+  async forgotPassword(identifier: string) {
+    return (await this.client.post('/auth/forgot-password', { identifier })).data;
+  }
+
+  async social(provider: 'google' | 'facebook') {
+    return (await this.client.post(`/auth/oauth/${provider}`, {})).data;
   }
 
   async getAccountDeletion() {
@@ -93,7 +135,8 @@ class ApiService {
     } catch (error) {
       // Continue with logout even if API call fails
     } finally {
-      await AsyncStorage.multiRemove(['@auth_token', '@user_data']);
+      await clearTokens();
+      await AsyncStorage.removeItem('@user_data');
     }
   }
 

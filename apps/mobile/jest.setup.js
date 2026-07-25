@@ -12,6 +12,12 @@ jest.mock('react-native-linear-gradient', () => require('react-native').View);
 jest.mock('react-native-vector-icons/MaterialIcons', () => require('react-native').Text);
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => require('react-native').Text);
 jest.mock('react-native-video', () => require('react-native').View);
+jest.mock('react-native-keychain', () => ({
+  ACCESSIBLE: { WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY' },
+  setGenericPassword: jest.fn(async () => true),
+  getGenericPassword: jest.fn(async () => false),
+  resetGenericPassword: jest.fn(async () => true),
+}));
 jest.mock('react-native-webview', () => ({ WebView: require('react-native').View }));
 jest.mock('react-native-orientation-locker', () => ({
   lockToLandscape: jest.fn(),

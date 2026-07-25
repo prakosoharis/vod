@@ -23,6 +23,16 @@ dotenv.config();
 // Register plugins and routes
 export async function build(options: { startWebSocket?: boolean } = {}): Promise<FastifyInstance> {
   const isDev = process.env.NODE_ENV === 'development';
+  if (process.env.NODE_ENV === 'production') {
+    for (const name of ['AUTH_HASH_SECRET', 'OTP_HASH_SECRET']) {
+      if (!process.env[name] || process.env[name]!.length < 24) {
+        throw new Error(`${name} must be configured with at least 24 characters`);
+      }
+    }
+    if (process.env.AUTH_PROVIDER_MODE === 'mock') {
+      throw new Error('AUTH_PROVIDER_MODE=mock is forbidden in production');
+    }
+  }
 
   const fastify: FastifyInstance = Fastify({
     logger: {

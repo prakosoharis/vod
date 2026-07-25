@@ -85,7 +85,9 @@ export async function runAccountDeletionWorker(
         where: {
           OR: [
             { user_id: candidate.user_id },
-            { email: { equals: user.email, mode: 'insensitive' } },
+            ...(user.email
+              ? [{ email: { equals: user.email, mode: 'insensitive' as const } }]
+              : []),
           ],
         },
         select: { id: true, attachment_url: true },
@@ -96,6 +98,12 @@ export async function runAccountDeletionWorker(
       await prisma.$transaction(async (tx) => {
         await tx.watchlist.deleteMany({ where: { user_id: candidate.user_id } });
         await tx.watchProgress.deleteMany({ where: { user_id: candidate.user_id } });
+        await tx.otpChallenge.deleteMany({ where: { user_id: candidate.user_id } });
+        await tx.socialIdentity.deleteMany({ where: { user_id: candidate.user_id } });
+        await tx.authSession.updateMany({
+          where: { user_id: candidate.user_id, revoked_at: null },
+          data: { revoked_at: now },
+        });
         await tx.legalConsent.updateMany({
           where: { user_id: candidate.user_id },
           data: { user_agent: null },
@@ -117,6 +125,13 @@ export async function runAccountDeletionWorker(
           where: { id: candidate.user_id },
           data: {
             email: anonymousEmail,
+            email_normalized: anonymousEmail,
+            email_verified_at: null,
+            username: null,
+            username_normalized: null,
+            phone_e164: null,
+            phone_verified_at: null,
+            account_status: 'DELETED',
             password_hash: passwordHash,
             full_name: null,
             avatar_url: null,

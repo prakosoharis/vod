@@ -67,9 +67,8 @@ Thumbs.db
 *.cert
 *secret*
 *credential*
-*auth*
-!apps/mobile/src/screens/auth/
-!apps/mobile/src/screens/auth/*.tsx
+oauth-credentials*.json
+oauth-client-secret*.json
 *.env.local
 *.env.production
 *.env.staging

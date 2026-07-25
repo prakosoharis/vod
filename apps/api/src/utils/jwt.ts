@@ -4,7 +4,9 @@ import jwt from 'jsonwebtoken';
 
 export interface JWTPayload {
   userId: string;
-  email: string;
+  email?: string;
+  sessionId?: string;
+  purpose?: 'access' | 'password-reset';
 }
 
 export async function registerJwt(fastify: FastifyInstance): Promise<void> {
@@ -23,7 +25,9 @@ export function generateToken(userId: string): string;
 export function generateToken(arg1: FastifyInstance | string, arg2?: JWTPayload): string {
   // Legacy: fastify instance + payload
   if (typeof arg1 !== 'string' && arg2) {
-    return arg1.jwt.sign(arg2, { expiresIn: '7d' });
+    return arg1.jwt.sign({ purpose: 'access', ...arg2 }, {
+      expiresIn: process.env.AUTH_ACCESS_TOKEN_TTL || '15m',
+    });
   }
 
   // New: userId only, using jsonwebtoken and env secret
@@ -37,8 +41,8 @@ export function generateToken(arg1: FastifyInstance | string, arg2?: JWTPayload)
 
 // Overloads to support both legacy Fastify-based usage and new standalone utility
 export function verifyToken(fastify: FastifyInstance, token: string): Promise<JWTPayload>;
-export function verifyToken(token: string): { userId: string } | null;
-export function verifyToken(arg1: FastifyInstance | string, arg2?: string): Promise<JWTPayload> | ({ userId: string } | null) {
+export function verifyToken(token: string): JWTPayload | null;
+export function verifyToken(arg1: FastifyInstance | string, arg2?: string): Promise<JWTPayload> | (JWTPayload | null) {
   // Legacy: fastify instance + token
   if (typeof arg1 !== 'string' && typeof arg2 === 'string') {
     return arg1.jwt.verify<JWTPayload>(arg2);
@@ -54,7 +58,12 @@ export function verifyToken(arg1: FastifyInstance | string, arg2?: string): Prom
     const decoded = jwt.verify(token, secret);
     if (typeof decoded === 'string') return null;
     if (decoded && typeof (decoded as any).userId === 'string') {
-      return { userId: (decoded as any).userId };
+      return {
+        userId: (decoded as any).userId,
+        email: typeof (decoded as any).email === 'string' ? (decoded as any).email : undefined,
+        sessionId: typeof (decoded as any).sessionId === 'string' ? (decoded as any).sessionId : undefined,
+        purpose: (decoded as any).purpose,
+      };
     }
     return null;
   } catch (err) {

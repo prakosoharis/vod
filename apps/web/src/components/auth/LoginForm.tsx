@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { authService } from '@/services/auth.service';
 
 const loginSchema = z.object({
-  email: z.string().email('Format email tidak valid'),
-  password: z.string().min(8, 'Password minimal 8 karakter'),
+  identifier: z.string().min(1, 'Nomor HP, email, atau username wajib diisi'),
+  password: z.string().min(1, 'Password wajib diisi'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -23,29 +24,30 @@ interface LoginFormProps {
 export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [socialError, setSocialError] = useState('');
 
   const { login, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from || '/browse';
+  const from = (location.state as { from?: string } | null)?.from || '/browse';
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema as any),
+    resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.email, data.password);
+      await login(data.identifier, data.password);
       if (isModal && onSuccess) {
         onSuccess();
       } else {
         navigate(from, { replace: true });
       }
-    } catch (error: any) {
+    } catch {
       // Error is handled by the store
     }
   };
@@ -61,15 +63,16 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Input
-            type="email"
-            placeholder="Email"
+            type="text"
+            placeholder="Nomor HP, Email, atau Username"
+            autoComplete="username"
             className={`h-12 text-cream-50 placeholder:text-cream-200/50 bg-warm-charcoal-100 border-accent-500/30 focus:border-accent-400 focus:ring-accent-400 rounded-xl ${
-              errors.email ? 'border-accent-500' : ''
+              errors.identifier ? 'border-accent-500' : ''
             }`}
-            {...register('email')}
+            {...register('identifier')}
           />
-          {errors.email && (
-            <p className="text-accent-400 text-sm mt-1.5">{errors.email.message}</p>
+          {errors.identifier && (
+            <p className="text-accent-400 text-sm mt-1.5">{errors.identifier.message}</p>
           )}
         </div>
 
@@ -81,6 +84,7 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
               errors.password ? 'border-accent-500' : ''
             }`}
             {...register('password')}
+            autoComplete="current-password"
           />
           <button
             type="button"
@@ -121,6 +125,26 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
             'Masuk'
           )}
         </Button>
+        <div className="flex items-center gap-3 py-1 text-xs text-cream-200">
+          <span className="h-px flex-1 bg-cream-50/10" /><span>atau</span><span className="h-px flex-1 bg-cream-50/10" />
+        </div>
+        {socialError && <p role="alert" className="text-sm text-accent-400">{socialError}</p>}
+        {(['google', 'facebook'] as const).map((provider) => (
+          <Button
+            key={provider}
+            type="button"
+            variant="outline"
+            disabled={isLoading}
+            className="w-full h-11 border-cream-50/20 bg-transparent text-cream-50"
+            onClick={async () => {
+              setSocialError('');
+              try { await authService.social(provider); }
+              catch { setSocialError(`Continue with ${provider === 'google' ? 'Google' : 'Facebook'} belum dikonfigurasi.`); }
+            }}
+          >
+            Continue with {provider === 'google' ? 'Google' : 'Facebook'}
+          </Button>
+        ))}
       </form>
     </div>
   );

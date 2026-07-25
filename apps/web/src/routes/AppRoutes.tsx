@@ -10,6 +10,7 @@ const LandingPage = lazy(() => import('../pages/LandingPage').then(module => ({ 
 const PublicLandingPage = lazy(() => import('../pages/PublicLandingPage'))
 const LoginPage = lazy(() => import('../pages/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'))
 const BrowsePage = lazy(() => import('../pages/BrowsePage'))
 const UpcomingPage = lazy(() => import('../pages/UpcomingPage'))
 const VideoPlayerPage = lazy(() => import('../pages/VideoPlayerPage'))
@@ -49,6 +50,7 @@ const AppRoutes = () => {
             <RegisterPage />
           </Suspense>
         } />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/contact" element={<ContactPage />} />

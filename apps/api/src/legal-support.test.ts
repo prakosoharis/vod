@@ -12,6 +12,10 @@ import { registerJwt } from './utils/jwt.js';
 const uploadsPath = '/tmp/vod-api-legal-tests';
 process.env.UPLOADS_PATH = uploadsPath;
 process.env.ACCOUNT_DELETION_COOLING_OFF_DAYS = '7';
+process.env.AUTH_PROVIDER_MODE = 'mock';
+process.env.AUTH_TEST_OTP = '482913';
+process.env.OTP_HASH_SECRET = 'test-otp-hash-secret-with-at-least-24-characters';
+process.env.AUTH_HASH_SECRET = 'test-auth-hash-secret-with-at-least-24-characters';
 
 function multipartPayload(
   fields: Record<string, string>,
@@ -92,7 +96,9 @@ test('legal, support, consent, CORS, and account deletion lifecycle', async (con
 
   await context.test('registration rejects missing/false consent and stores accepted versions', async () => {
     const baseBody = {
+      method: 'email',
       email,
+      username: `legal${Date.now()}`,
       password,
       full_name: 'Legal Automated Test',
       terms_version: LEGAL_VERSIONS.terms,
@@ -119,9 +125,27 @@ test('legal, support, consent, CORS, and account deletion lifecycle', async (con
       headers: { 'user-agent': 'VOD-Automated-Legal-Test/1.0' },
       payload: { ...baseBody, legal_consent: true },
     });
-    assert.equal(accepted.statusCode, 201);
-    const body = accepted.json();
-    userId = body.user.id;
+    assert.equal(accepted.statusCode, 202);
+    const pendingBody = accepted.json();
+    const pendingChallenge = await prisma.otpChallenge.findUniqueOrThrow({
+      where: { id: pendingBody.challenge_id },
+    });
+    userId = pendingChallenge.user_id;
+    const pendingUser = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    assert.equal(pendingUser.account_status, 'PENDING_VERIFICATION');
+    assert.notEqual(pendingChallenge.otp_hash, process.env.AUTH_TEST_OTP);
+
+    const verified = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register/verify',
+      payload: {
+        challenge_id: pendingBody.challenge_id,
+        otp: process.env.AUTH_TEST_OTP,
+        source_platform: 'web',
+      },
+    });
+    assert.equal(verified.statusCode, 200);
+    const body = verified.json();
     assert.ok(body.token);
 
     const consents = await prisma.legalConsent.findMany({
@@ -136,6 +160,7 @@ test('legal, support, consent, CORS, and account deletion lifecycle', async (con
 
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
     assert.notEqual(user.password_hash, password);
+    assert.ok(user.password_hash);
     assert.match(user.password_hash, /^\$2[aby]\$\d{2}\$/);
 
     const token = body.token as string;
@@ -228,7 +253,7 @@ test('legal, support, consent, CORS, and account deletion lifecycle', async (con
     const login = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email, password },
+      payload: { identifier: email, password, source_platform: 'web' },
     });
     const token = login.json().token as string;
 
@@ -325,13 +350,14 @@ test('legal, support, consent, CORS, and account deletion lifecycle', async (con
 
     const anonymized = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
     assert.ok(anonymized.deleted_at);
+    assert.ok(anonymized.email);
     assert.match(anonymized.email, /^deleted-[0-9a-f-]+@deleted\.invalid$/);
     assert.equal(anonymized.full_name, null);
 
     const loginAfterDeletion = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: anonymized.email, password },
+      payload: { identifier: anonymized.email, password, source_platform: 'web' },
     });
     assert.equal(loginAfterDeletion.statusCode, 401);
   });

@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearTokens, getTokens } from './secureAuthStorage';
 import { API_BASE_URL, MIDTRANS_CONFIG } from '../constants';
 
 export interface SubscriptionPlan {
@@ -101,9 +102,9 @@ class PaymentService {
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       async (config) => {
-        const token = await AsyncStorage.getItem('@auth_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        const tokens = await getTokens();
+        if (tokens?.accessToken) {
+          config.headers.Authorization = `Bearer ${tokens.accessToken}`;
         }
         return config;
       },
@@ -115,7 +116,8 @@ class PaymentService {
       (response) => response,
       async (error) => {
         if (error.response?.status === 401) {
-          await AsyncStorage.multiRemove(['@auth_token', '@user_data']);
+          await clearTokens();
+          await AsyncStorage.removeItem('@user_data');
         }
         return Promise.reject(error);
       }

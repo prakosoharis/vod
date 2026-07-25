@@ -250,8 +250,8 @@ export const createSubscription = async (
         gross_amount: Number(plan.price),
       },
       customer_details: {
-        first_name: user.full_name || user.email.split('@')[0],
-        email: user.email,
+        first_name: user.full_name || user.username || 'Pengguna',
+        email: user.email || '',
       },
       item_details: [
         {
@@ -372,8 +372,8 @@ export const rentContent = async (
         gross_amount: Number(rentalPrice.price),
       },
       customer_details: {
-        first_name: user.full_name || user.email.split('@')[0],
-        email: user.email,
+        first_name: user.full_name || user.username || 'Pengguna',
+        email: user.email || '',
       },
       item_details: [
         {
@@ -490,8 +490,8 @@ export const buyEventTicket = async (
         gross_amount: Number(event.ticket_price),
       },
       customer_details: {
-        first_name: user.full_name || user.email.split('@')[0],
-        email: user.email,
+        first_name: user.full_name || user.username || 'Pengguna',
+        email: user.email || '',
       },
       item_details: [
         {
@@ -632,8 +632,8 @@ export const buyBroadcastTicket = async (
         gross_amount: ticketPrice,
       },
       customer_details: {
-        first_name: user.full_name || user.email.split('@')[0],
-        email: user.email,
+        first_name: user.full_name || user.username || 'Pengguna',
+        email: user.email || '',
       },
       item_details: [
         {

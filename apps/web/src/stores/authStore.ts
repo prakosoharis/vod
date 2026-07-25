@@ -23,9 +23,9 @@ interface AuthState {
   hasHydrated: boolean;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, full_name?: string) => Promise<void>;
-  logout: () => void;
+  login: (identifier: string, password: string) => Promise<void>;
+  setSession: (user: User, token: string) => void;
+  logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
 
@@ -52,10 +52,12 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      login: async (email: string, password: string) => {
+      login: async (identifier: string, password: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await authService.login({ email, password });
+          const response = await authService.login({
+            identifier, password, source_platform: 'web',
+          });
           set({
             user: response.user,
             token: response.token,
@@ -70,46 +72,21 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (email: string, password: string, full_name?: string) => {
-        try {
-          set({ isLoading: true, error: null });
-          const response = await authService.register({
-            email,
-            password,
-            full_name,
-            legal_consent: true,
-            terms_version: '2026-07-25',
-            privacy_version: '2026-07-25',
-            source_platform: 'web',
-          });
-          set({
-            user: response.user,
-            token: response.token,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-        } catch (error: unknown) {
-          const errorMessage = getApiErrorMessage(error, 'Registration failed. Please try again.');
-          set({ isLoading: false, error: errorMessage, isAuthenticated: false });
-          throw error;
-        }
+      setSession: (user, token) => {
+        authService.setToken(token);
+        set({ user, token, isAuthenticated: true, isLoading: false, error: null });
       },
 
-      logout: () => {
+      logout: async () => {
+        await authService.logout();
         set({ user: null, token: null, isAuthenticated: false, error: null });
-        authService.logout();
       },
 
       checkAuth: async () => {
         try {
           set({ isLoading: true });
-          const token = authService.getToken();
-
-          if (!token) {
-            set({ user: null, token: null, isAuthenticated: false, isLoading: false });
-            return;
-          }
+          let token = authService.getToken();
+          if (!token) token = await authService.refresh();
 
           // Verify token is still valid by calling getMe
           const user = await authService.getMe();
@@ -127,8 +104,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             isLoading: false,
           });
-          // Clear token from localStorage
-          localStorage.removeItem('token');
+          authService.setToken('');
         }
       },
     }),
@@ -136,34 +112,13 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        token: state.token,
         user: state.user,
-        isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        console.log('💾 [Store] Rehydrating auth store...');
-        console.log('💾 [Store] Rehydrated state:', {
-          hasUser: !!state?.user,
-          hasToken: !!state?.token,
-          isAuthenticated: state?.isAuthenticated,
-          userEmail: state?.user?.email
-        });
-
         if (state) {
           state.hasHydrated = true;
-
-          // Ensure isAuthenticated is properly set based on token presence
-          if (state.token && !state.isAuthenticated) {
-            state.isAuthenticated = true;
-          }
-        }
-
-        // When state is rehydrated from localStorage, set the token in authService
-        if (state?.token) {
-          console.log('🔑 [Store] Setting rehydrated token to authService');
-          authService.setToken(state.token);
-        } else {
-          console.log('❌ [Store] No token found in rehydrated state');
+          state.token = null;
+          state.isAuthenticated = false;
         }
       },
     }
