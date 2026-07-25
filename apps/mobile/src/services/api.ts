@@ -69,13 +69,12 @@ class ApiService {
   }
 
   async startRegistration(input: {
-    method: 'email' | 'phone'; fullName: string; username: string;
+    method: 'email' | 'phone'; fullName: string;
     destination: string; password: string;
   }) {
     const response = await this.client.post('/auth/register/start', {
       method: input.method,
       ...(input.method === 'email' ? { email: input.destination } : { phone: input.destination }),
-      username: input.username,
       password: input.password,
       full_name: input.fullName,
       legal_consent: true,

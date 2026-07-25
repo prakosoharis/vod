@@ -9,7 +9,6 @@ class AuthService {
   async register(data: RegisterRequest): Promise<any> {
     return apiService.startRegistration({
       method: data.method,
-      username: data.username,
       fullName: data.full_name,
       destination: data.method === 'email' ? data.email! : data.phone!,
       password: data.password,

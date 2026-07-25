@@ -97,7 +97,6 @@ export interface RegisterRequest {
   method: 'email' | 'phone';
   email?: string;
   phone?: string;
-  username: string;
   password: string;
   full_name: string;
   legal_consent: true;

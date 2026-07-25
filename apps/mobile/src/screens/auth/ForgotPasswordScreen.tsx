@@ -12,8 +12,8 @@ export default function ForgotPasswordScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>Lupa password</Text>
-        <Text style={styles.copy}>Masukkan nomor HP, email, atau username. Instruksi dikirim melalui kanal akun yang sudah terverifikasi.</Text>
-        <Input label="Nomor HP, Email, atau Username" value={identifier} onChangeText={setIdentifier} autoCapitalize="none" />
+        <Text style={styles.copy}>Masukkan nomor HP atau email. Instruksi dikirim melalui kanal akun yang sudah terverifikasi.</Text>
+        <Input label="Nomor HP atau Email" value={identifier} onChangeText={setIdentifier} autoCapitalize="none" />
         <Button title="Kirim instruksi" loading={loading} disabled={loading || !identifier.trim()} onPress={async () => {
           setLoading(true);
           try {

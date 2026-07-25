@@ -30,7 +30,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!identifier.trim() || !password) {
-      Alert.alert('Error', 'Nomor HP, email, atau username dan password harus diisi');
+      Alert.alert('Error', 'Nomor HP atau email dan password harus diisi');
       return;
     }
     try {
@@ -66,8 +66,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.form}>
             <Input
-              label="Nomor HP, Email, atau Username"
-              placeholder="0812…, email, atau username"
+              label="Nomor HP atau Email"
+              placeholder="0812… atau email@contoh.com"
               value={identifier}
               onChangeText={setIdentifier}
               autoCapitalize="none"

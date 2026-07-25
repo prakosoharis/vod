@@ -8,7 +8,7 @@ import { LEGAL_VERSIONS } from '../routes/legal.js';
 import {
   authConfig, classifyIdentifier, createOtp, createRefreshToken, hashIdentifier,
   hashOtp, hashRefreshToken, maskDestination, normalizeEmail,
-  normalizeIndonesianPhone, normalizeUsername, secureEqual, validatePassword,
+  normalizeIndonesianPhone, secureEqual, validatePassword,
 } from '../auth/authCore.js';
 import { getOtpProvider } from '../auth/otpProvider.js';
 import { generateToken } from '../utils/jwt.js';
@@ -17,7 +17,6 @@ const platformSchema = z.enum(['web', 'android', 'ios']);
 const registrationSchema = z.object({
   method: z.enum(['email', 'phone']),
   full_name: z.string().trim().min(2).max(100),
-  username: z.string(),
   email: z.string().optional(),
   phone: z.string().optional(),
   password: z.string(),
@@ -153,14 +152,12 @@ export async function startRegistration(this: FastifyInstance, request: FastifyR
   try {
     const body = registrationSchema.parse(request.body);
     validatePassword(body.password);
-    const username = normalizeUsername(body.username);
     const email = body.method === 'email' && body.email ? normalizeEmail(body.email) : null;
     const phone = body.method === 'phone' && body.phone ? normalizeIndonesianPhone(body.phone) : null;
     if (!email && !phone) return reply.code(400).send({ error: 'Metode dan tujuan registrasi tidak sesuai.' });
     const duplicate = await prisma.user.findFirst({
       where: {
         OR: [
-          { username_normalized: username },
           ...(email ? [{ email_normalized: email }] : []),
           ...(phone ? [{ phone_e164: phone }] : []),
         ],
@@ -176,7 +173,6 @@ export async function startRegistration(this: FastifyInstance, request: FastifyR
       const created = await tx.user.create({
         data: {
           email, email_normalized: email,
-          username, username_normalized: username,
           phone_e164: phone,
           full_name: body.full_name,
           password_hash: passwordHash,
@@ -282,9 +278,9 @@ export async function loginWithIdentifier(this: FastifyInstance, request: Fastif
   if (identifierFailures >= config.loginMaxAttempts || ipFailures >= config.loginMaxAttempts * 5) {
     return reply.code(429).send({ error: 'Terlalu banyak percobaan. Coba lagi nanti.' });
   }
-  const where = identifier.type === 'email' ? { email_normalized: identifier.normalized }
-    : identifier.type === 'phone' ? { phone_e164: identifier.normalized }
-      : { username_normalized: identifier.normalized };
+  const where = identifier.type === 'email'
+    ? { email_normalized: identifier.normalized }
+    : { phone_e164: identifier.normalized };
   const user = await prisma.user.findFirst({ where });
   const valid = Boolean(user?.password_hash) && await bcrypt.compare(parsed.data.password, user!.password_hash!);
   const active = user?.account_status === 'ACTIVE' && !user.deleted_at;
@@ -360,9 +356,9 @@ export async function forgotPassword(request: FastifyRequest, reply: FastifyRepl
   if (!parsed.success) return reply.send(generic);
   try {
     const identifier = classifyIdentifier(parsed.data.identifier);
-    const where = identifier.type === 'email' ? { email_normalized: identifier.normalized }
-      : identifier.type === 'phone' ? { phone_e164: identifier.normalized }
-        : { username_normalized: identifier.normalized };
+      const where = identifier.type === 'email'
+        ? { email_normalized: identifier.normalized }
+        : { phone_e164: identifier.normalized };
     const user = await prisma.user.findFirst({ where });
     if (user?.account_status === 'ACTIVE') {
       const destination = user.phone_verified_at && user.phone_e164

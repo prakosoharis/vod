@@ -23,7 +23,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
   const setSession = useAuthStore((state) => state.setSession);
   const [method, setMethod] = useState<Method>('phone');
   const [form, setForm] = useState({
-    full_name: '', username: '', destination: '', password: '', confirm: '',
+    full_name: '', destination: '', password: '', confirm: '',
   });
   const [consent, setConsent] = useState(false);
   const [challenge, setChallenge] = useState<RegistrationChallenge | null>(null);
@@ -49,7 +49,6 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
       const result = await authService.register({
         method,
         full_name: form.full_name,
-        username: form.username,
         ...(method === 'email' ? { email: form.destination } : { phone: form.destination }),
         password: form.password,
         legal_consent: true,
@@ -137,7 +136,6 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
       </div>
       {error && <p role="alert" className="rounded-lg bg-accent-500/15 p-3 text-sm text-accent-300">{error}</p>}
       <Input className="auth-register-input" value={form.full_name} onChange={(e) => field('full_name', e.target.value)} placeholder="Nama tampilan" autoComplete="name" />
-      <Input className="auth-register-input" value={form.username} onChange={(e) => field('username', e.target.value)} placeholder="Username" autoCapitalize="none" autoComplete="username" />
       <Input
         className="auth-register-input"
         value={form.destination}

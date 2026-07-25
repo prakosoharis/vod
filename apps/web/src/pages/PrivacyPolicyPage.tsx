@@ -12,7 +12,7 @@ const PrivacyPolicyPage = () => (
       },
       {
         title: 'Data yang kami proses',
-        content: <><p>Data dapat meliputi nama, username, email, nomor HP/WhatsApp, password dalam bentuk hash, foto profil, identitas social login, serta status verifikasi OTP email dan WhatsApp.</p><p>Kami juga dapat memproses data perangkat, alamat IP, sesi, cookies, log keamanan, aktivitas login, riwayat tontonan dan pencarian, watchlist, preferensi, interaksi, pembelian coin, rental, entitlement, invoice, dan riwayat transaksi.</p></>,
+        content: <><p>Data dapat meliputi nama, email, nomor HP/WhatsApp, password dalam bentuk hash, foto profil, identitas social login, serta status verifikasi OTP email dan WhatsApp.</p><p>Kami juga dapat memproses data perangkat, alamat IP, sesi, cookies, log keamanan, aktivitas login, riwayat tontonan dan pencarian, watchlist, preferensi, interaksi, pembelian coin, rental, entitlement, invoice, dan riwayat transaksi.</p></>,
       },
       {
         title: 'Pembayaran',

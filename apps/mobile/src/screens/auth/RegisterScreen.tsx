@@ -16,7 +16,6 @@ export default function RegisterScreen({ navigation }: any) {
   const setSession = useAuthStore((state) => state.setSession);
   const [method, setMethod] = useState<Method>('phone');
   const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
   const [destination, setDestination] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -33,14 +32,14 @@ export default function RegisterScreen({ navigation }: any) {
   }, [seconds]);
 
   const start = async () => {
-    if (!fullName.trim() || !username.trim() || !destination.trim()) return Alert.alert('Data belum lengkap', 'Lengkapi seluruh field registrasi.');
+    if (!fullName.trim() || !destination.trim()) return Alert.alert('Data belum lengkap', 'Lengkapi seluruh field registrasi.');
     if (password.length < 10) return Alert.alert('Password belum aman', 'Password minimal 10 karakter dan mendukung passphrase.');
     if (password !== confirm) return Alert.alert('Password tidak cocok', 'Periksa konfirmasi password.');
     if (!consent) return Alert.alert('Persetujuan diperlukan', 'Setujui Syarat dan Kebijakan Privasi.');
     setLoading(true);
     try {
       const result = await apiService.startRegistration({
-        method, fullName: fullName.trim(), username: username.trim(),
+        method, fullName: fullName.trim(),
         destination: destination.trim(), password,
       });
       setChallenge(result); setSeconds(result.resend_after);
@@ -99,7 +98,6 @@ export default function RegisterScreen({ navigation }: any) {
                 ))}
               </View>
               <Input label="Nama tampilan" value={fullName} onChangeText={setFullName} autoCapitalize="words" />
-              <Input label="Username" value={username} onChangeText={setUsername} autoCapitalize="none" autoCorrect={false} />
               <Input
                 label={method === 'phone' ? 'Nomor HP' : 'Email'}
                 placeholder={method === 'phone' ? '0812 3456 7890' : 'email@contoh.com'}

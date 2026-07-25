@@ -98,7 +98,6 @@ test('legal, support, consent, CORS, and account deletion lifecycle', async (con
     const baseBody = {
       method: 'email',
       email,
-      username: `legal${Date.now()}`,
       password,
       full_name: 'Legal Automated Test',
       terms_version: LEGAL_VERSIONS.terms,

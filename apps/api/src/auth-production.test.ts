@@ -3,7 +3,7 @@ import test from 'node:test';
 import { build } from './server.js';
 import prisma from './config/database.js';
 import {
-  normalizeEmail, normalizeIndonesianPhone, normalizeUsername, validatePassword,
+  classifyIdentifier, normalizeEmail, normalizeIndonesianPhone, validatePassword,
 } from './auth/authCore.js';
 
 process.env.AUTH_PROVIDER_MODE = 'mock';
@@ -13,11 +13,10 @@ process.env.AUTH_HASH_SECRET = 'test-auth-hash-secret-with-at-least-24-character
 
 test('normalization and password policy', () => {
   assert.equal(normalizeEmail(' User@Example.COM '), 'user@example.com');
-  assert.equal(normalizeUsername(' User.Name '), 'user.name');
   assert.equal(normalizeIndonesianPhone('0812-3456-7890'), '+6281234567890');
   assert.equal(normalizeIndonesianPhone('81234567890'), '+6281234567890');
   assert.equal(normalizeIndonesianPhone('+6281234567890'), '+6281234567890');
-  assert.throws(() => normalizeUsername('admin'));
+  assert.throws(() => classifyIdentifier('username-tidak-didukung'));
   assert.throws(() => validatePassword('short'));
   assert.doesNotThrow(() => validatePassword('correct horse battery staple'));
 });
@@ -26,7 +25,6 @@ test('pending registration, OTP single use, identifier login, recovery, and sess
   const app = await build({ startWebSocket: false });
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const email = `auth-${suffix}@example.test`;
-  const username = `auth${suffix}`.slice(0, 30);
   const password = 'production test passphrase';
   let userId = '';
 
@@ -39,7 +37,7 @@ test('pending registration, OTP single use, identifier login, recovery, and sess
     method: 'POST',
     url: '/api/auth/register/start',
     payload: {
-      method: 'email', email, username, full_name: 'Auth Test',
+      method: 'email', email, full_name: 'Auth Test',
       password, legal_consent: true,
       terms_version: '2026-07-25', privacy_version: '2026-07-25',
       source_platform: 'web',
@@ -90,13 +88,19 @@ test('pending registration, OTP single use, identifier login, recovery, and sess
   });
   assert.equal(reused.statusCode, 400);
 
-  for (const identifier of [email.toUpperCase(), username.toUpperCase()]) {
+  for (const identifier of [email.toUpperCase()]) {
     const login = await app.inject({
       method: 'POST', url: '/api/auth/login',
       payload: { identifier, password, source_platform: 'web' },
     });
     assert.equal(login.statusCode, 200, login.body);
   }
+
+  const usernameLogin = await app.inject({
+    method: 'POST', url: '/api/auth/login',
+    payload: { identifier: `auth${suffix}`, password, source_platform: 'web' },
+  });
+  assert.equal(usernameLogin.statusCode, 401);
 
   const legacyEmailLogin = await app.inject({
     method: 'POST', url: '/api/auth/login',
@@ -163,7 +167,6 @@ test('phone registration normalizes Indonesian number and login accepts local fo
   const app = await build({ startWebSocket: false });
   const suffix = `${Date.now()}`.slice(-8);
   const localPhone = `0812${suffix}`;
-  const username = `phone${suffix}`;
   const password = 'phone registration passphrase';
   let userId = '';
   context.after(async () => {
@@ -173,7 +176,7 @@ test('phone registration normalizes Indonesian number and login accepts local fo
   const started = await app.inject({
     method: 'POST', url: '/api/auth/register/start',
     payload: {
-      method: 'phone', phone: localPhone, username, full_name: 'Phone Test',
+      method: 'phone', phone: localPhone, full_name: 'Phone Test',
       password, legal_consent: true, terms_version: '2026-07-25',
       privacy_version: '2026-07-25', source_platform: 'android',
     },
