@@ -2,6 +2,11 @@
 
 Status: **technical design implemented; production policy approval pending**.
 
+Business decision dated 25 July 2026: the production cooling-off period is
+**7 days**, and the deletion worker must remain disabled until the retention
+policy, operational owner, schedule, retry procedure, and policy version have
+been approved.
+
 ## Invariants
 
 - The worker never hard-deletes the `users` row.

@@ -54,7 +54,7 @@ const AccountDeletionPage = () => {
       <div className="legal-copy mt-10 space-y-5 leading-7 text-cream-100">
         <p>Penghapusan akun mengakhiri akses ke coin, rental aktif, watchlist, riwayat, dan konten terkait akun. Coin atau hak akses yang tersisa dapat hilang setelah penghapusan selesai.</p>
         <p>Data tertentu mungkin tetap dipertahankan untuk transaksi, antifraud, sengketa, audit, dan kewajiban hukum selama <strong>[MASA RETENSI YANG DISETUJUI LEGAL]</strong>.</p>
-        <p>Cooling-off: <strong>[MASA TUNGGU DIKONFIGURASI MELALUI ACCOUNT_DELETION_COOLING_OFF_DAYS]</strong>. Selama periode ini, pengguna dapat membatalkan permintaan.</p>
+        <p>Cooling-off: <strong>7 hari</strong>. Selama periode ini, pengguna dapat membatalkan permintaan.</p>
         <p>Pengguna Facebook Login dapat mengajukan dari halaman ini setelah masuk, atau memakai instruction URL <code>https://smashstream.id/account-deletion</code> untuk konfigurasi Meta. Data Deletion Callback API: <strong>[CALLBACK META BELUM DIIMPLEMENTASIKAN/DIKONFIGURASI]</strong>.</p>
       </div>
       <div className="mt-8 rounded-2xl border border-cream-50/10 bg-warm-charcoal-50 p-6">

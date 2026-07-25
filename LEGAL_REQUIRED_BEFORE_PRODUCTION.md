@@ -2,14 +2,15 @@
 
 Naskah legal dan konfigurasi berikut belum boleh dianggap final sebelum dilengkapi dan ditinjau penasihat hukum Indonesia.
 
-- [ ] Nama legal badan usaha.
-- [ ] Alamat legal badan usaha.
+- [x] Nama legal badan usaha: **PT SEGITIGA MATA SEMESTA**.
+- [x] Alamat legal badan usaha: **Jalan Karyasari Nomor 90 B, Kembangan, Kota Administrasi Jakarta Barat, DKI Jakarta**.
 - [ ] NIB/NPWP hanya jika diputuskan perlu ditampilkan.
 - [ ] Batas usia pengguna dan mekanisme persetujuan orang tua/wali.
 - [ ] Masa retensi per kategori data.
-- [ ] Nilai production `ACCOUNT_DELETION_COOLING_OFF_DAYS` (development/test sementara: `7` hari).
+- [x] Nilai production `ACCOUNT_DELETION_COOLING_OFF_DAYS`: **7 hari**, disetujui bisnis pada 25 Juli 2026.
 - [ ] Persetujuan production untuk desain/worker di `ACCOUNT_DELETION_RETENTION_DESIGN.md`,
   termasuk jadwal, owner, retry `FAILED`, dan `ACCOUNT_DELETION_POLICY_VERSION`.
+  Keputusan sementara: worker production tetap nonaktif sampai seluruh butir tersebut disetujui.
 - [ ] Kebijakan penanganan coin dan rental aktif ketika akun dihapus.
 - [ ] Jangka waktu/SLA dukungan, hanya jika sudah disetujui bisnis.
 - [ ] Batas pengajuan dan waktu pemeriksaan refund, hanya jika disetujui.
@@ -27,7 +28,7 @@ Naskah legal dan konfigurasi berikut belum boleh dianggap final sebelum dilengka
 ## Konfigurasi yang harus tersedia
 
 ```env
-ACCOUNT_DELETION_COOLING_OFF_DAYS=[ANGKA_YANG_DISETUJUI]
+ACCOUNT_DELETION_COOLING_OFF_DAYS=7
 ```
 
 ## Catatan implementasi

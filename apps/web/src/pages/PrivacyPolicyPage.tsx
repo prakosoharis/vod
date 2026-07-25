@@ -8,7 +8,7 @@ const PrivacyPolicyPage = () => (
     sections={[
       {
         title: 'Identitas pengelola',
-        content: <p>SMASHSTREAM dikelola oleh <strong>[NAMA LEGAL BADAN USAHA]</strong>, dengan alamat terdaftar <strong>[ALAMAT LEGAL BADAN USAHA]</strong>. Pertanyaan privasi dapat dikirim ke <a href="mailto:email@smashstream.id">email@smashstream.id</a>.</p>,
+        content: <p>SMASHSTREAM dikelola oleh <strong>PT SEGITIGA MATA SEMESTA</strong>, dengan alamat terdaftar <strong>Jalan Karyasari Nomor 90 B, Kembangan, Kota Administrasi Jakarta Barat, DKI Jakarta</strong>. Pertanyaan privasi dapat dikirim ke <a href="mailto:email@smashstream.id">email@smashstream.id</a>.</p>,
       },
       {
         title: 'Data yang kami proses',
