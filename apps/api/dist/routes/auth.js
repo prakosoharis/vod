@@ -1,24 +1,19 @@
-import { register, login, getMe } from '../controllers/authController.js';
+import { getMe } from '../controllers/authController.js';
 import { authenticateRequest } from '../middleware/auth.js';
+import { forgotPassword, listSessions, loginWithIdentifier, logoutAllSessions, logoutSession, refreshSession, resendRegistration, resetPassword, socialUnavailable, startRegistration, verifyRecovery, verifyRegistration, } from '../controllers/authV2Controller.js';
 export async function authRoutes(fastify) {
     const userBase = {
         type: 'object',
         properties: {
             id: { type: 'string' },
-            email: { type: 'string', format: 'email' },
+            email: { type: 'string', format: 'email', nullable: true },
+            username: { type: 'string', nullable: true },
+            phone: { type: 'string', nullable: true },
+            account_status: { type: 'string', nullable: true },
             full_name: { type: 'string', nullable: true },
             avatar_url: { type: 'string', nullable: true },
         },
-        required: ['id', 'email'],
-        additionalProperties: false,
-    };
-    const userRegister = {
-        type: 'object',
-        properties: {
-            ...userBase.properties,
-            created_at: { type: 'string', format: 'date-time' },
-        },
-        required: [...userBase.required, 'created_at'],
+        required: ['id'],
         additionalProperties: false,
     };
     const userMe = {
@@ -31,68 +26,36 @@ export async function authRoutes(fastify) {
         required: [...userBase.required, 'created_at', 'updated_at'],
         additionalProperties: false,
     };
-    fastify.post('/register', {
-        schema: {
-            tags: ['auth'],
-            body: {
-                type: 'object',
-                properties: {
-                    email: { type: 'string', format: 'email' },
-                    password: { type: 'string', minLength: 8 },
-                    full_name: { type: 'string' },
-                    legal_consent: { type: 'boolean', const: true },
-                    terms_version: { type: 'string', const: '2026-07-25' },
-                    privacy_version: { type: 'string', const: '2026-07-25' },
-                    source_platform: { type: 'string', enum: ['web', 'android', 'ios'] },
-                },
-                required: [
-                    'email',
-                    'password',
-                    'legal_consent',
-                    'terms_version',
-                    'privacy_version',
-                    'source_platform',
-                ],
-                additionalProperties: false,
-            },
-            response: {
-                201: {
-                    type: 'object',
-                    properties: {
-                        user: userRegister,
-                        token: { type: 'string' },
-                    },
-                    required: ['user', 'token'],
-                    additionalProperties: false,
-                },
-            },
-        },
-    }, register.bind(fastify));
+    fastify.post('/register', startRegistration.bind(fastify));
+    fastify.post('/register/start', startRegistration.bind(fastify));
+    fastify.post('/register/verify', verifyRegistration.bind(fastify));
+    fastify.post('/register/resend', resendRegistration);
     fastify.post('/login', {
         schema: {
             tags: ['auth'],
             body: {
                 type: 'object',
                 properties: {
-                    email: { type: 'string', format: 'email' },
+                    identifier: { type: 'string', minLength: 1 },
+                    email: { type: 'string', minLength: 1 },
                     password: { type: 'string', minLength: 1 },
+                    source_platform: { type: 'string', enum: ['web', 'android', 'ios'] },
+                    device_name: { type: 'string' },
                 },
-                required: ['email', 'password'],
+                required: ['password'],
+                anyOf: [{ required: ['identifier'] }, { required: ['email'] }],
                 additionalProperties: false,
             },
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        user: userBase,
-                        token: { type: 'string' },
-                    },
-                    required: ['user', 'token'],
-                    additionalProperties: false,
-                },
-            },
         },
-    }, login.bind(fastify));
+    }, loginWithIdentifier.bind(fastify));
+    fastify.post('/refresh', refreshSession.bind(fastify));
+    fastify.post('/logout', { preHandler: [authenticateRequest] }, logoutSession);
+    fastify.post('/logout-all', { preHandler: [authenticateRequest] }, logoutAllSessions);
+    fastify.get('/sessions', { preHandler: [authenticateRequest] }, listSessions);
+    fastify.post('/forgot-password', forgotPassword);
+    fastify.post('/recovery/verify', verifyRecovery.bind(fastify));
+    fastify.post('/recovery/reset', resetPassword.bind(fastify));
+    fastify.post('/oauth/:provider', socialUnavailable);
     fastify.get('/me', {
         preHandler: [authenticateRequest],
         schema: {

@@ -16,6 +16,20 @@ export async function authenticateRequest(request, reply) {
         reply.code(401).send({ error: 'Invalid token' });
         return;
     }
+    if (decoded.purpose && decoded.purpose !== 'access') {
+        reply.code(401).send({ error: 'Invalid token' });
+        return;
+    }
+    if (decoded.sessionId) {
+        const session = await prisma.authSession.findUnique({
+            where: { id: decoded.sessionId },
+            select: { user_id: true, revoked_at: true, expires_at: true },
+        });
+        if (!session || session.user_id !== decoded.userId || session.revoked_at || session.expires_at <= new Date()) {
+            reply.code(401).send({ error: 'Session expired' });
+            return;
+        }
+    }
     const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
         select: { id: true, email: true, deleted_at: true },
@@ -24,7 +38,7 @@ export async function authenticateRequest(request, reply) {
         reply.code(401).send({ error: 'User not found' });
         return;
     }
-    request.user = { userId: user.id, email: user.email };
+    request.user = { userId: user.id, email: user.email, sessionId: decoded.sessionId };
 }
 // Backwards-compatible export name used in routes
 export const authenticate = authenticateRequest;

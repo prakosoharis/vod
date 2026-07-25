@@ -1,141 +1,4 @@
-import bcrypt from 'bcryptjs';
-import { z } from 'zod';
 import prisma from '../config/database.js';
-import { generateToken } from '../utils/jwt.js';
-import { LEGAL_VERSIONS } from '../routes/legal.js';
-const registerSchema = z.object({
-    email: z.string().email(),
-    full_name: z.string().min(1).optional(),
-    password: z.string().min(8),
-    legal_consent: z.literal(true),
-    terms_version: z.literal(LEGAL_VERSIONS.terms),
-    privacy_version: z.literal(LEGAL_VERSIONS.privacy),
-    source_platform: z.enum(['web', 'android', 'ios']),
-});
-const loginSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(1),
-});
-export async function register(request, reply) {
-    try {
-        const body = registerSchema.parse(request.body);
-        // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
-            where: { email: body.email },
-        });
-        if (existingUser) {
-            reply.code(409).send({ error: 'Email already exists' });
-            return;
-        }
-        // Hash password
-        const hashedPassword = await bcrypt.hash(body.password, 10);
-        // Create user
-        const user = await prisma.$transaction(async (tx) => {
-            const created = await tx.user.create({
-                data: {
-                    email: body.email,
-                    full_name: body.full_name,
-                    password_hash: hashedPassword,
-                },
-                select: {
-                    id: true,
-                    email: true,
-                    full_name: true,
-                    avatar_url: true,
-                    created_at: true,
-                },
-            });
-            await tx.legalConsent.createMany({
-                data: [
-                    {
-                        user_id: created.id,
-                        document_type: 'TERMS',
-                        document_version: body.terms_version,
-                        source_platform: body.source_platform,
-                        user_agent: request.headers['user-agent'],
-                    },
-                    {
-                        user_id: created.id,
-                        document_type: 'PRIVACY',
-                        document_version: body.privacy_version,
-                        source_platform: body.source_platform,
-                        user_agent: request.headers['user-agent'],
-                    },
-                ],
-            });
-            await tx.complianceAuditLog.create({
-                data: {
-                    user_id: created.id,
-                    event_type: 'LEGAL_CONSENT_ACCEPTED',
-                    subject_type: 'USER',
-                    subject_id: created.id,
-                    source_platform: body.source_platform,
-                    metadata: {
-                        terms_version: body.terms_version,
-                        privacy_version: body.privacy_version,
-                    },
-                },
-            });
-            return created;
-        });
-        // Generate token
-        const token = generateToken(this, {
-            userId: user.id,
-            email: user.email,
-        });
-        reply.code(201).send({
-            user,
-            token,
-        });
-    }
-    catch (error) {
-        if (error instanceof z.ZodError) {
-            reply.code(400).send({ error: 'Validation error', details: error.errors });
-            return;
-        }
-        reply.code(500).send({ error: 'Internal server error' });
-    }
-}
-export async function login(request, reply) {
-    try {
-        const body = loginSchema.parse(request.body);
-        // Find user
-        const user = await prisma.user.findUnique({
-            where: { email: body.email },
-        });
-        if (!user || user.deleted_at) {
-            reply.code(401).send({ error: 'Invalid email or password' });
-            return;
-        }
-        // Verify password
-        const isValidPassword = await bcrypt.compare(body.password, user.password_hash);
-        if (!isValidPassword) {
-            reply.code(401).send({ error: 'Invalid email or password' });
-            return;
-        }
-        // Generate token
-        const token = generateToken(this, {
-            userId: user.id,
-            email: user.email,
-        });
-        reply.send({
-            user: {
-                id: user.id,
-                email: user.email,
-                full_name: user.full_name,
-                avatar_url: user.avatar_url,
-            },
-            token,
-        });
-    }
-    catch (error) {
-        if (error instanceof z.ZodError) {
-            reply.code(400).send({ error: 'Validation error', details: error.errors });
-            return;
-        }
-        reply.code(500).send({ error: 'Internal server error' });
-    }
-}
 export async function getMe(request, reply) {
     try {
         if (!request.user) {
@@ -147,6 +10,9 @@ export async function getMe(request, reply) {
             select: {
                 id: true,
                 email: true,
+                username: true,
+                phone_e164: true,
+                account_status: true,
                 full_name: true,
                 avatar_url: true,
                 created_at: true,
@@ -157,9 +23,10 @@ export async function getMe(request, reply) {
             reply.code(404).send({ error: 'User not found' });
             return;
         }
-        reply.send({ user });
+        const { phone_e164, ...rest } = user;
+        reply.send({ user: { ...rest, phone: phone_e164 } });
     }
-    catch (error) {
+    catch {
         reply.code(500).send({ error: 'Internal server error' });
     }
 }

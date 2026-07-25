@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/authStore';
 import { isAxiosError } from 'axios';
+import { SocialAuthButtons } from './SocialAuthButtons';
 
 type Method = 'email' | 'phone';
 type RegistrationChallenge = {
@@ -135,9 +136,10 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
         ))}
       </div>
       {error && <p role="alert" className="rounded-lg bg-accent-500/15 p-3 text-sm text-accent-300">{error}</p>}
-      <Input value={form.full_name} onChange={(e) => field('full_name', e.target.value)} placeholder="Nama tampilan" autoComplete="name" />
-      <Input value={form.username} onChange={(e) => field('username', e.target.value)} placeholder="Username" autoCapitalize="none" autoComplete="username" />
+      <Input className="auth-register-input" value={form.full_name} onChange={(e) => field('full_name', e.target.value)} placeholder="Nama tampilan" autoComplete="name" />
+      <Input className="auth-register-input" value={form.username} onChange={(e) => field('username', e.target.value)} placeholder="Username" autoCapitalize="none" autoComplete="username" />
       <Input
+        className="auth-register-input"
         value={form.destination}
         onChange={(e) => field('destination', e.target.value)}
         type={method === 'email' ? 'email' : 'tel'}
@@ -145,23 +147,18 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
         autoComplete={method === 'email' ? 'email' : 'tel'}
       />
       <div className="relative">
-        <Input value={form.password} onChange={(e) => field('password', e.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Password minimal 10 karakter" autoComplete="new-password" className="pr-12" />
+        <Input value={form.password} onChange={(e) => field('password', e.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Password minimal 10 karakter" autoComplete="new-password" className="auth-register-input pr-12" />
         <button type="button" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-cream-200">
           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
         </button>
       </div>
-      <Input value={form.confirm} onChange={(e) => field('confirm', e.target.value)} type="password" placeholder="Konfirmasi password" autoComplete="new-password" />
+      <Input className="auth-register-input" value={form.confirm} onChange={(e) => field('confirm', e.target.value)} type="password" placeholder="Konfirmasi password" autoComplete="new-password" />
       <label className="flex items-start gap-3 text-sm text-cream-100">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
         <span>Saya menyetujui <Link className="text-accent-400 underline" to="/terms">Syarat dan Ketentuan</Link> serta <Link className="text-accent-400 underline" to="/privacy">Kebijakan Privasi</Link>.</span>
       </label>
       <Button className="h-12 w-full rounded-full" disabled={loading} onClick={start}>{loading ? 'Mengirim kode…' : 'Lanjutkan'}</Button>
-      <div className="flex items-center gap-3 text-xs text-cream-200"><span className="h-px flex-1 bg-cream-50/10" />atau<span className="h-px flex-1 bg-cream-50/10" /></div>
-      {(['google', 'facebook'] as const).map((provider) => (
-        <Button key={provider} type="button" variant="outline" className="w-full border-cream-50/20 bg-transparent text-cream-50" onClick={async () => {
-          try { await authService.social(provider); } catch { setError(`Continue with ${provider === 'google' ? 'Google' : 'Facebook'} belum dikonfigurasi.`); }
-        }}>Continue with {provider === 'google' ? 'Google' : 'Facebook'}</Button>
-      ))}
+      <SocialAuthButtons />
     </div>
   );
 }

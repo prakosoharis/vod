@@ -4,6 +4,7 @@ import { ArrowRight, Check, ChevronDown, Globe2, Ticket, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import Logo from '@/components/navbar/Logo'
 import { useAuthStore } from '@/stores/authStore'
+import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
 
 const steps = [
   {
@@ -90,6 +91,7 @@ const PublicLandingPage = () => {
         <div>
           <span className="smash-guest__language"><Globe2 /> ID</span>
           <button onClick={openLogin}>Masuk</button>
+          <Link className="smash-guest__register" to="/register">Daftar</Link>
         </div>
       </header>
 
@@ -230,6 +232,7 @@ const PublicLandingPage = () => {
             <button className="smash-guest__primary" type="submit" disabled={isLoading}>
               {isLoading ? 'Memproses...' : 'Masuk'} {!isLoading && <ArrowRight />}
             </button>
+            <SocialAuthButtons compact />
             <span>Belum punya akun? <Link to="/register">Daftar sekarang</Link></span>
           </form>
         </div>

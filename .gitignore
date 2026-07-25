@@ -76,6 +76,7 @@ oauth-client-secret*.json
 
 apps/api/uploads/
 apps/mobile/node_modules/
+apps/mobile/android/.gradle/
 
 # React Native build files
 apps/mobile/android/app/.cxx/

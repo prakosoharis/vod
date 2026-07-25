@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authService } from '@/services/auth.service';
+import { SocialAuthButtons } from './SocialAuthButtons';
 
 const loginSchema = z.object({
   identifier: z.string().min(1, 'Nomor HP, email, atau username wajib diisi'),
@@ -24,7 +24,6 @@ interface LoginFormProps {
 export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [socialError, setSocialError] = useState('');
 
   const { login, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
@@ -125,26 +124,7 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
             'Masuk'
           )}
         </Button>
-        <div className="flex items-center gap-3 py-1 text-xs text-cream-200">
-          <span className="h-px flex-1 bg-cream-50/10" /><span>atau</span><span className="h-px flex-1 bg-cream-50/10" />
-        </div>
-        {socialError && <p role="alert" className="text-sm text-accent-400">{socialError}</p>}
-        {(['google', 'facebook'] as const).map((provider) => (
-          <Button
-            key={provider}
-            type="button"
-            variant="outline"
-            disabled={isLoading}
-            className="w-full h-11 border-cream-50/20 bg-transparent text-cream-50"
-            onClick={async () => {
-              setSocialError('');
-              try { await authService.social(provider); }
-              catch { setSocialError(`Continue with ${provider === 'google' ? 'Google' : 'Facebook'} belum dikonfigurasi.`); }
-            }}
-          >
-            Continue with {provider === 'google' ? 'Google' : 'Facebook'}
-          </Button>
-        ))}
+        <SocialAuthButtons />
       </form>
     </div>
   );

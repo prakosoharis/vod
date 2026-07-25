@@ -12,7 +12,9 @@ export async function registerJwt(fastify) {
 export function generateToken(arg1, arg2) {
     // Legacy: fastify instance + payload
     if (typeof arg1 !== 'string' && arg2) {
-        return arg1.jwt.sign(arg2, { expiresIn: '7d' });
+        return arg1.jwt.sign({ purpose: 'access', ...arg2 }, {
+            expiresIn: process.env.AUTH_ACCESS_TOKEN_TTL || '15m',
+        });
     }
     // New: userId only, using jsonwebtoken and env secret
     const userId = arg1;
@@ -38,7 +40,12 @@ export function verifyToken(arg1, arg2) {
         if (typeof decoded === 'string')
             return null;
         if (decoded && typeof decoded.userId === 'string') {
-            return { userId: decoded.userId };
+            return {
+                userId: decoded.userId,
+                email: typeof decoded.email === 'string' ? decoded.email : undefined,
+                sessionId: typeof decoded.sessionId === 'string' ? decoded.sessionId : undefined,
+                purpose: decoded.purpose,
+            };
         }
         return null;
     }

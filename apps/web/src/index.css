@@ -1457,6 +1457,10 @@ button { color: inherit; }
   background: var(--guest-cream); border: 0; border-radius: 7px; color: var(--guest-bg);
   font-size: 11px; font-weight: 800; height: 40px; padding: 0 19px;
 }
+.smash-guest__nav .smash-guest__register {
+  align-items: center; background: var(--guest-gold); border-radius: 7px; color: #17120b;
+  display: inline-flex; font-size: 11px; font-weight: 800; height: 40px; justify-content: center; padding: 0 19px;
+}
 .smash-guest__language {
   align-items: center; border: 1px solid var(--guest-line); border-radius: 7px;
   color: var(--guest-muted); display: flex; font-size: 10px; gap: 7px; height: 40px; padding: 0 14px;
@@ -1609,6 +1613,23 @@ button { color: inherit; }
 .smash-login__close { background: transparent; border: 0; color: var(--guest-muted); position: absolute; right: 15px; top: 15px; }
 .smash-login__close svg { height: 21px; width: 21px; }
 .smash-login__error { background: rgba(166, 83, 53, .15); border: 1px solid rgba(166, 83, 53, .45); border-radius: 6px; color: #e8aa94; font-size: 10px; margin: 10px 0; padding: 10px; }
+.auth-register-input { background: rgba(40, 35, 25, .42) !important; border-color: rgba(244, 236, 217, .15) !important; }
+.auth-register-input::placeholder { color: rgba(210, 195, 165, .38) !important; opacity: 1; }
+.auth-register-input:focus { background: rgba(40, 35, 25, .62) !important; border-color: rgba(201, 132, 49, .7) !important; }
+.social-auth { margin-top: 4px; }
+.social-auth__divider { align-items: center; color: rgba(210,195,165,.62); display: flex; font-size: 10px; gap: 12px; justify-content: center; margin: 13px 0; }
+.social-auth__divider span { background: rgba(244,236,217,.13); height: 1px; width: 100%; }
+.social-auth__buttons { display: grid; gap: 10px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.social-auth__button {
+  align-items: center; background: rgba(255,255,255,.035); border: 1px solid rgba(244,236,217,.16);
+  border-radius: 9px; color: var(--guest-cream, #f4ecd9); display: flex; font-size: 12px; font-weight: 700;
+  gap: 9px; height: 46px; justify-content: center; transition: background .18s,border-color .18s,transform .18s;
+}
+.social-auth__button:hover { background: rgba(255,255,255,.075); border-color: rgba(244,236,217,.28); transform: translateY(-1px); }
+.social-auth__button:disabled { cursor: wait; opacity: .55; }
+.social-auth__button svg { flex: 0 0 21px; height: 21px; width: 21px; }
+.social-auth__error { color: #e8aa94; font-size: 10px; margin: 10px 0 0; text-align: center; }
+.social-auth--compact { margin-top: 14px; }
 
 @media (max-width: 760px) {
   body:has(.smash-guest) { padding-bottom: 0; }
