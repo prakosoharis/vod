@@ -793,7 +793,16 @@ button { color: inherit; }
   padding: 3.2rem 6.7vw;
 }
 .nusantara-footer > div { align-items: center; display: flex; gap: 1.5rem; }
-.nusantara-footer p, .nusantara-footer a, .nusantara-footer small { color: var(--nusantara-dim); font-size: .64rem; }
+.nusantara-footer p,
+.nusantara-footer a,
+.nusantara-footer button,
+.nusantara-footer small {
+  color: var(--nusantara-dim);
+  font-family: inherit;
+  font-size: .64rem;
+  font-weight: inherit;
+  line-height: inherit;
+}
 .nusantara-footer nav { display: flex; gap: 1.4rem; }
 
 .nusantara-loading { min-height: 100vh; padding-bottom: 5rem; }
@@ -1608,6 +1617,14 @@ button { color: inherit; }
 .smash-login input:focus { border-color: var(--guest-gold); box-shadow: 0 0 0 3px rgba(201, 132, 49, .12); }
 .smash-login form > .smash-guest__primary { margin-top: 11px; width: 100%; }
 .smash-login form > .smash-guest__primary:disabled { cursor: wait; opacity: .65; }
+.smash-login__forgot {
+  color: var(--guest-gold);
+  display: block;
+  font-size: 10px;
+  margin: -4px 0 12px;
+  text-align: right;
+}
+.smash-login__forgot:hover { color: var(--guest-cream); }
 .smash-login form > span { color: var(--guest-dim); display: block; font-size: 9px; margin-top: 15px; text-align: center; }
 .smash-login form > span a { color: var(--guest-gold); }
 .smash-login__close { background: transparent; border: 0; color: var(--guest-muted); position: absolute; right: 15px; top: 15px; }

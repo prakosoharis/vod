@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 
@@ -42,10 +43,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Forms */}
         {isLogin ? (
-          <LoginForm
-            onSuccess={onClose}
-            isModal
-          />
+          <>
+            <LoginForm
+              onSuccess={onClose}
+              isModal
+            />
+            <Link
+              to="/forgot-password"
+              onClick={onClose}
+              className="mt-4 block text-center text-sm text-cream-200 transition-colors hover:text-accent-400"
+            >
+              Lupa password?
+            </Link>
+          </>
         ) : (
           <RegisterForm
             onSuccess={onClose}

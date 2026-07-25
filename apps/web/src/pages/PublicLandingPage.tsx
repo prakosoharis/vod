@@ -228,6 +228,9 @@ const PublicLandingPage = () => {
               Kata sandi
               <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Masukkan kata sandi" autoComplete="current-password" required />
             </label>
+            <Link className="smash-login__forgot" to="/forgot-password" onClick={() => setShowLogin(false)}>
+              Lupa password?
+            </Link>
             {error && <div className="smash-login__error">{error}</div>}
             <button className="smash-guest__primary" type="submit" disabled={isLoading}>
               {isLoading ? 'Memproses...' : 'Masuk'} {!isLoading && <ArrowRight />}
