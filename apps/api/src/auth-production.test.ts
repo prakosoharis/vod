@@ -98,6 +98,12 @@ test('pending registration, OTP single use, identifier login, recovery, and sess
     assert.equal(login.statusCode, 200, login.body);
   }
 
+  const legacyEmailLogin = await app.inject({
+    method: 'POST', url: '/api/auth/login',
+    payload: { email, password },
+  });
+  assert.equal(legacyEmailLogin.statusCode, 200, legacyEmailLogin.body);
+
   const bad = await app.inject({
     method: 'POST', url: '/api/auth/login',
     payload: { identifier: email, password: 'not-the-password', source_platform: 'web' },

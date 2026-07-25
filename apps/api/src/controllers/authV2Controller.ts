@@ -254,13 +254,19 @@ export async function resendRegistration(request: FastifyRequest, reply: Fastify
 
 export async function loginWithIdentifier(this: FastifyInstance, request: FastifyRequest, reply: FastifyReply) {
   const parsed = z.object({
-    identifier: z.string().min(1), password: z.string().min(1),
+    identifier: z.string().min(1).optional(),
+    email: z.string().min(1).optional(),
+    password: z.string().min(1),
     source_platform: platformSchema.default('web'), device_name: z.string().max(120).optional(),
-  }).safeParse(request.body);
+  }).refine((body) => Boolean(body.identifier || body.email)).safeParse(request.body);
   const generic = { error: 'Data login tidak sesuai. Periksa kembali dan coba lagi.' };
   if (!parsed.success) return reply.code(401).send(generic);
   let identifier;
-  try { identifier = classifyIdentifier(parsed.data.identifier); } catch { return reply.code(401).send(generic); }
+  try {
+    identifier = classifyIdentifier(parsed.data.identifier || parsed.data.email!);
+  } catch {
+    return reply.code(401).send(generic);
+  }
   const identifierHash = hashIdentifier(identifier.normalized);
   const ipHash = requestIpHash(request);
   const config = authConfig();
