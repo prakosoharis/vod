@@ -106,6 +106,18 @@ class ApiService {
     return (await this.client.post('/auth/forgot-password', { email })).data;
   }
 
+  async verifyRecovery(challengeId: string, otp: string) {
+    return (await this.client.post('/auth/recovery/verify', {
+      challenge_id: challengeId, otp,
+    })).data;
+  }
+
+  async resetPassword(recoveryToken: string, password: string) {
+    return (await this.client.post('/auth/recovery/reset', {
+      recovery_token: recoveryToken, password,
+    })).data;
+  }
+
   async social(provider: 'google' | 'facebook') {
     return (await this.client.post(`/auth/oauth/${provider}`, {})).data;
   }

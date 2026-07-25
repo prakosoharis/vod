@@ -86,6 +86,16 @@ export const authService = {
     return response.data;
   },
 
+  async verifyRecovery(challengeId: string, otp: string): Promise<{ recovery_token: string }> {
+    const response = await api.post('/auth/recovery/verify', { challenge_id: challengeId, otp });
+    return response.data;
+  },
+
+  async resetPassword(recoveryToken: string, password: string): Promise<{ message: string }> {
+    const response = await api.post('/auth/recovery/reset', { recovery_token: recoveryToken, password });
+    return response.data;
+  },
+
   async social(provider: 'google' | 'facebook') {
     const response = await api.post(`/auth/oauth/${provider}`, {});
     return response.data;

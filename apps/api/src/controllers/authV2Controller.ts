@@ -340,7 +340,8 @@ export async function listSessions(request: FastifyRequest, reply: FastifyReply)
 export async function forgotPassword(request: FastifyRequest, reply: FastifyReply) {
   const generic = { message: 'Jika akun ditemukan, instruksi pemulihan akan dikirim melalui email terdaftar.' };
   const parsed = z.object({ email: z.string().email() }).safeParse(request.body);
-  if (!parsed.success) return reply.send(generic);
+  const response = { ...generic, challenge_id: crypto.randomUUID() };
+  if (!parsed.success) return reply.send(response);
   try {
     const identifier = classifyIdentifier(parsed.data.email);
     const user = await prisma.user.findFirst({ where: { email_normalized: identifier.normalized } });
@@ -348,12 +349,15 @@ export async function forgotPassword(request: FastifyRequest, reply: FastifyRepl
       const destination = user.email_verified_at && user.email
         ? { channel: 'EMAIL' as const, value: user.email }
         : null;
-      if (destination) await deliverChallenge(user.id, 'PASSWORD_RESET', destination.channel, destination.value);
+      if (destination) {
+        const challenge = await deliverChallenge(user.id, 'PASSWORD_RESET', destination.channel, destination.value);
+        response.challenge_id = challenge.challenge_id;
+      }
     }
   } catch {
     // Enumeration-safe response; provider failures are not exposed here.
   }
-  return reply.send(generic);
+  return reply.send(response);
 }
 
 export async function verifyRecovery(this: FastifyInstance, request: FastifyRequest, reply: FastifyReply) {
@@ -387,11 +391,16 @@ export async function resetPassword(this: FastifyInstance, request: FastifyReque
   try {
     validatePassword(parsed.data.password);
     const payload = this.jwt.verify<any>(parsed.data.recovery_token);
-    if (payload.purpose !== 'password-reset' || !payload.userId) throw new Error();
+    if (payload.purpose !== 'password-reset' || !payload.userId || !payload.challengeId) throw new Error();
+    const challenge = await prisma.otpChallenge.findUnique({ where: { id: payload.challengeId } });
+    if (!challenge || challenge.user_id !== payload.userId || challenge.purpose !== 'PASSWORD_RESET' || !challenge.consumed_at) {
+      throw new Error();
+    }
     const passwordHash = await bcrypt.hash(parsed.data.password, 12);
     await prisma.$transaction([
       prisma.user.update({ where: { id: payload.userId }, data: { password_hash: passwordHash } }),
       prisma.authSession.updateMany({ where: { user_id: payload.userId, revoked_at: null }, data: { revoked_at: new Date() } }),
+      prisma.otpChallenge.delete({ where: { id: payload.challengeId } }),
     ]);
     return reply.send({ message: 'Password berhasil diperbarui. Silakan masuk kembali.' });
   } catch {
