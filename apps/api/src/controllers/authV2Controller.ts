@@ -104,7 +104,7 @@ async function deliverChallenge(
   });
   try {
     const result = await getOtpProvider(channel).send({
-      channel, destination, otp,
+      channel, purpose, destination, otp,
       expiresMinutes: Math.ceil(config.otpTtlSeconds / 60),
       idempotencyKey: id,
     });
