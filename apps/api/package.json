@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "test": "NODE_ENV=test JWT_SECRET=automated-test-only-secret-not-for-runtime CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000 tsx --test src/**/*.test.ts",
+    "deletion-worker:dry-run": "ACCOUNT_DELETION_WORKER_MODE=dry-run tsx src/workers/accountDeletionWorker.ts",
+    "deletion-worker": "tsx src/workers/accountDeletionWorker.ts",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

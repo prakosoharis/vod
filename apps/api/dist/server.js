@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import dotenv from 'dotenv';
+import { pathToFileURL } from 'node:url';
 import { registerJwt } from './utils/jwt.js';
 import { authRoutes } from './routes/auth.js';
 import { userRoutes } from './routes/user.js';
@@ -11,21 +12,35 @@ import { uploadRoutes } from './routes/upload.js';
 import { eventRoutes } from './routes/event.js';
 import paymentRoutes from './routes/payment.js';
 import { broadcastRoutes } from './routes/broadcastRoutes.js';
+import { legalRoutes } from './routes/legal.js';
 import { getChatWebSocket } from './websocket/chatWebSocket.js';
 import prisma from './config/database.js';
 // Load environment variables
 dotenv.config();
 // Register plugins and routes
-async function build() {
+export async function build(options = {}) {
     const isDev = process.env.NODE_ENV === 'development';
     const fastify = Fastify({
         logger: {
             level: isDev ? 'debug' : 'info',
         },
     });
+    const configuredOrigins = process.env.CORS_ALLOWED_ORIGINS
+        ?.split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
+    const allowedOrigins = configuredOrigins?.length
+        ? configuredOrigins
+        : [
+            'https://smashstream.id',
+            'https://api.smashstream.id',
+            'https://backoffice.smashstream.id',
+            'https://broadcaster.smashstream.id',
+            ...(isDev ? ['http://localhost:3000', 'http://127.0.0.1:3000'] : []),
+        ];
     // CORS
     await fastify.register(cors, {
-        origin: ['https://smashstream.id', 'https://api.smashstream.id', 'https://backoffice.smashstream.id', 'https://broadcaster.smashstream.id', '*'],
+        origin: allowedOrigins,
         credentials: true,
     });
     // Multipart for file uploads
@@ -78,10 +93,13 @@ async function build() {
     await fastify.register(paymentRoutes, { prefix: '/api/payment' });
     await fastify.register(uploadRoutes, { prefix: '/api' });
     await fastify.register(broadcastRoutes, { prefix: '/api' });
+    await fastify.register(legalRoutes, { prefix: '/api' });
     // Start WebSocket server for chat
-    const wsPath = process.env.WEBSOCKET_PATH || '/ws';
-    const chatWebSocket = getChatWebSocket(wsPath);
-    chatWebSocket.start(parseInt(process.env.WEBSOCKET_PORT || '3002', 10));
+    if (options.startWebSocket !== false) {
+        const wsPath = process.env.WEBSOCKET_PATH || '/ws';
+        const chatWebSocket = getChatWebSocket(wsPath);
+        chatWebSocket.start(parseInt(process.env.WEBSOCKET_PORT || '3002', 10));
+    }
     // Global error handler
     fastify.setErrorHandler((error, request, reply) => {
         const statusCode = error.statusCode || 500;
@@ -97,7 +115,11 @@ async function build() {
             request: {
                 method: request.method,
                 url: request.url,
-                headers: request.headers,
+                headers: {
+                    'content-type': request.headers['content-type'],
+                    'user-agent': request.headers['user-agent'],
+                    'x-request-id': request.headers['x-request-id'],
+                },
             },
         });
         // Format error response consistently
@@ -132,7 +154,7 @@ async function build() {
 let serverInstance = null;
 async function start() {
     try {
-        serverInstance = await build();
+        serverInstance = await build({ startWebSocket: true });
         const port = parseInt(process.env.PORT || '3001', 10);
         const host = process.env.HOST || '0.0.0.0';
         await serverInstance.listen({ port, host });
@@ -152,6 +174,10 @@ async function shutdown() {
 }
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
-// Start the server
-start();
+const isMainModule = process.argv[1]
+    ? import.meta.url === pathToFileURL(process.argv[1]).href
+    : false;
+if (isMainModule) {
+    start();
+}
 //# sourceMappingURL=server.js.map

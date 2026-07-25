@@ -26,10 +26,10 @@ export async function authenticateRequest(
 
   const user = await prisma.user.findUnique({
     where: { id: decoded.userId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, deleted_at: true },
   });
 
-  if (!user) {
+  if (!user || user.deleted_at) {
     reply.code(401).send({ error: 'User not found' });
     return;
   }
@@ -40,4 +40,3 @@ export async function authenticateRequest(
 // Backwards-compatible export name used in routes
 export const authenticate = authenticateRequest;
 export const authMiddleware = authenticateRequest;
-

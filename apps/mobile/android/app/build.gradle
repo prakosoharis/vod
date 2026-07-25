@@ -78,6 +78,12 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+def releaseStoreFile = System.getenv("SMASH_RELEASE_STORE_FILE") ?: project.findProperty("SMASH_RELEASE_STORE_FILE")
+def releaseStorePassword = System.getenv("SMASH_RELEASE_STORE_PASSWORD") ?: project.findProperty("SMASH_RELEASE_STORE_PASSWORD")
+def releaseKeyAlias = System.getenv("SMASH_RELEASE_KEY_ALIAS") ?: project.findProperty("SMASH_RELEASE_KEY_ALIAS")
+def releaseKeyPassword = System.getenv("SMASH_RELEASE_KEY_PASSWORD") ?: project.findProperty("SMASH_RELEASE_KEY_PASSWORD")
+def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -99,11 +105,13 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        release {
-            storeFile file('mostara-release-key.keystore')
-            storePassword 'mostara2025'
-            keyAlias 'mostara-key-alias'
-            keyPassword 'mostara2025'
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
         }
     }
     buildTypes {
@@ -111,10 +119,24 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.release
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def requestsReleaseBuild = graph.allTasks.any { task ->
+        task.name.toLowerCase().contains("release")
+    }
+    if (requestsReleaseBuild && !hasReleaseSigning) {
+        throw new GradleException(
+            "Release signing is not configured. Set SMASH_RELEASE_STORE_FILE, " +
+            "SMASH_RELEASE_STORE_PASSWORD, SMASH_RELEASE_KEY_ALIAS, and SMASH_RELEASE_KEY_PASSWORD."
+        )
     }
 }
 

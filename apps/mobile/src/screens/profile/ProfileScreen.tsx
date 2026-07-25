@@ -68,16 +68,34 @@ const ProfileScreen: React.FC = () => {
       onPress: () => console.log('Navigate to Downloads'),
     },
     {
-      icon: 'settings',
-      title: 'Pengaturan',
-      subtitle: 'Atur preferensi aplikasi',
-      onPress: () => console.log('Navigate to Settings'),
+      icon: 'privacy-tip',
+      title: 'Kebijakan Privasi',
+      subtitle: 'Cara kami memproses data',
+      onPress: () => navigation.navigate('LegalWeb', { path: '/privacy', title: 'Kebijakan Privasi' }),
     },
     {
-      icon: 'help-outline',
-      title: 'Bantuan',
-      subtitle: 'Dapatkan bantuan dan dukungan',
-      onPress: () => console.log('Navigate to Help'),
+      icon: 'description',
+      title: 'Syarat dan Ketentuan',
+      subtitle: 'Ketentuan penggunaan layanan',
+      onPress: () => navigation.navigate('LegalWeb', { path: '/terms', title: 'Syarat dan Ketentuan' }),
+    },
+    {
+      icon: 'contact-support',
+      title: 'Kontak dan Bantuan',
+      subtitle: 'Kirim permintaan dukungan',
+      onPress: () => navigation.navigate('LegalWeb', { path: '/contact', title: 'Kontak dan Bantuan' }),
+    },
+    {
+      icon: 'currency-exchange',
+      title: 'Kebijakan Refund',
+      subtitle: 'Ketentuan pengembalian dana',
+      onPress: () => navigation.navigate('LegalWeb', { path: '/refund-policy', title: 'Kebijakan Refund' }),
+    },
+    {
+      icon: 'delete-forever',
+      title: 'Hapus Akun',
+      subtitle: 'Ajukan penghapusan akun dan data',
+      onPress: () => navigation.navigate('AccountDeletion'),
     },
   ];
 

@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { broadcastService } from '../services/broadcastService';
-import { prisma } from '../config/database';
+import { broadcastService } from '../services/broadcastService.js';
+import { prisma } from '../config/database.js';
 import { verifyToken } from '../utils/jwt.js';
 import { getChatWebSocket } from '../websocket/chatWebSocket.js';
 

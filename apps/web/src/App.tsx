@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import AppRoutes from './routes/AppRoutes'
 import { useAuthStore } from '@/stores/authStore'
 import SmashIntro from './components/SmashIntro'
+import CookieConsent from './components/legal/CookieConsent'
 
 const INTRO_SESSION_KEY = 'smash_intro_played'
 
@@ -35,6 +36,7 @@ function App() {
   return (
     <>
       <AppRoutes />
+      <CookieConsent />
       {showIntro && <SmashIntro onFinished={finishIntro} />}
     </>
   )

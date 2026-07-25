@@ -18,6 +18,8 @@ import MyListScreen from '../screens/mylist/MyListScreen';
 import WatchHistoryScreen from '../screens/history/WatchHistoryScreen';
 import RentalHistoryScreen from '../screens/rentals/RentalHistoryScreen';
 import LiveEventsScreen from '../screens/live/LiveEventsScreen';
+import LegalWebViewScreen from '../screens/legal/LegalWebViewScreen';
+import AccountDeletionScreen from '../screens/legal/AccountDeletionScreen';
 import { RootStackParamList } from '../types';
 import { COLORS } from '../constants';
 
@@ -72,11 +74,17 @@ const AppNavigator = () => {
 
   return (
     <Stack.Navigator
+      initialRouteName={isAuthenticated ? 'Main' : 'Auth'}
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: COLORS.warmCharcoal[100] },
       }}
     >
+      <Stack.Screen
+        name="LegalWeb"
+        component={LegalWebViewScreen}
+        options={({ route }: any) => ({ ...screenOptions, title: route.params?.title || 'SMASHSTREAM' })}
+      />
       {isAuthenticated ? (
         <>
           <Stack.Screen name="Main" component={TabNavigator} />
@@ -149,6 +157,11 @@ const AppNavigator = () => {
             name="LiveEvents"
             component={LiveEventsScreen}
             options={screenOptions}
+          />
+          <Stack.Screen
+            name="AccountDeletion"
+            component={AccountDeletionScreen}
+            options={{ ...screenOptions, title: 'Hapus Akun' }}
           />
         </>
       ) : (

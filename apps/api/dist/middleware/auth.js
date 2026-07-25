@@ -18,9 +18,9 @@ export async function authenticateRequest(request, reply) {
     }
     const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
-        select: { id: true, email: true },
+        select: { id: true, email: true, deleted_at: true },
     });
-    if (!user) {
+    if (!user || user.deleted_at) {
         reply.code(401).send({ error: 'User not found' });
         return;
     }

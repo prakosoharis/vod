@@ -8,8 +8,12 @@ export interface JWTPayload {
 }
 
 export async function registerJwt(fastify: FastifyInstance): Promise<void> {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 24) {
+    throw new Error('JWT_SECRET must be configured with at least 24 characters');
+  }
   await fastify.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+    secret,
   });
 }
 
@@ -58,4 +62,3 @@ export function verifyToken(arg1: FastifyInstance | string, arg2?: string): Prom
     return null;
   }
 }
-

@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { broadcastController } from '../controllers/broadcastController';
+import { broadcastController } from '../controllers/broadcastController.js';
 
 export async function broadcastRoutes(fastify: FastifyInstance) {
   // Create broadcast

@@ -4,11 +4,16 @@ import { z } from 'zod';
 import prisma from '../config/database.js';
 import { generateToken } from '../utils/jwt.js';
 import type { FastifyInstance } from 'fastify';
+import { LEGAL_VERSIONS } from '../routes/legal.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
   full_name: z.string().min(1).optional(),
   password: z.string().min(8),
+  legal_consent: z.literal(true),
+  terms_version: z.literal(LEGAL_VERSIONS.terms),
+  privacy_version: z.literal(LEGAL_VERSIONS.privacy),
+  source_platform: z.enum(['web', 'android', 'ios']),
 });
 
 const loginSchema = z.object({
@@ -38,19 +43,53 @@ export async function register(
     const hashedPassword = await bcrypt.hash(body.password, 10);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email: body.email,
-        full_name: body.full_name,
-        password_hash: hashedPassword,
-      },
-      select: {
-        id: true,
-        email: true,
-        full_name: true,
-        avatar_url: true,
-        created_at: true,
-      },
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: body.email,
+          full_name: body.full_name,
+          password_hash: hashedPassword,
+        },
+        select: {
+          id: true,
+          email: true,
+          full_name: true,
+          avatar_url: true,
+          created_at: true,
+        },
+      });
+      await tx.legalConsent.createMany({
+        data: [
+          {
+            user_id: created.id,
+            document_type: 'TERMS',
+            document_version: body.terms_version,
+            source_platform: body.source_platform,
+            user_agent: request.headers['user-agent'],
+          },
+          {
+            user_id: created.id,
+            document_type: 'PRIVACY',
+            document_version: body.privacy_version,
+            source_platform: body.source_platform,
+            user_agent: request.headers['user-agent'],
+          },
+        ],
+      });
+      await tx.complianceAuditLog.create({
+        data: {
+          user_id: created.id,
+          event_type: 'LEGAL_CONSENT_ACCEPTED',
+          subject_type: 'USER',
+          subject_id: created.id,
+          source_platform: body.source_platform,
+          metadata: {
+            terms_version: body.terms_version,
+            privacy_version: body.privacy_version,
+          },
+        },
+      });
+      return created;
     });
 
     // Generate token
@@ -80,32 +119,23 @@ export async function login(
 ): Promise<void> {
   try {
     const body = loginSchema.parse(request.body);
-    console.log('🔍 Login attempt for email:', body.email);
-
     // Find user
     const user = await prisma.user.findUnique({
       where: { email: body.email },
     });
 
-    if (!user) {
-      console.log('❌ User not found:', body.email);
+    if (!user || user.deleted_at) {
       reply.code(401).send({ error: 'Invalid email or password' });
       return;
     }
-
-    console.log('✅ User found:', user.email, 'ID:', user.id);
 
     // Verify password
     const isValidPassword = await bcrypt.compare(body.password, user.password_hash);
-    console.log('🔑 Password verification result:', isValidPassword);
 
     if (!isValidPassword) {
-      console.log('❌ Invalid password for:', body.email);
       reply.code(401).send({ error: 'Invalid email or password' });
       return;
     }
-
-    console.log('✅ Login successful for:', body.email);
 
     // Generate token
     const token = generateToken(this, {
@@ -164,4 +194,3 @@ export async function getMe(
     reply.code(500).send({ error: 'Internal server error' });
   }
 }
-

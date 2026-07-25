@@ -198,9 +198,12 @@ const PublicLandingPage = () => {
         <Logo />
         <p>Hiburan Indonesia, dalam cerita terbaiknya.</p>
         <nav>
-          <a href="#bantuan">Bantuan</a>
+          <Link to="/contact">Kontak</Link>
           <Link to="/terms">Syarat</Link>
           <Link to="/privacy">Privasi</Link>
+          <Link to="/refund-policy">Refund</Link>
+          <Link to="/account-deletion">Hapus Akun</Link>
+          <button type="button" onClick={() => window.dispatchEvent(new Event('smash-open-cookie-preferences'))}>Cookie Preferences</button>
         </nav>
         <small>© {new Date().getFullYear()} SMASH. Seluruh hak dilindungi.</small>
       </footer>

@@ -28,6 +28,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [legalConsent, setLegalConsent] = useState(false);
   const { register, isLoading } = useAuthStore();
 
   const handleRegister = async () => {
@@ -39,8 +40,12 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Error', 'Password tidak cocok');
       return;
     }
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password minimal 6 karakter');
+    if (password.length < 8) {
+      Alert.alert('Error', 'Password minimal 8 karakter');
+      return;
+    }
+    if (!legalConsent) {
+      Alert.alert('Persetujuan diperlukan', 'Baca dan setujui Syarat dan Ketentuan serta Kebijakan Privasi.');
       return;
     }
     try {
@@ -92,7 +97,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             />
             <Input
               label="Password"
-              placeholder="Minimal 6 karakter"
+              placeholder="Minimal 8 karakter"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -104,6 +109,24 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setConfirmPassword}
               secureTextEntry
             />
+
+            <View style={styles.consentRow}>
+              <TouchableOpacity
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: legalConsent }}
+                onPress={() => setLegalConsent((value) => !value)}
+                style={[styles.checkbox, legalConsent && styles.checkboxChecked]}
+              >
+                {legalConsent && <Text style={styles.checkmark}>✓</Text>}
+              </TouchableOpacity>
+              <Text style={styles.consentText}>
+                Saya telah membaca dan menyetujui{' '}
+                <Text style={styles.legalLink} onPress={() => navigation.getParent()?.navigate('LegalWeb', { path: '/terms', title: 'Syarat dan Ketentuan' })}>Syarat dan Ketentuan</Text>
+                {' '}serta{' '}
+                <Text style={styles.legalLink} onPress={() => navigation.getParent()?.navigate('LegalWeb', { path: '/privacy', title: 'Kebijakan Privasi' })}>Kebijakan Privasi</Text>
+                {' '}SMASHSTREAM.
+              </Text>
+            </View>
 
             <Button
               title="Daftar"
@@ -187,6 +210,28 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
   },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginVertical: 14,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: COLORS.cream[200],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.accent[500],
+    borderColor: COLORS.accent[500],
+  },
+  checkmark: { color: '#fff', fontWeight: '800' },
+  consentText: { flex: 1, color: COLORS.cream[200], fontSize: 12, lineHeight: 18 },
+  legalLink: { color: COLORS.accent[400], textDecorationLine: 'underline' },
   loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',

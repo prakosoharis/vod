@@ -1,8 +1,12 @@
 import fastifyJwt from '@fastify/jwt';
 import jwt from 'jsonwebtoken';
 export async function registerJwt(fastify) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret || secret.length < 24) {
+        throw new Error('JWT_SECRET must be configured with at least 24 characters');
+    }
     await fastify.register(fastifyJwt, {
-        secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+        secret,
     });
 }
 export function generateToken(arg1, arg2) {

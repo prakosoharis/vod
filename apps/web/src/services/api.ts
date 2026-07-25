@@ -29,7 +29,8 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl = String(error.config?.url || '');
+    if (error.response?.status === 401 && !requestUrl.includes('/account-deletion')) {
       // Unauthorized - clear token
       localStorage.removeItem('token');
     }
@@ -39,4 +40,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-

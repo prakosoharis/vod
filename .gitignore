@@ -10,9 +10,13 @@ apps/*/build/
 
 # Environment files
 .env
+.env.*
 .env.local
 .env.production
 .env.development
+!.env.example
+!*.env.example
+!.env.*.example
 
 # Logs
 logs/
@@ -57,6 +61,8 @@ Thumbs.db
 *.pem
 *.p12
 *.pfx
+*.keystore
+*.jks
 *.crt
 *.cert
 *secret*

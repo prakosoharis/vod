@@ -90,6 +90,10 @@ export interface RegisterRequest {
   email: string;
   password: string;
   full_name?: string;
+  legal_consent: true;
+  terms_version: string;
+  privacy_version: string;
+  source_platform: 'web';
 }
 
 // Export aliases for useAuth hook compatibility

@@ -13,7 +13,10 @@ const registerSchema = z.object({
   email: z.string().email("Email tidak valid"),
   password: z.string().min(8, "Password minimal 8 karakter"),
   confirmPassword: z.string(),
-  terms: z.boolean().refine(val => val === true, "Harus menyetujui syarat & ketentuan")
+  terms: z.boolean().refine(
+    val => val === true,
+    'Harus menyetujui Syarat dan Ketentuan serta Kebijakan Privasi',
+  ),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Password tidak cocok",
   path: ["confirmPassword"]
@@ -29,7 +32,7 @@ const getPasswordStrength = (password: string) => {
   const hasLower = /[a-z]/.test(password);
   const hasUpper = /[A-Z]/.test(password);
   const hasNumber = /\d/.test(password);
-  const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const hasSymbol = /[^A-Za-z0-9]/.test(password);
 
   const mixCount = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
 
@@ -55,7 +58,7 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
     watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema as any),
+    resolver: zodResolver(registerSchema),
   });
 
   const password = watch('password', '');
@@ -69,7 +72,7 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
       } else {
         navigate('/browse');
       }
-    } catch (error: any) {
+    } catch {
       // Error is handled by the store
     }
   };
@@ -175,13 +178,21 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
             {...register('terms')}
           />
           <label htmlFor="terms" className="text-sm text-cream-100 leading-relaxed cursor-pointer">
-            Saya setuju dengan{' '}
+            Saya telah membaca dan menyetujui{' '}
             <Link
               to="/terms"
               className="text-accent-400 hover:text-accent-300 transition-colors underline"
             >
-              Syarat & Ketentuan
+              Syarat dan Ketentuan
             </Link>
+            {' '}serta{' '}
+            <Link
+              to="/privacy"
+              className="text-accent-400 hover:text-accent-300 transition-colors underline"
+            >
+              Kebijakan Privasi
+            </Link>
+            {' '}SMASHSTREAM.
           </label>
         </div>
         {errors.terms && (
@@ -206,4 +217,3 @@ export function RegisterForm({ onSuccess, isModal = false }: RegisterFormProps =
     </div>
   );
 }
-

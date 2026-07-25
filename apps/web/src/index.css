@@ -15,6 +15,49 @@ video::cue {
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.95);
 }
 
+.legal-copy a,
+.legal-form a {
+  color: var(--color-accent-400, #d79a55);
+  text-decoration: underline;
+}
+
+.legal-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #f4ede3;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.legal-form input:not([type='checkbox']),
+.legal-form select,
+.legal-form textarea {
+  width: 100%;
+  border: 1px solid rgba(244, 237, 227, 0.16);
+  border-radius: 0.75rem;
+  background: #1a1614;
+  color: #f4ede3;
+  padding: 0.75rem 0.875rem;
+  font: inherit;
+}
+
+.legal-form input:focus,
+.legal-form select:focus,
+.legal-form textarea:focus {
+  border-color: #c67d4b;
+  outline: 2px solid rgba(198, 125, 75, 0.25);
+}
+
+.nusantara-footer button,
+.smash-guest__footer button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
 /* ═══════════════════════════════════════════════════════
    SMASH DESIGN SYSTEM - WARM COFFEE HOUSE CINEMA
    ═══════════════════════════════════════════════════════ */

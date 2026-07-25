@@ -47,8 +47,19 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
             email: { type: 'string', format: 'email' },
             password: { type: 'string', minLength: 8 },
             full_name: { type: 'string' },
+            legal_consent: { type: 'boolean', const: true },
+            terms_version: { type: 'string', const: '2026-07-25' },
+            privacy_version: { type: 'string', const: '2026-07-25' },
+            source_platform: { type: 'string', enum: ['web', 'android', 'ios'] },
           },
-          required: ['email', 'password'],
+          required: [
+            'email',
+            'password',
+            'legal_consent',
+            'terms_version',
+            'privacy_version',
+            'source_platform',
+          ],
           additionalProperties: false,
         },
         response: {
@@ -118,4 +129,3 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     getMe
   );
 }
-

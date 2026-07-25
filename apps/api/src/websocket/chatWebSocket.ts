@@ -1,6 +1,6 @@
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { broadcastService } from '../services/broadcastService';
+import { broadcastService } from '../services/broadcastService.js';
 
 interface ChatMessage {
   broadcast_id: string;

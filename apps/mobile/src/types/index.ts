@@ -101,6 +101,8 @@ export type RootStackParamList = {
   Subscription: undefined;
   RentalHistory: undefined;
   LiveEvents: undefined;
+  LegalWeb: { path: '/privacy' | '/terms' | '/contact' | '/refund-policy' | '/account-deletion'; title: string };
+  AccountDeletion: undefined;
   /** Legacy route retained for source compatibility; no longer registered in the app navigator. */
   Upcoming: undefined;
 };

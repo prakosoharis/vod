@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { API_BASE_URL } from '../constants';
 
 class ApiService {
@@ -30,7 +31,8 @@ class ApiService {
     this.client.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error) => {
-        if (error.response?.status === 401) {
+        const requestUrl = String(error.config?.url || '');
+        if (error.response?.status === 401 && !requestUrl.includes('/account-deletion')) {
           // Token expired or invalid, clear storage
           await AsyncStorage.multiRemove(['@auth_token', '@user_data']);
           // You could navigate to login screen here
@@ -55,11 +57,33 @@ class ApiService {
       email,
       password,
       full_name: fullName,
+      legal_consent: true,
+      terms_version: '2026-07-25',
+      privacy_version: '2026-07-25',
+      source_platform: Platform.OS === 'ios' ? 'ios' : 'android',
     });
     if (response.data.token) {
       await AsyncStorage.setItem('@auth_token', response.data.token);
       await AsyncStorage.setItem('@user_data', JSON.stringify(response.data.user));
     }
+    return response.data;
+  }
+
+  async getAccountDeletion() {
+    const response = await this.client.get('/account-deletion');
+    return response.data;
+  }
+
+  async requestAccountDeletion(password: string) {
+    const response = await this.client.post('/account-deletion', {
+      password,
+      source_platform: Platform.OS === 'ios' ? 'ios' : 'android',
+    });
+    return response.data;
+  }
+
+  async cancelAccountDeletion() {
+    const response = await this.client.post('/account-deletion/cancel', {});
     return response.data;
   }
 

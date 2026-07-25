@@ -22,6 +22,11 @@ const PaymentSuccessPage = lazy(() => import('../pages/PaymentSuccessPage'))
 const PaymentErrorPage = lazy(() => import('../pages/PaymentErrorPage'))
 const ProfilePage = lazy(() => import('../pages/ProfilePage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
+const PrivacyPolicyPage = lazy(() => import('../pages/PrivacyPolicyPage'))
+const TermsPage = lazy(() => import('../pages/TermsPage'))
+const ContactPage = lazy(() => import('../pages/ContactPage'))
+const RefundPolicyPage = lazy(() => import('../pages/RefundPolicyPage'))
+const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'))
 
 const AppRoutes = () => {
   const { isAuthenticated, hasHydrated } = useAuthStore()
@@ -44,6 +49,11 @@ const AppRoutes = () => {
             <RegisterPage />
           </Suspense>
         } />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/refund-policy" element={<RefundPolicyPage />} />
+        <Route path="/account-deletion" element={<AccountDeletionPage />} />
         <Route path="/browse" element={
           <ProtectedRoute>
             <Layout>

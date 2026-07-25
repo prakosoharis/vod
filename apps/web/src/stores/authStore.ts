@@ -2,6 +2,17 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User } from '@/types';
 import { authService } from '@/services/auth.service';
+import { AxiosError } from 'axios';
+
+type ApiError = {
+  error?: string;
+  message?: string;
+};
+
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  const apiError = error as AxiosError<ApiError>;
+  return apiError.response?.data?.error || apiError.response?.data?.message || fallback;
+}
 
 interface AuthState {
   user: User | null;
@@ -52,8 +63,8 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+        } catch (error: unknown) {
+          const errorMessage = getApiErrorMessage(error, 'Login failed. Please try again.');
           set({ isLoading: false, error: errorMessage, isAuthenticated: false });
           throw error;
         }
@@ -62,7 +73,15 @@ export const useAuthStore = create<AuthState>()(
       register: async (email: string, password: string, full_name?: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await authService.register({ email, password, full_name });
+          const response = await authService.register({
+            email,
+            password,
+            full_name,
+            legal_consent: true,
+            terms_version: '2026-07-25',
+            privacy_version: '2026-07-25',
+            source_platform: 'web',
+          });
           set({
             user: response.user,
             token: response.token,
@@ -70,8 +89,8 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+        } catch (error: unknown) {
+          const errorMessage = getApiErrorMessage(error, 'Registration failed. Please try again.');
           set({ isLoading: false, error: errorMessage, isAuthenticated: false });
           throw error;
         }
@@ -84,30 +103,23 @@ export const useAuthStore = create<AuthState>()(
 
       checkAuth: async () => {
         try {
-          console.log('🔍 [Auth] Starting auth check...');
           set({ isLoading: true });
           const token = authService.getToken();
 
-          console.log('🔍 [Auth] Token from localStorage:', token ? 'exists' : 'none');
-
           if (!token) {
-            console.log('❌ [Auth] No token found, setting unauthenticated');
             set({ user: null, token: null, isAuthenticated: false, isLoading: false });
             return;
           }
 
-          console.log('🔍 [Auth] Verifying token with /auth/me...');
           // Verify token is still valid by calling getMe
           const user = await authService.getMe();
-          console.log('✅ [Auth] Token valid, user:', user?.email);
           set({
             user,
             token,
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error) {
-          console.error('❌ [Auth] Token verification failed:', error);
+        } catch {
           // Token is invalid or expired, clear auth state
           set({
             user: null,
@@ -157,4 +169,3 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
-

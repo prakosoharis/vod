@@ -1,0 +1,6 @@
+# Supply these as environment variables or private Gradle properties.
+# Never commit the populated values or the release keystore.
+SMASH_RELEASE_STORE_FILE=/absolute/private/path/smash-release.keystore
+SMASH_RELEASE_STORE_PASSWORD=change-me
+SMASH_RELEASE_KEY_ALIAS=change-me
+SMASH_RELEASE_KEY_PASSWORD=change-me

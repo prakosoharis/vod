@@ -41,6 +41,8 @@ services:
       - WEBSOCKET_PATH=/socket.io/
       - DATABASE_URL=postgresql://${POSTGRES_USER:-streamkita}:${POSTGRES_PASSWORD:-streamkita123}@postgres:5432/${POSTGRES_DB:-streamkita_dev}?schema=public
       - JWT_SECRET=${JWT_SECRET}
+      - ACCOUNT_DELETION_COOLING_OFF_DAYS=7
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
       - IVS_STREAM_KEY=${IVS_STREAM_KEY}
       - IVS_RTMP_URL=${IVS_RTMP_URL}
