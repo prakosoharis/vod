@@ -10,11 +10,9 @@ import { apiService } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 
 const smashLogo = require('../../assets/smash-logo-transparent.png');
-type Method = 'phone' | 'email';
 
 export default function RegisterScreen({ navigation }: any) {
   const setSession = useAuthStore((state) => state.setSession);
-  const [method, setMethod] = useState<Method>('phone');
   const [fullName, setFullName] = useState('');
   const [destination, setDestination] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +37,7 @@ export default function RegisterScreen({ navigation }: any) {
     setLoading(true);
     try {
       const result = await apiService.startRegistration({
-        method, fullName: fullName.trim(),
+        method: 'email', fullName: fullName.trim(),
         destination: destination.trim(), password,
       });
       setChallenge(result); setSeconds(result.resend_after);
@@ -67,7 +65,7 @@ export default function RegisterScreen({ navigation }: any) {
           <Text style={styles.title}>{challenge ? 'Verifikasi akun' : 'Buat akun SMASH'}</Text>
           {challenge ? (
             <View style={styles.card}>
-              <Text style={styles.copy}>Kode dikirim melalui {method === 'phone' ? 'WhatsApp' : 'email'} ke {challenge.destination_masked}.</Text>
+              <Text style={styles.copy}>Kode dikirim melalui email ke {challenge.destination_masked}.</Text>
               <Input
                 label="Kode verifikasi"
                 value={otp}
@@ -79,7 +77,7 @@ export default function RegisterScreen({ navigation }: any) {
               />
               <Button title="Verifikasi dan Masuk" onPress={verify} loading={loading} disabled={loading} />
               <View style={styles.actions}>
-                <TouchableOpacity onPress={() => { setChallenge(null); setOtp(''); }}><Text style={styles.link}>Ubah {method === 'phone' ? 'nomor' : 'email'}</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => { setChallenge(null); setOtp(''); }}><Text style={styles.link}>Ubah email</Text></TouchableOpacity>
                 <TouchableOpacity disabled={seconds > 0 || loading} onPress={async () => {
                   try {
                     const next = await apiService.resendRegistration(challenge.challenge_id);
@@ -90,20 +88,13 @@ export default function RegisterScreen({ navigation }: any) {
             </View>
           ) : (
             <View style={styles.card}>
-              <View style={styles.tabs}>
-                {(['phone', 'email'] as Method[]).map((item) => (
-                  <TouchableOpacity key={item} onPress={() => { setMethod(item); setDestination(''); }} style={[styles.tab, method === item && styles.activeTab]}>
-                    <Text style={method === item ? styles.activeTabText : styles.tabText}>{item === 'phone' ? 'Nomor HP' : 'Email'}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
               <Input label="Nama tampilan" value={fullName} onChangeText={setFullName} autoCapitalize="words" />
               <Input
-                label={method === 'phone' ? 'Nomor HP' : 'Email'}
-                placeholder={method === 'phone' ? '0812 3456 7890' : 'email@contoh.com'}
+                label="Email"
+                placeholder="email@contoh.com"
                 value={destination}
                 onChangeText={setDestination}
-                keyboardType={method === 'phone' ? 'phone-pad' : 'email-address'}
+                keyboardType="email-address"
                 autoCapitalize="none"
               />
               <Input label="Password" placeholder="Minimal 10 karakter" value={password} onChangeText={setPassword} secureTextEntry />

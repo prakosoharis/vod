@@ -62,14 +62,13 @@ export interface AuthResponse {
 }
 
 export interface LoginRequest {
-  identifier: string;
+  email: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  method: 'email' | 'phone';
-  email?: string;
-  phone?: string;
+  method: 'email';
+  email: string;
   password: string;
   full_name: string;
 }

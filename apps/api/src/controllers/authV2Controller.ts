@@ -7,18 +7,16 @@ import prisma from '../config/database.js';
 import { LEGAL_VERSIONS } from '../routes/legal.js';
 import {
   authConfig, classifyIdentifier, createOtp, createRefreshToken, hashIdentifier,
-  hashOtp, hashRefreshToken, maskDestination, normalizeEmail,
-  normalizeIndonesianPhone, secureEqual, validatePassword,
+  hashOtp, hashRefreshToken, maskDestination, normalizeEmail, secureEqual, validatePassword,
 } from '../auth/authCore.js';
 import { getOtpProvider } from '../auth/otpProvider.js';
 import { generateToken } from '../utils/jwt.js';
 
 const platformSchema = z.enum(['web', 'android', 'ios']);
 const registrationSchema = z.object({
-  method: z.enum(['email', 'phone']),
+  method: z.literal('email'),
   full_name: z.string().trim().min(2).max(100),
-  email: z.string().optional(),
-  phone: z.string().optional(),
+  email: z.string().email(),
   password: z.string(),
   legal_consent: z.literal(true),
   terms_version: z.literal(LEGAL_VERSIONS.terms),
@@ -152,16 +150,9 @@ export async function startRegistration(this: FastifyInstance, request: FastifyR
   try {
     const body = registrationSchema.parse(request.body);
     validatePassword(body.password);
-    const email = body.method === 'email' && body.email ? normalizeEmail(body.email) : null;
-    const phone = body.method === 'phone' && body.phone ? normalizeIndonesianPhone(body.phone) : null;
-    if (!email && !phone) return reply.code(400).send({ error: 'Metode dan tujuan registrasi tidak sesuai.' });
+    const email = normalizeEmail(body.email);
     const duplicate = await prisma.user.findFirst({
-      where: {
-        OR: [
-          ...(email ? [{ email_normalized: email }] : []),
-          ...(phone ? [{ phone_e164: phone }] : []),
-        ],
-      },
+      where: { email_normalized: email },
     });
     if (duplicate?.account_status === 'PENDING_VERIFICATION') {
       await prisma.user.delete({ where: { id: duplicate.id } });
@@ -173,7 +164,6 @@ export async function startRegistration(this: FastifyInstance, request: FastifyR
       const created = await tx.user.create({
         data: {
           email, email_normalized: email,
-          phone_e164: phone,
           full_name: body.full_name,
           password_hash: passwordHash,
           account_status: 'PENDING_VERIFICATION',
@@ -191,9 +181,9 @@ export async function startRegistration(this: FastifyInstance, request: FastifyR
       return created;
     });
     const challenge = await deliverChallenge(
-      user.id, 'REGISTRATION', email ? 'EMAIL' : 'WHATSAPP', email || phone!,
+      user.id, 'REGISTRATION', 'EMAIL', email,
     );
-    return reply.code(202).send({ ...challenge, method: body.method });
+    return reply.code(202).send({ ...challenge, method: 'email' });
   } catch (error: any) {
     if (error instanceof z.ZodError) return reply.code(400).send({ error: 'Data registrasi tidak valid.' });
     request.log.warn({ err: { message: error.message } }, 'Registration start failed');
@@ -278,10 +268,7 @@ export async function loginWithIdentifier(this: FastifyInstance, request: Fastif
   if (identifierFailures >= config.loginMaxAttempts || ipFailures >= config.loginMaxAttempts * 5) {
     return reply.code(429).send({ error: 'Terlalu banyak percobaan. Coba lagi nanti.' });
   }
-  const where = identifier.type === 'email'
-    ? { email_normalized: identifier.normalized }
-    : { phone_e164: identifier.normalized };
-  const user = await prisma.user.findFirst({ where });
+  const user = await prisma.user.findFirst({ where: { email_normalized: identifier.normalized } });
   const valid = Boolean(user?.password_hash) && await bcrypt.compare(parsed.data.password, user!.password_hash!);
   const active = user?.account_status === 'ACTIVE' && !user.deleted_at;
   await prisma.loginAttempt.create({
@@ -351,21 +338,16 @@ export async function listSessions(request: FastifyRequest, reply: FastifyReply)
 }
 
 export async function forgotPassword(request: FastifyRequest, reply: FastifyReply) {
-  const generic = { message: 'Jika akun ditemukan, instruksi pemulihan akan dikirim melalui kanal yang terdaftar.' };
-  const parsed = z.object({ identifier: z.string().min(1) }).safeParse(request.body);
+  const generic = { message: 'Jika akun ditemukan, instruksi pemulihan akan dikirim melalui email terdaftar.' };
+  const parsed = z.object({ email: z.string().email() }).safeParse(request.body);
   if (!parsed.success) return reply.send(generic);
   try {
-    const identifier = classifyIdentifier(parsed.data.identifier);
-      const where = identifier.type === 'email'
-        ? { email_normalized: identifier.normalized }
-        : { phone_e164: identifier.normalized };
-    const user = await prisma.user.findFirst({ where });
+    const identifier = classifyIdentifier(parsed.data.email);
+    const user = await prisma.user.findFirst({ where: { email_normalized: identifier.normalized } });
     if (user?.account_status === 'ACTIVE') {
-      const destination = user.phone_verified_at && user.phone_e164
-        ? { channel: 'WHATSAPP' as const, value: user.phone_e164 }
-        : user.email_verified_at && user.email
-          ? { channel: 'EMAIL' as const, value: user.email }
-          : null;
+      const destination = user.email_verified_at && user.email
+        ? { channel: 'EMAIL' as const, value: user.email }
+        : null;
       if (destination) await deliverChallenge(user.id, 'PASSWORD_RESET', destination.channel, destination.value);
     }
   } catch {

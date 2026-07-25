@@ -58,15 +58,10 @@ export function validatePassword(password: string): void {
   }
 }
 
-export function classifyIdentifier(value: string):
-  | { type: 'email'; normalized: string }
-  | { type: 'phone'; normalized: string } {
+export function classifyIdentifier(value: string): { type: 'email'; normalized: string } {
   const input = value.normalize('NFKC').trim();
   if (input.includes('@')) return { type: 'email', normalized: normalizeEmail(input) };
-  if (/^[+\d][\d\s().-]+$/.test(input)) {
-    return { type: 'phone', normalized: normalizeIndonesianPhone(input) };
-  }
-  throw new Error('Gunakan email atau nomor HP.');
+  throw new Error('Gunakan alamat email.');
 }
 
 function requiredSecret(name: string): string {

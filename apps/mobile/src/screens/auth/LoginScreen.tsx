@@ -24,17 +24,17 @@ interface Props {
 }
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const [identifier, setIdentifier] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, isLoading } = useAuthStore();
 
   const handleLogin = async () => {
-    if (!identifier.trim() || !password) {
-      Alert.alert('Error', 'Nomor HP atau email dan password harus diisi');
+    if (!email.trim() || !password) {
+      Alert.alert('Error', 'Email dan password harus diisi');
       return;
     }
     try {
-      await login(identifier.trim(), password);
+      await login(email.trim(), password);
     } catch (error: any) {
       const apiMessage = error?.response?.data?.error || error?.response?.data?.message;
       const networkCode = error?.code ? ` (${error.code})` : '';
@@ -66,10 +66,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.form}>
             <Input
-              label="Nomor HP atau Email"
+              label="Email"
               placeholder="0812… atau email@contoh.com"
-              value={identifier}
-              onChangeText={setIdentifier}
+              value={email}
+              onChangeText={setEmail}
               autoCapitalize="none"
               autoCorrect={false}
             />

@@ -10,7 +10,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { SocialAuthButtons } from './SocialAuthButtons';
 
 const loginSchema = z.object({
-  identifier: z.string().min(1, 'Nomor HP atau email wajib diisi'),
+  email: z.string().email('Alamat email tidak valid'),
   password: z.string().min(1, 'Password wajib diisi'),
 });
 
@@ -40,7 +40,7 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.identifier, data.password);
+      await login(data.email, data.password);
       if (isModal && onSuccess) {
         onSuccess();
       } else {
@@ -63,15 +63,15 @@ export function LoginForm({ onSuccess, isModal = false }: LoginFormProps = {}) {
         <div>
           <Input
             type="text"
-            placeholder="Nomor HP atau Email"
+            placeholder="Email"
             autoComplete="email"
             className={`h-12 text-cream-50 placeholder:text-cream-200/50 bg-warm-charcoal-100 border-accent-500/30 focus:border-accent-400 focus:ring-accent-400 rounded-xl ${
-              errors.identifier ? 'border-accent-500' : ''
+              errors.email ? 'border-accent-500' : ''
             }`}
-            {...register('identifier')}
+            {...register('email')}
           />
-          {errors.identifier && (
-            <p className="text-accent-400 text-sm mt-1.5">{errors.identifier.message}</p>
+          {errors.email && (
+            <p className="text-accent-400 text-sm mt-1.5">{errors.email.message}</p>
           )}
         </div>
 

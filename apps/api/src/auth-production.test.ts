@@ -21,7 +21,7 @@ test('normalization and password policy', () => {
   assert.doesNotThrow(() => validatePassword('correct horse battery staple'));
 });
 
-test('pending registration, OTP single use, identifier login, recovery, and session rotation', async (context) => {
+test('pending registration, OTP single use, email login, recovery, and session rotation', async (context) => {
   const app = await build({ startWebSocket: false });
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const email = `auth-${suffix}@example.test`;
@@ -100,7 +100,7 @@ test('pending registration, OTP single use, identifier login, recovery, and sess
     method: 'POST', url: '/api/auth/login',
     payload: { identifier: `auth${suffix}`, password, source_platform: 'web' },
   });
-  assert.equal(usernameLogin.statusCode, 401);
+  assert.equal(usernameLogin.statusCode, 400);
 
   const legacyEmailLogin = await app.inject({
     method: 'POST', url: '/api/auth/login',
@@ -132,7 +132,7 @@ test('pending registration, OTP single use, identifier login, recovery, and sess
 
   const forgot = await app.inject({
     method: 'POST', url: '/api/auth/forgot-password',
-    payload: { identifier: email },
+    payload: { email },
   });
   assert.equal(forgot.statusCode, 200);
   assert.match(forgot.json().message, /Jika akun ditemukan/);
@@ -163,14 +163,12 @@ test('pending registration, OTP single use, identifier login, recovery, and sess
   assert.equal(newLogin.statusCode, 200, newLogin.body);
 });
 
-test('phone registration normalizes Indonesian number and login accepts local format', async (context) => {
+test('phone registration and phone login are rejected', async (context) => {
   const app = await build({ startWebSocket: false });
   const suffix = `${Date.now()}`.slice(-8);
   const localPhone = `0812${suffix}`;
   const password = 'phone registration passphrase';
-  let userId = '';
   context.after(async () => {
-    if (userId) await prisma.user.deleteMany({ where: { id: userId } });
     await app.close();
   });
   const started = await app.inject({
@@ -181,23 +179,10 @@ test('phone registration normalizes Indonesian number and login accepts local fo
       privacy_version: '2026-07-25', source_platform: 'android',
     },
   });
-  assert.equal(started.statusCode, 202, started.body);
-  const challenge = await prisma.otpChallenge.findUniqueOrThrow({
-    where: { id: started.json().challenge_id },
-  });
-  userId = challenge.user_id;
-  const verified = await app.inject({
-    method: 'POST', url: '/api/auth/register/verify',
-    payload: { challenge_id: challenge.id, otp: process.env.AUTH_TEST_OTP, source_platform: 'android' },
-  });
-  assert.equal(verified.statusCode, 200, verified.body);
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  assert.equal(user.phone_e164, normalizeIndonesianPhone(localPhone));
-  assert.ok(user.phone_verified_at);
-  assert.equal(user.email, null);
+  assert.equal(started.statusCode, 400, started.body);
   const login = await app.inject({
     method: 'POST', url: '/api/auth/login',
     payload: { identifier: localPhone, password, source_platform: 'android' },
   });
-  assert.equal(login.statusCode, 200, login.body);
+  assert.equal(login.statusCode, 400, login.body);
 });

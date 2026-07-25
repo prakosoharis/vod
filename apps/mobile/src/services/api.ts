@@ -54,9 +54,9 @@ class ApiService {
   }
 
   // Auth methods
-  async login(identifier: string, password: string) {
+  async login(email: string, password: string) {
     const response = await this.client.post('/auth/login', {
-      identifier, password, source_platform: Platform.OS === 'ios' ? 'ios' : 'android',
+      email, password, source_platform: Platform.OS === 'ios' ? 'ios' : 'android',
     });
     if (response.data.token) {
       await saveTokens({
@@ -69,12 +69,12 @@ class ApiService {
   }
 
   async startRegistration(input: {
-    method: 'email' | 'phone'; fullName: string;
+    method: 'email'; fullName: string;
     destination: string; password: string;
   }) {
     const response = await this.client.post('/auth/register/start', {
       method: input.method,
-      ...(input.method === 'email' ? { email: input.destination } : { phone: input.destination }),
+      email: input.destination,
       password: input.password,
       full_name: input.fullName,
       legal_consent: true,
@@ -102,8 +102,8 @@ class ApiService {
     return (await this.client.post('/auth/register/resend', { challenge_id: challengeId })).data;
   }
 
-  async forgotPassword(identifier: string) {
-    return (await this.client.post('/auth/forgot-password', { identifier })).data;
+  async forgotPassword(email: string) {
+    return (await this.client.post('/auth/forgot-password', { email })).data;
   }
 
   async social(provider: 'google' | 'facebook') {

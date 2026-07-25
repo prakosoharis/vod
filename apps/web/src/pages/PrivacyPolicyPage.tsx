@@ -12,7 +12,7 @@ const PrivacyPolicyPage = () => (
       },
       {
         title: 'Data yang kami proses',
-        content: <><p>Data dapat meliputi nama, email, nomor HP/WhatsApp, password dalam bentuk hash, foto profil, identitas social login, serta status verifikasi OTP email dan WhatsApp.</p><p>Kami juga dapat memproses data perangkat, alamat IP, sesi, cookies, log keamanan, aktivitas login, riwayat tontonan dan pencarian, watchlist, preferensi, interaksi, pembelian coin, rental, entitlement, invoice, dan riwayat transaksi.</p></>,
+        content: <><p>Data akun dapat meliputi nama, email, password dalam bentuk hash, foto profil, identitas social login, serta status verifikasi email. Nomor HP hanya dapat diproses bila diberikan secara opsional melalui layanan dukungan, bukan untuk login atau registrasi.</p><p>Kami juga dapat memproses data perangkat, alamat IP, sesi, cookies, log keamanan, aktivitas login, riwayat tontonan dan pencarian, watchlist, preferensi, interaksi, pembelian coin, rental, entitlement, invoice, dan riwayat transaksi.</p></>,
       },
       {
         title: 'Pembayaran',
@@ -24,7 +24,7 @@ const PrivacyPolicyPage = () => (
       },
       {
         title: 'Autentikasi dan komunikasi',
-        content: <p>Jika tersedia, Facebook Login dan penyedia autentikasi lain dapat mengirim identitas dasar sesuai izin pengguna. Meta WhatsApp Cloud API dapat digunakan untuk OTP nomor HP dan pemulihan akun. Layanan email dapat digunakan untuk OTP, pemulihan akun, invoice, dan notifikasi layanan.</p>,
+        content: <p>Jika tersedia, Facebook Login dan penyedia autentikasi lain dapat mengirim identitas dasar sesuai izin pengguna. Layanan email dapat digunakan untuk verifikasi akun, pemulihan akun, invoice, dan notifikasi layanan.</p>,
       },
       {
         title: 'Penyedia layanan dan transfer data',

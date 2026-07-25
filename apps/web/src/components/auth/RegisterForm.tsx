@@ -8,7 +8,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { isAxiosError } from 'axios';
 import { SocialAuthButtons } from './SocialAuthButtons';
 
-type Method = 'email' | 'phone';
 type RegistrationChallenge = {
   challenge_id: string;
   destination_masked: string;
@@ -21,7 +20,6 @@ const requestErrorMessage = (error: unknown, fallback: string) =>
 export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: boolean } = {}) {
   const navigate = useNavigate();
   const setSession = useAuthStore((state) => state.setSession);
-  const [method, setMethod] = useState<Method>('phone');
   const [form, setForm] = useState({
     full_name: '', destination: '', password: '', confirm: '',
   });
@@ -47,9 +45,9 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
     setLoading(true);
     try {
       const result = await authService.register({
-        method,
+        method: 'email',
         full_name: form.full_name,
-        ...(method === 'email' ? { email: form.destination } : { phone: form.destination }),
+        email: form.destination,
         password: form.password,
         legal_consent: true,
         terms_version: '2026-07-25',
@@ -81,7 +79,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
     return (
       <div className="space-y-5">
         <div className="rounded-xl border border-accent-500/20 bg-warm-charcoal-100 p-4">
-          <h2 className="font-bold text-cream-50">Verifikasi melalui {method === 'phone' ? 'WhatsApp' : 'Email'}</h2>
+          <h2 className="font-bold text-cream-50">Verifikasi melalui Email</h2>
           <p className="mt-1 text-sm text-cream-200">Kode dikirim ke {challenge.destination_masked}.</p>
         </div>
         {error && <p role="alert" className="text-sm text-accent-400">{error}</p>}
@@ -101,7 +99,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
         </Button>
         <div className="flex justify-between text-sm">
           <button type="button" className="text-cream-200 underline" onClick={() => { setChallenge(null); setOtp(''); }}>
-            Ubah {method === 'phone' ? 'nomor' : 'email'}
+            Ubah email
           </button>
           <button
             type="button"
@@ -122,27 +120,15 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
   const field = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 rounded-xl bg-warm-charcoal-100 p-1">
-        {(['phone', 'email'] as Method[]).map((item) => (
-          <button
-            key={item}
-            type="button"
-            className={`rounded-lg px-3 py-2 text-sm ${method === item ? 'bg-accent-500 text-white' : 'text-cream-200'}`}
-            onClick={() => { setMethod(item); field('destination', ''); }}
-          >
-            Daftar dengan {item === 'phone' ? 'Nomor HP' : 'Email'}
-          </button>
-        ))}
-      </div>
       {error && <p role="alert" className="rounded-lg bg-accent-500/15 p-3 text-sm text-accent-300">{error}</p>}
       <Input className="auth-register-input" value={form.full_name} onChange={(e) => field('full_name', e.target.value)} placeholder="Nama tampilan" autoComplete="name" />
       <Input
         className="auth-register-input"
         value={form.destination}
         onChange={(e) => field('destination', e.target.value)}
-        type={method === 'email' ? 'email' : 'tel'}
-        placeholder={method === 'email' ? 'email@contoh.com' : '0812 3456 7890'}
-        autoComplete={method === 'email' ? 'email' : 'tel'}
+        type="email"
+        placeholder="email@contoh.com"
+        autoComplete="email"
       />
       <div className="relative">
         <Input value={form.password} onChange={(e) => field('password', e.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Password minimal 10 karakter" autoComplete="new-password" className="auth-register-input pr-12" />

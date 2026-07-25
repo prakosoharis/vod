@@ -47,8 +47,8 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
         body: {
           type: 'object',
           properties: {
-            identifier: { type: 'string', minLength: 1 },
-            email: { type: 'string', minLength: 1 },
+            identifier: { type: 'string', format: 'email' },
+            email: { type: 'string', format: 'email' },
             password: { type: 'string', minLength: 1 },
             source_platform: { type: 'string', enum: ['web', 'android', 'ios'] },
             device_name: { type: 'string' },

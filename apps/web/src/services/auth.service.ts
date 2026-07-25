@@ -81,8 +81,8 @@ export const authService = {
     return response.data.token;
   },
 
-  async forgotPassword(identifier: string) {
-    const response = await api.post('/auth/forgot-password', { identifier });
+  async forgotPassword(email: string) {
+    const response = await api.post('/auth/forgot-password', { email });
     return response.data;
   },
 

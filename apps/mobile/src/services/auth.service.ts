@@ -3,14 +3,14 @@ import { AuthResponse, LoginRequest, RegisterRequest } from '../types';
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return apiService.login(credentials.identifier, credentials.password);
+    return apiService.login(credentials.email, credentials.password);
   }
 
   async register(data: RegisterRequest): Promise<any> {
     return apiService.startRegistration({
       method: data.method,
       fullName: data.full_name,
-      destination: data.method === 'email' ? data.email! : data.phone!,
+      destination: data.email,
       password: data.password,
     });
   }

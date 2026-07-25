@@ -87,16 +87,15 @@ export interface AuthResponse {
 }
 
 export interface LoginRequest {
-  identifier: string;
+  email: string;
   password: string;
   source_platform: 'web';
   device_name?: string;
 }
 
 export interface RegisterRequest {
-  method: 'email' | 'phone';
-  email?: string;
-  phone?: string;
+  method: 'email';
+  email: string;
   password: string;
   full_name: string;
   legal_consent: true;
