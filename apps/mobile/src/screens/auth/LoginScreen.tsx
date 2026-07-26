@@ -67,9 +67,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.form}>
             <Input
               label="Email"
-              placeholder="0812… atau email@contoh.com"
+              placeholder="Masukkan email"
               value={email}
               onChangeText={setEmail}
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              autoComplete="email"
               autoCapitalize="none"
               autoCorrect={false}
             />

@@ -34,12 +34,32 @@ interface SubtitleTrack {
   type?: string;
 }
 
+interface QualityOption {
+  label: string;
+  height: number | null;
+}
+
+interface ExternalTextTrack {
+  title: string;
+  language: string;
+  type: 'text/vtt';
+  uri: string;
+}
+
 const CONTROL_TIMEOUT = 3000;
 const SEEK_AMOUNT = 10;
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const QUALITY_OPTIONS = ['Auto', '1080p', '720p', '480p', '360p'];
+const DEFAULT_QUALITY_OPTIONS: QualityOption[] = [
+  { label: 'Auto', height: null },
+  { label: '4K', height: 2160 },
+  { label: '2K', height: 1440 },
+  { label: '1080p', height: 1080 },
+  { label: '720p', height: 720 },
+  { label: '480p', height: 480 },
+  { label: '360p', height: 360 },
+];
 const SPEED_OPTIONS = [
   { label: '0.25x', value: 0.25 },
   { label: '0.5x', value: 0.5 },
@@ -82,13 +102,69 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
   const [showSpeedModal, setShowSpeedModal] = useState(false);
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState('Auto');
+  const [selectedQualityHeight, setSelectedQualityHeight] = useState<number | null>(null);
+  const [qualityOptions, setQualityOptions] = useState<QualityOption[]>(DEFAULT_QUALITY_OPTIONS);
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>([]);
+  const [externalTextTracks, setExternalTextTracks] = useState<ExternalTextTrack[]>([]);
   const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState<number | null>(null);
+  const availableSubtitleTracks = subtitleTracks.length
+    ? subtitleTracks
+    : externalTextTracks.map((track, index) => ({ ...track, index }));
 
   // Animation States
   const controlsOpacity = useRef(new Animated.Value(1)).current;
   const seekAnimationLeft = useRef(new Animated.Value(0)).current;
   const seekAnimationRight = useRef(new Animated.Value(0)).current;
+
+  const resolveMediaUrl = (base: string, path: string) => {
+    if (/^https?:\/\//i.test(path)) return path;
+    return `${base.slice(0, base.lastIndexOf('/') + 1)}${path.replace(/^\//, '')}`;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const inspectManifest = async () => {
+      if (!/\.m3u8(?:$|\?)/i.test(source)) return;
+      try {
+        const manifest = await (await fetch(source)).text();
+        const heights = Array.from(manifest.matchAll(/RESOLUTION=\d+x(\d+)/g))
+          .map((match) => Number(match[1]))
+          .filter((height) => Number.isFinite(height));
+        if (!cancelled && heights.length) {
+          const uniqueHeights = [...new Set(heights)].sort((a, b) => b - a);
+          setQualityOptions([
+            { label: 'Auto', height: null },
+            ...uniqueHeights.map((height) => ({
+              label: height >= 2160 ? '4K' : height >= 1440 ? '2K' : `${height}p`,
+              height,
+            })),
+          ]);
+        }
+
+        const subtitleMatch = manifest.match(
+          /#EXT-X-MEDIA:[^\n]*TYPE=SUBTITLES[^\n]*?(?:NAME="([^"]+)")[^\n]*?(?:LANGUAGE="([^"]+)")[^\n]*?(?:URI="([^"]+)")/i
+        );
+        if (subtitleMatch) {
+          const subtitlePlaylistUrl = resolveMediaUrl(source, subtitleMatch[3]);
+          const subtitlePlaylist = await (await fetch(subtitlePlaylistUrl)).text();
+          const subtitleFile = subtitlePlaylist.split(/\r?\n/)
+            .find((line) => line.trim() && !line.startsWith('#') && /\.vtt(?:$|\?)/i.test(line));
+          if (subtitleFile && !cancelled) {
+            setExternalTextTracks([{
+              title: subtitleMatch[1] || 'Subtitle',
+              language: subtitleMatch[2] || 'en',
+              type: 'text/vtt',
+              uri: resolveMediaUrl(subtitlePlaylistUrl, subtitleFile.trim()),
+            }]);
+          }
+        }
+      } catch (error) {
+        console.warn('Unable to inspect HLS variants:', error);
+      }
+    };
+    inspectManifest();
+    return () => { cancelled = true; };
+  }, [source]);
 
   // Force landscape on mount
   useEffect(() => {
@@ -219,6 +295,24 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
     lastErrorSignatureRef.current = null;
     setDuration(Number.isFinite(data.duration) && data.duration > 0 ? data.duration : 0);
     setSubtitleTracks(Array.isArray(data.textTracks) ? data.textTracks : []);
+    if (Array.isArray(data.videoTracks) && data.videoTracks.length) {
+      const heights = [...new Set<number>(
+        data.videoTracks.map((track: any) => Number(track.height)).filter((height: number) => height > 0)
+      )].sort((a, b) => b - a);
+      setQualityOptions((current) => {
+        const combinedHeights = [...new Set([
+          ...current.map((option) => option.height).filter((height): height is number => height !== null),
+          ...heights,
+        ])].sort((a, b) => b - a);
+        return [
+          { label: 'Auto', height: null },
+          ...combinedHeights.map((height) => ({
+            label: height >= 2160 ? '4K' : height >= 1440 ? '2K' : `${height}p`,
+            height,
+          })),
+        ];
+      });
+    }
     setSelectedSubtitleIndex(null);
     setIsLoading(false);
   };
@@ -287,8 +381,9 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
     setCurrentTime(value);
   };
 
-  const handleQualitySelect = (quality: string) => {
-    setSelectedQuality(quality);
+  const handleQualitySelect = (quality: QualityOption) => {
+    setSelectedQuality(quality.label);
+    setSelectedQualityHeight(quality.height);
     setShowQualityModal(false);
     setShowControls(true);
     resetControlsTimer();
@@ -346,19 +441,19 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
                   </TouchableOpacity>
                 </View>
                 <ScrollView style={styles.modalScroll}>
-                  {QUALITY_OPTIONS.map((quality) => (
+                  {qualityOptions.map((quality) => (
                     <TouchableOpacity
-                      key={quality}
+                      key={quality.label}
                       style={styles.modalOption}
                       onPress={() => handleQualitySelect(quality)}
                     >
                       <Text style={[
                         styles.modalOptionText,
-                        selectedQuality === quality && styles.modalOptionTextActive
+                        selectedQuality === quality.label && styles.modalOptionTextActive
                       ]}>
-                        {quality}
+                        {quality.label}
                       </Text>
-                      {selectedQuality === quality && (
+                      {selectedQuality === quality.label && (
                         <SafeIcon name="check" size={20} color={COLORS.accent[500]} />
                       )}
                     </TouchableOpacity>
@@ -465,7 +560,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
                       <SafeIcon name="check" size={20} color={COLORS.accent[500]} />
                     )}
                   </TouchableOpacity>
-                  {subtitleTracks.map((track) => (
+                  {availableSubtitleTracks.map((track) => (
                     <TouchableOpacity
                       key={track.index}
                       style={styles.modalOption}
@@ -565,6 +660,12 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
           progressUpdateInterval={250}
           repeat={false}
           reportBandwidth={true}
+          selectedVideoTrack={
+            selectedQualityHeight === null
+              ? { type: 'auto' }
+              : { type: 'resolution', value: selectedQualityHeight }
+          }
+          textTracks={externalTextTracks}
           selectedTextTrack={
             selectedSubtitleIndex === null
               ? { type: 'disabled' }
@@ -750,7 +851,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
               </View>
 
               <View style={styles.rightControls}>
-                {subtitleTracks.length > 0 && (
+                {availableSubtitleTracks.length > 0 && (
                   <TouchableOpacity
                     style={styles.controlBtn}
                     onPress={() => {
