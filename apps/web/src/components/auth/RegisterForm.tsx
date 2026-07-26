@@ -1,41 +1,23 @@
-import { useEffect, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, Eye, EyeOff, Mail } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { authService } from '@/services/auth.service';
-import { useAuthStore } from '@/stores/authStore';
 import { isAxiosError } from 'axios';
 import { SocialAuthButtons } from './SocialAuthButtons';
-
-type RegistrationChallenge = {
-  challenge_id: string;
-  destination_masked: string;
-  resend_after: number;
-};
 
 const requestErrorMessage = (error: unknown, fallback: string) =>
   isAxiosError<{ error?: string }>(error) ? error.response?.data?.error || fallback : fallback;
 
 export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: boolean } = {}) {
   const navigate = useNavigate();
-  const setSession = useAuthStore((state) => state.setSession);
-  const [form, setForm] = useState({
-    full_name: '', destination: '', password: '', confirm: '',
-  });
+  const [form, setForm] = useState({ full_name: '', destination: '', password: '', confirm: '' });
   const [consent, setConsent] = useState(false);
-  const [challenge, setChallenge] = useState<RegistrationChallenge | null>(null);
-  const [otp, setOtp] = useState('');
-  const [seconds, setSeconds] = useState(0);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!seconds) return;
-    const timer = window.setInterval(() => setSeconds((value) => Math.max(0, value - 1)), 1000);
-    return () => window.clearInterval(timer);
-  }, [seconds]);
 
   const start = async () => {
     setError('');
@@ -44,7 +26,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
     if (form.password !== form.confirm) return setError('Konfirmasi password tidak cocok.');
     setLoading(true);
     try {
-      const result = await authService.register({
+      await authService.register({
         method: 'email',
         full_name: form.full_name,
         email: form.destination,
@@ -54,95 +36,35 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void; isModal?: 
         privacy_version: '2026-07-25',
         source_platform: 'web',
       });
-      setChallenge(result);
-      setSeconds(result.resend_after);
+      setRegisteredEmail(form.destination);
     } catch (requestError: unknown) {
       setError(requestErrorMessage(requestError, 'Pendaftaran belum dapat diproses.'));
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const verify = async () => {
-    if (!/^\d{6}$/.test(otp)) return setError('Masukkan enam digit kode verifikasi.');
-    if (!challenge) return setError('Sesi verifikasi tidak ditemukan. Silakan mulai ulang pendaftaran.');
-    setLoading(true); setError('');
-    try {
-      const result = await authService.verifyRegistration(challenge.challenge_id, otp);
-      setSession(result.user, result.token);
-      if (onSuccess) onSuccess();
-      else navigate('/browse', { replace: true });
-    } catch (requestError: unknown) {
-      setError(requestErrorMessage(requestError, 'Kode verifikasi tidak valid.'));
-    } finally { setLoading(false); }
-  };
-
-  if (challenge) {
-    return (
-      <div className="space-y-5">
-        <div className="rounded-xl border border-accent-500/20 bg-warm-charcoal-100 p-4">
-          <h2 className="font-bold text-cream-50">Verifikasi melalui Email</h2>
-          <p className="mt-1 text-sm text-cream-200">Kode dikirim ke {challenge.destination_masked}.</p>
-        </div>
-        {error && <p role="alert" className="text-sm text-accent-400">{error}</p>}
-        <Input
-          value={otp}
-          onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={6}
-          autoFocus
-          aria-label="Kode verifikasi enam digit"
-          placeholder="000000"
-          className="h-14 text-center text-2xl tracking-[0.5em] bg-warm-charcoal-100 text-cream-50"
-        />
-        <Button className="h-12 w-full rounded-full" disabled={loading} onClick={verify}>
-          {loading ? 'Memverifikasi…' : 'Verifikasi dan Masuk'}
-        </Button>
-        <div className="flex justify-between text-sm">
-          <button type="button" className="text-cream-200 underline" onClick={() => { setChallenge(null); setOtp(''); }}>
-            Ubah email
-          </button>
-          <button
-            type="button"
-            disabled={seconds > 0 || loading}
-            className="text-accent-400 disabled:text-cream-200"
-            onClick={async () => {
-              const next = await authService.resendRegistration(challenge.challenge_id);
-              setChallenge(next); setSeconds(next.resend_after);
-            }}
-          >
-            {seconds ? `Kirim ulang (${seconds})` : 'Kirim ulang'}
-          </button>
-        </div>
-      </div>
-    );
+  if (registeredEmail) {
+    return <div className="space-y-5 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15"><Mail className="h-8 w-8 text-emerald-400"/></div>
+      <div><h2 className="text-xl font-bold text-cream-50">Pendaftaran berhasil</h2><p className="mt-2 text-sm text-cream-200">Kami mengirim tombol verifikasi ke <b className="text-cream-50">{registeredEmail}</b>. Tautan berlaku selama 5 menit.</p></div>
+      <div className="flex items-start gap-2 rounded-xl border border-amber-400/20 bg-amber-400/10 p-4 text-left text-sm text-cream-100"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-amber-400"/><p>Anda tetap dapat login tanpa verifikasi untuk melihat katalog, tetapi belum dapat membeli tiket atau menyewa konten.</p></div>
+      <Button className="h-12 w-full rounded-full" onClick={() => { onSuccess?.(); navigate('/login'); }}>Masuk ke Akun</Button>
+    </div>;
   }
 
-  const field = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
-  return (
-    <div className="space-y-4">
-      {error && <p role="alert" className="rounded-lg bg-accent-500/15 p-3 text-sm text-accent-300">{error}</p>}
-      <Input className="auth-register-input" value={form.full_name} onChange={(e) => field('full_name', e.target.value)} placeholder="Nama tampilan" autoComplete="name" />
-      <Input
-        className="auth-register-input"
-        value={form.destination}
-        onChange={(e) => field('destination', e.target.value)}
-        type="email"
-        placeholder="email@contoh.com"
-        autoComplete="email"
-      />
-      <div className="relative">
-        <Input value={form.password} onChange={(e) => field('password', e.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Password minimal 10 karakter" autoComplete="new-password" className="auth-register-input pr-12" />
-        <button type="button" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-cream-200">
-          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-        </button>
-      </div>
-      <Input className="auth-register-input" value={form.confirm} onChange={(e) => field('confirm', e.target.value)} type="password" placeholder="Konfirmasi password" autoComplete="new-password" />
-      <label className="flex items-start gap-3 text-sm text-cream-100">
-        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
-        <span>Saya menyetujui <Link className="text-accent-400 underline" to="/terms">Syarat dan Ketentuan</Link> serta <Link className="text-accent-400 underline" to="/privacy">Kebijakan Privasi</Link>.</span>
-      </label>
-      <Button className="h-12 w-full rounded-full" disabled={loading} onClick={start}>{loading ? 'Mengirim kode…' : 'Lanjutkan'}</Button>
-      <SocialAuthButtons />
+  const field = (key: keyof typeof form, value: string) => setForm(current => ({ ...current, [key]: value }));
+  return <div className="space-y-4">
+    {error && <p role="alert" className="rounded-lg bg-accent-500/15 p-3 text-sm text-accent-300">{error}</p>}
+    <Input className="auth-register-input" value={form.full_name} onChange={e => field('full_name', e.target.value)} placeholder="Nama tampilan" autoComplete="name" />
+    <Input className="auth-register-input" value={form.destination} onChange={e => field('destination', e.target.value)} type="email" placeholder="email@contoh.com" autoComplete="email" />
+    <div className="relative">
+      <Input value={form.password} onChange={e => field('password', e.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Password minimal 10 karakter" autoComplete="new-password" className="auth-register-input pr-12" />
+      <button type="button" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-cream-200">{showPassword ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
     </div>
-  );
+    <Input className="auth-register-input" value={form.confirm} onChange={e => field('confirm', e.target.value)} type="password" placeholder="Konfirmasi password" autoComplete="new-password" />
+    <label className="flex items-start gap-3 text-sm text-cream-100"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-1"/><span>Saya menyetujui <Link className="text-accent-400 underline" to="/terms">Syarat dan Ketentuan</Link> serta <Link className="text-accent-400 underline" to="/privacy">Kebijakan Privasi</Link>.</span></label>
+    <Button className="h-12 w-full rounded-full" disabled={loading} onClick={start}>{loading ? 'Mendaftarkan…' : 'Daftar'}</Button>
+    <SocialAuthButtons/>
+  </div>;
 }

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { userService } from '@/services/user.service'
 import { ContentCard } from '@/components/home/ContentCard'
 import Layout from '@/components/layout/Layout'
+import { Link } from 'react-router-dom'
 
 const MyListPage = () => {
   const { data: watchlist, isLoading, error } = useQuery({
@@ -46,16 +47,12 @@ const MyListPage = () => {
               <p className="text-cream-100 mb-6">
                 Tambahkan film dan series favorit Anda ke daftar
               </p>
-              <a
-                href="/browse"
+              <Link
+                to="/browse"
                 className="inline-block px-6 py-3 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-cream-50 rounded-full transition-all duration-300 font-semibold"
-                onClick={(e) => {
-                  e.preventDefault()
-                  window.location.href = '/browse'
-                }}
               >
                 Jelajahi Konten
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

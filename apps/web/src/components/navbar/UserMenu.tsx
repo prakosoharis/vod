@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { User, LogOut, Settings, ChevronDown } from 'lucide-react'
+import { authService } from '@/services/auth.service'
 
 interface UserMenuProps {
   onLogout?: () => void
@@ -11,6 +12,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLogout }) => {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const [showDropdown, setShowDropdown] = useState(false)
+  const [sendingVerification, setSendingVerification] = useState(false)
+  const [verificationMessage, setVerificationMessage] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown when clicking outside
@@ -50,6 +53,18 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLogout }) => {
       return user.email.split('@')[0]
     }
     return 'User'
+  }
+  const isVerified = Boolean(user?.email_verified || user?.email_verified_at || user?.account_status === 'ACTIVE')
+  const resendVerification = async () => {
+    setSendingVerification(true)
+    try {
+      const result = await authService.resendRegistration()
+      setVerificationMessage(result.message || 'Email verifikasi berhasil dikirim.')
+    } catch (error: any) {
+      setVerificationMessage(error.response?.data?.error || 'Email verifikasi belum dapat dikirim.')
+    } finally {
+      setSendingVerification(false)
+    }
   }
 
   return (
@@ -96,6 +111,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLogout }) => {
                 </p>
               </div>
             </div>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${isVerified ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>
+                {isVerified ? 'VERIFIED' : 'UNVERIFIED'}
+              </span>
+              {!isVerified && <button disabled={sendingVerification} onClick={resendVerification} className="text-xs font-semibold text-accent-400 hover:text-accent-300 disabled:opacity-50">{sendingVerification ? 'Mengirim…' : 'Kirim ulang verifikasi'}</button>}
+            </div>
+            {verificationMessage && <p className="mt-2 text-xs leading-relaxed text-cream-200">{verificationMessage}</p>}
           </div>
 
           {/* Menu Items */}
@@ -114,12 +136,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLogout }) => {
             <button
               onClick={() => {
                 setShowDropdown(false)
-                // Navigate to settings when implemented
+                navigate('/profile')
               }}
               className="flex items-center gap-3 w-full px-4 py-2 text-white hover:bg-white/10 transition-colors duration-200"
             >
               <Settings className="w-4 h-4" />
-              <span>Settings</span>
+              <span>Pengaturan Akun</span>
             </button>
 
             <div className="border-t border-white/10 my-2" />

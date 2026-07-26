@@ -13,6 +13,7 @@ export async function getMe(request, reply) {
                 username: true,
                 phone_e164: true,
                 account_status: true,
+                email_verified_at: true,
                 full_name: true,
                 avatar_url: true,
                 created_at: true,
@@ -24,7 +25,7 @@ export async function getMe(request, reply) {
             return;
         }
         const { phone_e164, ...rest } = user;
-        reply.send({ user: { ...rest, phone: phone_e164 } });
+        reply.send({ user: { ...rest, phone: phone_e164, email_verified: Boolean(rest.email_verified_at) } });
     }
     catch {
         reply.code(500).send({ error: 'Internal server error' });

@@ -1,12 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { User, CreditCard, Film, LogOut, Calendar, Clock } from 'lucide-react';
+import { User, CreditCard, Film, LogOut, Calendar, Clock, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { paymentService } from '@/services/payment.service';
 import { useAuthStore } from '@/stores/authStore';
+import { authService } from '@/services/auth.service';
+import { useState } from 'react';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const [verificationMessage, setVerificationMessage] = useState('');
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const isVerified = Boolean(user?.email_verified || user?.email_verified_at || user?.account_status === 'ACTIVE');
   const { data: rentals, isLoading } = useQuery({ queryKey: ['user-rentals'], queryFn: () => paymentService.getUserRentals() });
   const expired = (date: string) => new Date(date) <= new Date();
 
@@ -14,9 +19,12 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-8 flex items-start justify-between rounded-2xl border border-accent-500/30 bg-warm-charcoal-50 p-8">
         <div className="flex items-center gap-4"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent-500/20"><User className="h-10 w-10 text-accent-400"/></div>
-          <div><h1 className="text-3xl font-bold text-cream-50">{user?.full_name || user?.username || user?.email?.split('@')[0] || 'Pengguna'}</h1><p className="text-cream-100">{user?.email || user?.phone}</p></div></div>
+          <div><h1 className="text-3xl font-bold text-cream-50">{user?.full_name || user?.username || user?.email?.split('@')[0] || 'Pengguna'}</h1><p className="text-cream-100">{user?.email || user?.phone}</p>
+            <div className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${isVerified ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>{isVerified ? <ShieldCheck size={14}/> : <ShieldAlert size={14}/>} {isVerified ? 'VERIFIED' : 'UNVERIFIED'}</div>
+          </div></div>
         <button onClick={() => { logout(); navigate('/'); }} className="flex items-center gap-2 rounded-xl border border-cream-100/20 px-4 py-2 text-cream-50"><LogOut size={17}/>Logout</button>
       </div>
+      {!isVerified && <div className="mb-8 rounded-2xl border border-amber-400/25 bg-amber-400/10 p-5 text-cream-50"><h2 className="font-bold">Verifikasi email untuk membuka transaksi</h2><p className="mt-1 text-sm text-cream-100">Akun ini dapat melihat katalog, tetapi belum dapat menyewa film atau membeli tiket.</p>{verificationMessage && <p className="mt-3 text-sm text-amber-200">{verificationMessage}</p>}<button disabled={sendingVerification} onClick={async()=>{setSendingVerification(true);try{const result=await authService.resendRegistration();setVerificationMessage(result.message)}catch(error:any){setVerificationMessage(error.response?.data?.error || 'Email belum dapat dikirim.')}finally{setSendingVerification(false)}}} className="mt-4 rounded-xl bg-amber-400 px-5 py-2 font-bold text-black disabled:opacity-50">{sendingVerification ? 'Mengirim…' : 'Kirim Ulang Verifikasi'}</button></div>}
       <div className="mb-6 flex items-center gap-3"><Film className="text-accent-400"/><div><h2 className="text-2xl font-bold text-cream-50">Riwayat Sewa Film</h2><p className="text-sm text-cream-100">Akses film hanya berlaku selama periode sewa masing-masing.</p></div></div>
       {isLoading ? <div className="rounded-2xl bg-warm-charcoal-50 p-8 text-cream-100">Memuat...</div> :
       rentals?.length ? <div className="space-y-4">{rentals.map((rental) => <div key={rental.id} className={`rounded-2xl border-2 bg-warm-charcoal-50 p-6 ${expired(rental.expired_at) ? 'border-warm-charcoal-100 opacity-70' : 'border-accent-500/30'}`}>

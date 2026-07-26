@@ -8,6 +8,7 @@ export type OtpDelivery = {
   otp: string;
   expiresMinutes: number;
   idempotencyKey: string;
+  actionUrl?: string;
 };
 
 export interface OtpProvider {
@@ -88,9 +89,13 @@ class SmtpEmailProvider implements OtpProvider {
       to: delivery.destination,
       subject: delivery.purpose === 'PASSWORD_RESET'
         ? 'Kode pemulihan akun SMASH'
-        : 'Kode verifikasi akun SMASH',
-      text: `Kode verifikasi SMASH Anda adalah ${delivery.otp}. Kode berlaku selama ${delivery.expiresMinutes} menit. Jangan berikan kode ini kepada siapa pun.`,
-      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#171717"><h1 style="font-size:24px">Verifikasi akun SMASH</h1><p>Gunakan kode berikut untuk melanjutkan:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#e53935">${delivery.otp}</p><p>Kode berlaku selama ${delivery.expiresMinutes} menit.</p><p style="color:#666">Jangan berikan kode ini kepada siapa pun. Abaikan email ini jika Anda tidak melakukan permintaan.</p></div>`,
+        : 'Verifikasi email akun SMASH',
+      text: delivery.purpose === 'REGISTRATION' && delivery.actionUrl
+        ? `Verifikasi email SMASH Anda melalui tautan berikut: ${delivery.actionUrl}. Tautan berlaku selama ${delivery.expiresMinutes} menit.`
+        : `Kode ${delivery.purpose === 'REGISTRATION' ? 'verifikasi' : 'pemulihan'} SMASH Anda adalah ${delivery.otp}. Kode berlaku selama ${delivery.expiresMinutes} menit. Jangan berikan kode ini kepada siapa pun.`,
+      html: delivery.purpose === 'REGISTRATION' && delivery.actionUrl
+        ? `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;color:#171717"><h1 style="font-size:24px">Verifikasi email SMASH</h1><p>Tekan tombol berikut untuk mengaktifkan akun Anda.</p><p style="margin:28px 0"><a href="${delivery.actionUrl}" style="display:inline-block;background:#e53935;color:#fff;text-decoration:none;padding:14px 24px;border-radius:10px;font-weight:700">Verifikasi Email</a></p><p>Tautan hanya berlaku selama ${delivery.expiresMinutes} menit.</p><p style="color:#666;font-size:13px">Jika tombol tidak dapat dibuka, salin tautan ini ke browser:<br>${delivery.actionUrl}</p><p style="color:#666">Abaikan email ini jika Anda tidak membuat akun SMASH.</p></div>`
+        : `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#171717"><h1 style="font-size:24px">${delivery.purpose === 'REGISTRATION' ? 'Verifikasi akun' : 'Pulihkan akun'} SMASH</h1><p>Gunakan kode berikut untuk melanjutkan:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#e53935">${delivery.otp}</p><p>Kode berlaku selama ${delivery.expiresMinutes} menit.</p><p style="color:#666">Jangan berikan kode ini kepada siapa pun. Abaikan email ini jika Anda tidak melakukan permintaan.</p></div>`,
       headers: { 'X-Entity-Ref-ID': delivery.idempotencyKey },
     });
     if (!info.messageId) throw new Error('Email provider did not accept the OTP message');

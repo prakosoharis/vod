@@ -13,16 +13,16 @@ export const authService = {
     return response.data;
   },
 
-  async verifyRegistration(challengeId: string, otp: string): Promise<AuthResponse> {
+  async verifyRegistration(challengeId: string, token: string): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register/verify', {
-      challenge_id: challengeId, otp, source_platform: 'web',
+      challenge_id: challengeId, token, source_platform: 'web',
     });
     setAccessToken(response.data.token);
     return response.data;
   },
 
-  async resendRegistration(challengeId: string) {
-    const response = await api.post('/auth/register/resend', { challenge_id: challengeId });
+  async resendRegistration() {
+    const response = await api.post('/auth/register/resend', {});
     return response.data;
   },
 

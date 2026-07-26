@@ -11,6 +11,7 @@ import {
   getUserRentals,
 } from '../controllers/paymentController.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { requireVerifiedEmail } from '../middleware/verifiedEmail.js';
 
 export default async function paymentRoutes(fastify: FastifyInstance) {
   // Webhook - no auth required (called by Midtrans server)
@@ -21,12 +22,12 @@ export default async function paymentRoutes(fastify: FastifyInstance) {
     protectedRoutes.addHook('onRequest', authMiddleware);
 
     // Rental
-    protectedRoutes.post('/rental/rent', rentContent);
+    protectedRoutes.post<{ Body: { content_id: string } }>('/rental/rent', { preHandler: [requireVerifiedEmail] }, rentContent);
     protectedRoutes.get('/rental/me', getUserRentals);
 
     // Event tickets
-    protectedRoutes.post('/event/buy-ticket', buyEventTicket);
-    protectedRoutes.post('/broadcast/:broadcastId/ticket', buyBroadcastTicket);
+    protectedRoutes.post<{ Body: { event_id: string } }>('/event/buy-ticket', { preHandler: [requireVerifiedEmail] }, buyEventTicket);
+    protectedRoutes.post<{ Params: { broadcastId: string } }>('/broadcast/:broadcastId/ticket', { preHandler: [requireVerifiedEmail] }, buyBroadcastTicket);
     protectedRoutes.get('/broadcast/:broadcastId/access', checkBroadcastAccess);
 
     // Access check

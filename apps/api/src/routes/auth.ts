@@ -16,6 +16,8 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       username: { type: 'string', nullable: true },
       phone: { type: 'string', nullable: true },
       account_status: { type: 'string', nullable: true },
+      email_verified_at: { type: 'string', format: 'date-time', nullable: true },
+      email_verified: { type: 'boolean' },
       full_name: { type: 'string', nullable: true },
       avatar_url: { type: 'string', nullable: true },
     },
@@ -37,7 +39,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post('/register', startRegistration.bind(fastify));
   fastify.post('/register/start', startRegistration.bind(fastify));
   fastify.post('/register/verify', verifyRegistration.bind(fastify));
-  fastify.post('/register/resend', resendRegistration);
+  fastify.post('/register/resend', { preHandler: [authenticateRequest] }, resendRegistration);
 
   fastify.post(
     '/login',

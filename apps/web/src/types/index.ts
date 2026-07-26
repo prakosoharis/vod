@@ -4,6 +4,8 @@ export interface User {
   username?: string | null;
   phone?: string | null;
   account_status?: string;
+  email_verified_at?: string | null;
+  email_verified?: boolean;
   full_name: string | null;
   avatar_url: string | null;
   created_at: string;

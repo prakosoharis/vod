@@ -61,37 +61,38 @@ enum EventType {
 }
 
 model User {
-  id                  String                   @id @default(uuid())
-  email               String?                  @unique
-  email_normalized    String?                  @unique
-  email_verified_at   DateTime?
-  username            String?                  @unique
-  username_normalized String?                  @unique
-  phone_e164          String?                  @unique
-  phone_verified_at   DateTime?
-  password_hash       String?
-  account_status      AuthAccountStatus        @default(PENDING_VERIFICATION)
-  full_name           String?
-  avatar_url          String?
-  local_avatar_url    String? // For uploaded avatars
-  created_at          DateTime                 @default(now())
-  updated_at          DateTime                 @updatedAt
-  deleted_at          DateTime?
-  watchlist           Watchlist[]
-  watch_progress      WatchProgress[]
-  subscriptions       UserSubscription[]
-  rentals             UserRental[]
-  event_tickets       EventTicket[]
-  broadcast_tickets   BroadcastTicket[]
-  transactions        Transaction[]
-  legal_consents      LegalConsent[]
-  support_tickets     SupportTicket[]
-  deletion_requests   AccountDeletionRequest[]
-  compliance_logs     ComplianceAuditLog[]
-  otp_challenges      OtpChallenge[]
-  auth_sessions       AuthSession[]
-  social_identities   SocialIdentity[]
-  login_attempts      LoginAttempt[]
+  id                         String                   @id @default(uuid())
+  email                      String?                  @unique
+  email_normalized           String?                  @unique
+  email_verified_at          DateTime?
+  verification_blocked_until DateTime?
+  username                   String?                  @unique
+  username_normalized        String?                  @unique
+  phone_e164                 String?                  @unique
+  phone_verified_at          DateTime?
+  password_hash              String?
+  account_status             AuthAccountStatus        @default(PENDING_VERIFICATION)
+  full_name                  String?
+  avatar_url                 String?
+  local_avatar_url           String? // For uploaded avatars
+  created_at                 DateTime                 @default(now())
+  updated_at                 DateTime                 @updatedAt
+  deleted_at                 DateTime?
+  watchlist                  Watchlist[]
+  watch_progress             WatchProgress[]
+  subscriptions              UserSubscription[]
+  rentals                    UserRental[]
+  event_tickets              EventTicket[]
+  broadcast_tickets          BroadcastTicket[]
+  transactions               Transaction[]
+  legal_consents             LegalConsent[]
+  support_tickets            SupportTicket[]
+  deletion_requests          AccountDeletionRequest[]
+  compliance_logs            ComplianceAuditLog[]
+  otp_challenges             OtpChallenge[]
+  auth_sessions              AuthSession[]
+  social_identities          SocialIdentity[]
+  login_attempts             LoginAttempt[]
 
   @@index([email])
   @@index([deleted_at])
@@ -135,11 +136,13 @@ model OtpChallenge {
   max_attempts        Int
   consumed_at         DateTime?
   provider_message_id String?
+  is_resend           Boolean    @default(false)
   created_at          DateTime   @default(now())
   user                User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, purpose, consumed_at])
   @@index([destination_hash, purpose, created_at])
+  @@index([user_id, purpose, is_resend, created_at])
   @@index([expires_at])
   @@map("otp_challenges")
 }

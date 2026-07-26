@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
       error: null,
       hasHydrated: false,
 
@@ -119,6 +119,7 @@ export const useAuthStore = create<AuthState>()(
           state.hasHydrated = true;
           state.token = null;
           state.isAuthenticated = false;
+          state.isLoading = true;
         }
       },
     }

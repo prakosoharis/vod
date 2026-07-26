@@ -33,6 +33,8 @@ const publicUser = (user: any) => ({
   full_name: user.full_name,
   avatar_url: user.avatar_url,
   account_status: user.account_status,
+  email_verified_at: user.email_verified_at,
+  email_verified: Boolean(user.email_verified_at),
 });
 
 const requestIpHash = (request: FastifyRequest): string => hashIdentifier(request.ip || 'unknown');
@@ -75,13 +77,20 @@ async function deliverChallenge(
   purpose: 'REGISTRATION' | 'PASSWORD_RESET',
   channel: 'EMAIL' | 'WHATSAPP',
   destination: string,
+  isResend = false,
+  useActionLink = false,
 ) {
   const config = authConfig();
   const destinationHash = hashIdentifier(destination);
   await enforceOtpSendLimit(destinationHash);
   const id = crypto.randomUUID();
-  const otp = createOtp();
+  const otp = purpose === 'REGISTRATION' && useActionLink
+    ? (process.env.NODE_ENV === 'test' && process.env.AUTH_TEST_OTP
+        ? process.env.AUTH_TEST_OTP
+        : crypto.randomBytes(32).toString('base64url'))
+    : createOtp();
   const now = Date.now();
+  const ttlSeconds = 300;
   await prisma.$transaction(async (tx) => {
     await tx.otpChallenge.updateMany({
       where: { user_id: userId, purpose, consumed_at: null },
@@ -96,17 +105,21 @@ async function deliverChallenge(
         destination,
         destination_hash: destinationHash,
         otp_hash: hashOtp(id, otp),
-        expires_at: new Date(now + config.otpTtlSeconds * 1000),
+        expires_at: new Date(now + ttlSeconds * 1000),
         resend_after: new Date(now + config.otpResendSeconds * 1000),
         max_attempts: config.otpMaxAttempts,
+        is_resend: isResend,
       },
     });
   });
   try {
     const result = await getOtpProvider(channel).send({
       channel, purpose, destination, otp,
-      expiresMinutes: Math.ceil(config.otpTtlSeconds / 60),
+      expiresMinutes: 5,
       idempotencyKey: id,
+      ...(purpose === 'REGISTRATION' && useActionLink ? {
+        actionUrl: `${(process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '')}/verify-email?challenge=${encodeURIComponent(id)}&token=${encodeURIComponent(otp)}`,
+      } : {}),
     });
     await prisma.otpChallenge.update({
       where: { id },
@@ -119,7 +132,7 @@ async function deliverChallenge(
   return {
     challenge_id: id,
     destination_masked: maskDestination(destination),
-    expires_in: config.otpTtlSeconds,
+    expires_in: ttlSeconds,
     resend_after: config.otpResendSeconds,
   };
 }
@@ -154,9 +167,7 @@ export async function startRegistration(this: FastifyInstance, request: FastifyR
     const duplicate = await prisma.user.findFirst({
       where: { email_normalized: email },
     });
-    if (duplicate?.account_status === 'PENDING_VERIFICATION') {
-      await prisma.user.delete({ where: { id: duplicate.id } });
-    } else if (duplicate) {
+    if (duplicate) {
       return reply.code(409).send({ error: 'Data registrasi tidak dapat digunakan.' });
     }
     const passwordHash = await bcrypt.hash(body.password, 12);
@@ -181,9 +192,15 @@ export async function startRegistration(this: FastifyInstance, request: FastifyR
       return created;
     });
     const challenge = await deliverChallenge(
-      user.id, 'REGISTRATION', 'EMAIL', email,
+      user.id, 'REGISTRATION', 'EMAIL', email, false, body.source_platform === 'web',
     );
-    return reply.code(202).send({ ...challenge, method: 'email' });
+    return reply.code(202).send({
+      message: 'Pendaftaran berhasil. Silakan periksa email untuk melakukan verifikasi.',
+      challenge_id: challenge.challenge_id,
+      destination_masked: challenge.destination_masked,
+      expires_in: challenge.expires_in,
+      method: 'email',
+    });
   } catch (error: any) {
     if (error instanceof z.ZodError) return reply.code(400).send({ error: 'Data registrasi tidak valid.' });
     request.log.warn({ err: { message: error.message } }, 'Registration start failed');
@@ -193,18 +210,20 @@ export async function startRegistration(this: FastifyInstance, request: FastifyR
 
 export async function verifyRegistration(this: FastifyInstance, request: FastifyRequest, reply: FastifyReply) {
   const parsed = z.object({
-    challenge_id: z.string().uuid(), otp: z.string().regex(/^\d{6}$/),
+    challenge_id: z.string().uuid(), token: z.string().min(32).optional(),
+    otp: z.string().min(6).optional(),
     source_platform: platformSchema, device_name: z.string().max(120).optional(),
-  }).safeParse(request.body);
-  if (!parsed.success) return reply.code(400).send({ error: 'Kode verifikasi tidak valid.' });
-  const { challenge_id, otp, source_platform, device_name } = parsed.data;
+  }).refine((body) => Boolean(body.token || body.otp)).safeParse(request.body);
+  if (!parsed.success) return reply.code(400).send({ error: 'Tautan verifikasi tidak valid.' });
+  const { challenge_id, source_platform, device_name } = parsed.data;
+  const presentedToken = parsed.data.token || parsed.data.otp!;
   try {
     const result = await prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM otp_challenges WHERE id = ${challenge_id} FOR UPDATE`;
       const challenge = await tx.otpChallenge.findUnique({ where: { id: challenge_id }, include: { user: true } });
       if (!challenge || challenge.purpose !== 'REGISTRATION' || challenge.consumed_at ||
           challenge.expires_at <= new Date() || challenge.attempts >= challenge.max_attempts) return null;
-      if (!secureEqual(challenge.otp_hash, hashOtp(challenge.id, otp))) {
+      if (!secureEqual(challenge.otp_hash, hashOtp(challenge.id, presentedToken))) {
         await tx.otpChallenge.update({ where: { id: challenge.id }, data: { attempts: { increment: 1 } } });
         return null;
       }
@@ -217,24 +236,60 @@ export async function verifyRegistration(this: FastifyInstance, request: Fastify
         },
       });
     });
-    if (!result) return reply.code(400).send({ error: 'Kode verifikasi salah atau kedaluwarsa.' });
+    if (!result) return reply.code(400).send({ error: 'Tautan verifikasi tidak valid atau sudah kedaluwarsa.' });
     return sendSession(reply, source_platform, await createSession(this, result, request, source_platform, device_name));
   } catch {
-    return reply.code(400).send({ error: 'Kode verifikasi salah atau kedaluwarsa.' });
+    return reply.code(400).send({ error: 'Tautan verifikasi tidak valid atau sudah kedaluwarsa.' });
   }
 }
 
 export async function resendRegistration(request: FastifyRequest, reply: FastifyReply) {
-  const parsed = z.object({ challenge_id: z.string().uuid() }).safeParse(request.body);
-  if (!parsed.success) return reply.code(400).send({ error: 'Permintaan tidak valid.' });
-  const previous = await prisma.otpChallenge.findUnique({ where: { id: parsed.data.challenge_id } });
-  if (!previous || previous.purpose !== 'REGISTRATION' || previous.resend_after > new Date()) {
-    return reply.code(429).send({ error: 'Kode belum dapat dikirim ulang.' });
+  const userId = (request.user as any)?.userId;
+  if (!userId) return reply.code(401).send({ error: 'Silakan login terlebih dahulu.' });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.email) return reply.code(404).send({ error: 'Akun tidak ditemukan.' });
+  if (user.email_verified_at) return reply.send({ message: 'Email sudah terverifikasi.', email_verified: true });
+  const now = new Date();
+  if (user.verification_blocked_until && user.verification_blocked_until > now) {
+    return reply.code(429).send({
+      error: 'Terlalu banyak permintaan. Pengiriman verifikasi diblokir selama 24 jam.',
+      retry_at: user.verification_blocked_until,
+    });
+  }
+  const sendsLastMinute = await prisma.otpChallenge.count({
+    where: {
+      user_id: user.id,
+      purpose: 'REGISTRATION',
+      is_resend: true,
+      created_at: { gte: new Date(Date.now() - 60_000) },
+    },
+  });
+  if (sendsLastMinute >= 3) {
+    const blockedUntil = new Date(Date.now() + 86_400_000);
+    await prisma.user.update({ where: { id: user.id }, data: { verification_blocked_until: blockedUntil } });
+    return reply.code(429).send({
+      error: 'Batas pengiriman ulang tercapai. Silakan coba kembali dalam 24 jam.',
+      retry_at: blockedUntil,
+    });
   }
   try {
-    return reply.send(await deliverChallenge(previous.user_id, 'REGISTRATION', previous.channel, previous.destination));
-  } catch {
-    return reply.code(503).send({ error: 'Kode belum dapat dikirim. Coba lagi nanti.' });
+    const sessionId = (request.user as any)?.sessionId;
+    const session = sessionId
+      ? await prisma.authSession.findUnique({ where: { id: sessionId }, select: { platform: true } })
+      : null;
+    const challenge = await deliverChallenge(
+      user.id, 'REGISTRATION', 'EMAIL', user.email, true, session?.platform === 'web',
+    );
+    return reply.send({
+      message: 'Email verifikasi baru telah dikirim.',
+      challenge_id: challenge.challenge_id,
+      expires_in: challenge.expires_in,
+      resend_after: challenge.resend_after,
+    });
+  } catch (error: any) {
+    return reply.code(error.statusCode || 503).send({
+      error: error.statusCode ? error.message : 'Email belum dapat dikirim. Coba lagi nanti.',
+    });
   }
 }
 
@@ -270,7 +325,7 @@ export async function loginWithIdentifier(this: FastifyInstance, request: Fastif
   }
   const user = await prisma.user.findFirst({ where: { email_normalized: identifier.normalized } });
   const valid = Boolean(user?.password_hash) && await bcrypt.compare(parsed.data.password, user!.password_hash!);
-  const active = user?.account_status === 'ACTIVE' && !user.deleted_at;
+  const active = ['ACTIVE', 'PENDING_VERIFICATION'].includes(user?.account_status || '') && !user?.deleted_at;
   await prisma.loginAttempt.create({
     data: {
       user_id: user?.id, identifier_hash: identifierHash, ip_hash: ipHash,
@@ -294,7 +349,8 @@ export async function refreshSession(this: FastifyInstance, request: FastifyRequ
   if (!presentedToken) return reply.code(401).send({ error: 'Session tidak valid.' });
   const hash = hashRefreshToken(presentedToken);
   const session = await prisma.authSession.findUnique({ where: { refresh_token_hash: hash }, include: { user: true } });
-  if (!session || session.revoked_at || session.expires_at <= new Date() || session.user.account_status !== 'ACTIVE') {
+  if (!session || session.revoked_at || session.expires_at <= new Date() ||
+      !['ACTIVE', 'PENDING_VERIFICATION'].includes(session.user.account_status)) {
     if (session?.user_id) await prisma.authSession.updateMany({ where: { user_id: session.user_id }, data: { revoked_at: new Date() } });
     return reply.code(401).send({ error: 'Session tidak valid.' });
   }

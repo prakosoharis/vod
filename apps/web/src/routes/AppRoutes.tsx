@@ -28,6 +28,7 @@ const TermsPage = lazy(() => import('../pages/TermsPage'))
 const ContactPage = lazy(() => import('../pages/ContactPage'))
 const RefundPolicyPage = lazy(() => import('../pages/RefundPolicyPage'))
 const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'))
+const VerifyEmailPage = lazy(() => import('../pages/VerifyEmailPage'))
 
 const AppRoutes = () => {
   const { isAuthenticated, hasHydrated } = useAuthStore()
@@ -51,6 +52,7 @@ const AppRoutes = () => {
           </Suspense>
         } />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/contact" element={<ContactPage />} />

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import test from 'node:test';
 import { build } from './server.js';
 import prisma from './config/database.js';
@@ -21,7 +22,7 @@ test('normalization and password policy', () => {
   assert.doesNotThrow(() => validatePassword('correct horse battery staple'));
 });
 
-test('pending registration, OTP single use, email login, recovery, and session rotation', async (context) => {
+test('email verification link, unverified login restrictions, resend lock, recovery, and session rotation', async (context) => {
   const app = await build({ startWebSocket: false });
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const email = `auth-${suffix}@example.test`;
@@ -48,31 +49,57 @@ test('pending registration, OTP single use, email login, recovery, and session r
   const challenge = await prisma.otpChallenge.findUniqueOrThrow({ where: { id: challengeId } });
   userId = challenge.user_id;
   assert.notEqual(challenge.otp_hash, process.env.AUTH_TEST_OTP);
+  assert.ok(challenge.expires_at.getTime() - challenge.created_at.getTime() <= 300_500);
   const pending = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   assert.equal(pending.account_status, 'PENDING_VERIFICATION');
   assert.equal(pending.email_verified_at, null);
-
-  const earlyResend = await app.inject({
-    method: 'POST', url: '/api/auth/register/resend',
-    payload: { challenge_id: challengeId },
-  });
-  assert.equal(earlyResend.statusCode, 429);
 
   const pendingLogin = await app.inject({
     method: 'POST', url: '/api/auth/login',
     payload: { identifier: email, password, source_platform: 'web' },
   });
-  assert.equal(pendingLogin.statusCode, 401);
+  assert.equal(pendingLogin.statusCode, 200, pendingLogin.body);
+  assert.equal(pendingLogin.json().user.email_verified, false);
+  const pendingToken = pendingLogin.json().token;
+
+  const rentalWhileUnverified = await app.inject({
+    method: 'POST', url: '/api/payment/rental/rent',
+    headers: { authorization: `Bearer ${pendingToken}` },
+    payload: { content_id: crypto.randomUUID() },
+  });
+  assert.equal(rentalWhileUnverified.statusCode, 403);
+  assert.equal(rentalWhileUnverified.json().code, 'EMAIL_VERIFICATION_REQUIRED');
+
+  for (let index = 0; index < 3; index += 1) {
+    const resent = await app.inject({
+      method: 'POST', url: '/api/auth/register/resend',
+      headers: { authorization: `Bearer ${pendingToken}` },
+      payload: {},
+    });
+    assert.equal(resent.statusCode, 200, resent.body);
+  }
+  const blockedResend = await app.inject({
+    method: 'POST', url: '/api/auth/register/resend',
+    headers: { authorization: `Bearer ${pendingToken}` },
+    payload: {},
+  });
+  assert.equal(blockedResend.statusCode, 429);
+  const blockedUser = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  assert.ok(blockedUser.verification_blocked_until);
+  const latestChallenge = await prisma.otpChallenge.findFirstOrThrow({
+    where: { user_id: userId, purpose: 'REGISTRATION', consumed_at: null },
+    orderBy: { created_at: 'desc' },
+  });
 
   const wrong = await app.inject({
     method: 'POST', url: '/api/auth/register/verify',
-    payload: { challenge_id: challengeId, otp: '000000', source_platform: 'web' },
+    payload: { challenge_id: latestChallenge.id, otp: '000000', source_platform: 'web' },
   });
   assert.equal(wrong.statusCode, 400);
 
   const verified = await app.inject({
     method: 'POST', url: '/api/auth/register/verify',
-    payload: { challenge_id: challengeId, otp: process.env.AUTH_TEST_OTP, source_platform: 'android' },
+    payload: { challenge_id: latestChallenge.id, otp: process.env.AUTH_TEST_OTP, source_platform: 'android' },
   });
   assert.equal(verified.statusCode, 200, verified.body);
   assert.ok(verified.json().refresh_token);
@@ -84,7 +111,7 @@ test('pending registration, OTP single use, email login, recovery, and session r
 
   const reused = await app.inject({
     method: 'POST', url: '/api/auth/register/verify',
-    payload: { challenge_id: challengeId, otp: process.env.AUTH_TEST_OTP, source_platform: 'web' },
+    payload: { challenge_id: latestChallenge.id, otp: process.env.AUTH_TEST_OTP, source_platform: 'web' },
   });
   assert.equal(reused.statusCode, 400);
 
