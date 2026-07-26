@@ -84,13 +84,10 @@ const BrowsePage = () => {
 
   return (
     <div className="nusantara-browse">
-      <section className="nusantara-browse__intro">
-        <div>
-          <p>JELAJAHI KEPULAUAN CERITA</p>
-          <h1>Cerita dari ribuan pulau,<br /><em>dalam satu layar.</em></h1>
-          <span>Temukan sinema dan serial yang membawa suara Indonesia dari barat hingga timur.</span>
-        </div>
-      </section>
+      <header className="nusantara-browse__heading">
+        <h1>Jelajah</h1>
+        <p>Temukan film dan serial pilihan untuk Anda.</p>
+      </header>
 
       <section className="nusantara-browse__toolbar">
         <form

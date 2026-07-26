@@ -7,6 +7,10 @@ import CookieConsent from './components/legal/CookieConsent'
 const INTRO_SESSION_KEY = 'smash_intro_played'
 
 function shouldPlayIntro() {
+  if (window.location.pathname === '/verify-email') {
+    try { sessionStorage.setItem(INTRO_SESSION_KEY, '1') } catch { /* storage may be unavailable */ }
+    return false
+  }
   try {
     const hasPlayed = sessionStorage.getItem(INTRO_SESSION_KEY) === '1'
     if (!hasPlayed) {

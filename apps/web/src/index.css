@@ -811,6 +811,20 @@ button { color: inherit; }
 .nusantara-loading__rail { background: var(--nusantara-surface); height: 260px; margin-left: 6.7vw; }
 
 .nusantara-browse { background: var(--nusantara-bg); min-height: 100vh; }
+.nusantara-browse__heading {
+  border-bottom: 1px solid var(--nusantara-line);
+  padding: 2.25rem 6.7vw 1.75rem;
+}
+.nusantara-browse__heading h1 {
+  color: var(--nusantara-cream);
+  font: 600 clamp(1.8rem,3vw,2.5rem)/1.1 Georgia,serif;
+  letter-spacing: -.025em;
+}
+.nusantara-browse__heading p {
+  color: var(--nusantara-muted);
+  font-size: .72rem;
+  margin-top: .45rem;
+}
 .nusantara-browse__intro {
   align-items: flex-end;
   background:
@@ -1285,6 +1299,7 @@ button { color: inherit; }
 .smash-broadcast-paywall aside .nusantara-button { margin-top: 1rem; }
 
 @media (max-width: 760px) {
+  .nusantara-browse__heading { padding: 1.5rem 19px 1.25rem; }
   body { padding-bottom: 67px; }
   .nusantara-nav { height: 61px; padding: 0 18px; }
   .nusantara-nav__links, .nusantara-nav__account, .nusantara-nav__menu { display: none; }
