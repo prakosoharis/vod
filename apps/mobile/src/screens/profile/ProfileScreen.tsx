@@ -86,12 +86,6 @@ const ProfileScreen: React.FC = () => {
       onPress: () => navigation.navigate('LiveEvents'),
     },
     {
-      icon: 'file-download',
-      title: 'Unduhan',
-      subtitle: 'Kelola konten yang diunduh',
-      onPress: () => console.log('Navigate to Downloads'),
-    },
-    {
       icon: 'privacy-tip',
       title: 'Kebijakan Privasi',
       subtitle: 'Cara kami memproses data',

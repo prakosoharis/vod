@@ -5,9 +5,18 @@ import SmashIntro from './components/SmashIntro'
 import CookieConsent from './components/legal/CookieConsent'
 
 const INTRO_SESSION_KEY = 'smash_intro_played'
+const INTRO_FREE_PATHS = new Set([
+  '/verify-email',
+  '/privacy',
+  '/terms',
+  '/refund-policy',
+  '/contact',
+  '/account-deletion',
+])
 
 function shouldPlayIntro() {
-  if (window.location.pathname === '/verify-email') {
+  const isEmbedded = new URLSearchParams(window.location.search).get('embed') === 'mobile'
+  if (INTRO_FREE_PATHS.has(window.location.pathname) || isEmbedded) {
     try { sessionStorage.setItem(INTRO_SESSION_KEY, '1') } catch { /* storage may be unavailable */ }
     return false
   }

@@ -11,7 +11,7 @@ const LegalWebViewScreen = ({ route }: any) => {
   return (
     <View style={styles.container}>
       <WebView
-        source={{ uri: `https://smashstream.id${path}` }}
+        source={{ uri: `https://smashstream.id${path}?embed=mobile` }}
         originWhitelist={['https://smashstream.id']}
         sharedCookiesEnabled={false}
         thirdPartyCookiesEnabled={false}
