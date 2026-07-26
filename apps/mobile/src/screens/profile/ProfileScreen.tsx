@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,39 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeIcon } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS, THEME } from '../../constants';
 import Button from '../../components/ui/Button';
+import { apiService } from '../../services/api';
 
 const ProfileScreen: React.FC = () => {
-  const { user, logout, isAuthenticated } = useAuthStore();
+  const { user, logout, isAuthenticated, updateUser } = useAuthStore();
   const navigation = useNavigation<any>();
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const isVerified = Boolean(user?.email_verified || user?.email_verified_at || user?.account_status === 'ACTIVE');
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isAuthenticated) return;
+      apiService.checkAuth()
+        .then((result) => updateUser(result.user || result))
+        .catch(() => undefined);
+    }, [isAuthenticated, updateUser])
+  );
+
+  const resendVerification = async () => {
+    setSendingVerification(true);
+    try {
+      const result = await apiService.resendRegistration();
+      Alert.alert('Email dikirim', result.message || 'Silakan periksa inbox email Anda. Tautan berlaku selama 5 menit.');
+    } catch (error: any) {
+      Alert.alert('Belum dapat dikirim', error.response?.data?.error || 'Silakan coba kembali nanti.');
+    } finally {
+      setSendingVerification(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -131,8 +155,26 @@ const ProfileScreen: React.FC = () => {
             </View>
             <Text style={styles.userName}>{user?.full_name || 'User'}</Text>
             <Text style={styles.userEmail}>{user?.email}</Text>
+            <View style={[styles.verificationBadge, isVerified ? styles.verifiedBadge : styles.unverifiedBadge]}>
+              <Text style={[styles.verificationText, isVerified ? styles.verifiedText : styles.unverifiedText]}>
+                {isVerified ? 'VERIFIED' : 'UNVERIFIED'}
+              </Text>
+            </View>
           </View>
         </View>
+
+        {!isVerified && (
+          <View style={styles.verificationCard}>
+            <Text style={styles.verificationTitle}>Verifikasi email untuk membuka transaksi</Text>
+            <Text style={styles.verificationCopy}>Anda dapat melihat katalog, tetapi belum dapat menyewa tayangan atau membeli tiket.</Text>
+            <Button
+              title={sendingVerification ? 'Mengirim…' : 'Kirim Ulang Verifikasi'}
+              onPress={resendVerification}
+              disabled={sendingVerification}
+              style={styles.verificationButton}
+            />
+          </View>
+        )}
 
         {/* Menu Items */}
         <View style={styles.menuContainer}>
@@ -229,6 +271,16 @@ const styles = StyleSheet.create({
     fontSize: THEME.typography.fontSize.md,
     color: COLORS.cream[200],
   },
+  verificationBadge: { marginTop: 10, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
+  verifiedBadge: { backgroundColor: 'rgba(16,185,129,.15)' },
+  unverifiedBadge: { backgroundColor: 'rgba(245,158,11,.15)' },
+  verificationText: { fontSize: 10, fontWeight: '800' },
+  verifiedText: { color: '#6ee7b7' },
+  unverifiedText: { color: '#fcd34d' },
+  verificationCard: { margin: 18, marginBottom: 0, borderRadius: 14, padding: 16, backgroundColor: 'rgba(245,158,11,.10)', borderWidth: 1, borderColor: 'rgba(245,158,11,.24)' },
+  verificationTitle: { color: COLORS.cream[50], fontWeight: '700', fontSize: 15 },
+  verificationCopy: { color: COLORS.cream[200], fontSize: 12, lineHeight: 18, marginTop: 5 },
+  verificationButton: { marginTop: 14 },
   menuContainer: {
     marginTop: THEME.spacing.xl,
   },

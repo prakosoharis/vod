@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Alert, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView,
   StyleSheet, Text, TouchableOpacity, View,
@@ -7,27 +7,17 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { COLORS } from '../../constants/colors';
 import { apiService } from '../../services/api';
-import { useAuthStore } from '../../store/authStore';
 
 const smashLogo = require('../../assets/smash-logo-transparent.png');
 
 export default function RegisterScreen({ navigation }: any) {
-  const setSession = useAuthStore((state) => state.setSession);
   const [fullName, setFullName] = useState('');
   const [destination, setDestination] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [consent, setConsent] = useState(false);
-  const [challenge, setChallenge] = useState<any>(null);
-  const [otp, setOtp] = useState('');
-  const [seconds, setSeconds] = useState(0);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!seconds) return;
-    const timer = setInterval(() => setSeconds((value) => Math.max(0, value - 1)), 1000);
-    return () => clearInterval(timer);
-  }, [seconds]);
 
   const start = async () => {
     if (!fullName.trim() || !destination.trim()) return Alert.alert('Data belum lengkap', 'Lengkapi seluruh field registrasi.');
@@ -36,24 +26,13 @@ export default function RegisterScreen({ navigation }: any) {
     if (!consent) return Alert.alert('Persetujuan diperlukan', 'Setujui Syarat dan Kebijakan Privasi.');
     setLoading(true);
     try {
-      const result = await apiService.startRegistration({
+      await apiService.startRegistration({
         method: 'email', fullName: fullName.trim(),
         destination: destination.trim(), password,
       });
-      setChallenge(result); setSeconds(result.resend_after);
+      setRegisteredEmail(destination.trim());
     } catch (error: any) {
       Alert.alert('Pendaftaran belum berhasil', error.response?.data?.error || 'Layanan verifikasi belum tersedia.');
-    } finally { setLoading(false); }
-  };
-
-  const verify = async () => {
-    if (!/^\d{6}$/.test(otp)) return Alert.alert('Kode belum lengkap', 'Masukkan enam digit kode verifikasi.');
-    setLoading(true);
-    try {
-      const result = await apiService.verifyRegistration(challenge.challenge_id, otp);
-      setSession(result.user, result.token);
-    } catch (error: any) {
-      Alert.alert('Verifikasi gagal', error.response?.data?.error || 'Kode salah atau kedaluwarsa.');
     } finally { setLoading(false); }
   };
 
@@ -62,29 +41,13 @@ export default function RegisterScreen({ navigation }: any) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Image source={smashLogo} style={styles.logo} resizeMode="contain" />
-          <Text style={styles.title}>{challenge ? 'Verifikasi akun' : 'Buat akun SMASH'}</Text>
-          {challenge ? (
+          <Text style={styles.title}>{registeredEmail ? 'Pendaftaran berhasil' : 'Buat akun SMASH'}</Text>
+          {registeredEmail ? (
             <View style={styles.card}>
-              <Text style={styles.copy}>Kode dikirim melalui email ke {challenge.destination_masked}.</Text>
-              <Input
-                label="Kode verifikasi"
-                value={otp}
-                onChangeText={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
-                keyboardType="number-pad"
-                textContentType="oneTimeCode"
-                autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
-                maxLength={6}
-              />
-              <Button title="Verifikasi dan Masuk" onPress={verify} loading={loading} disabled={loading} />
-              <View style={styles.actions}>
-                <TouchableOpacity onPress={() => { setChallenge(null); setOtp(''); }}><Text style={styles.link}>Ubah email</Text></TouchableOpacity>
-                <TouchableOpacity disabled={seconds > 0 || loading} onPress={async () => {
-                  try {
-                    const next = await apiService.resendRegistration(challenge.challenge_id);
-                    setChallenge(next); setSeconds(next.resend_after);
-                  } catch { Alert.alert('Belum dapat dikirim', 'Tunggu cooldown atau coba kembali nanti.'); }
-                }}><Text style={[styles.link, seconds > 0 && styles.disabled]}>{seconds ? `Kirim ulang (${seconds})` : 'Kirim ulang'}</Text></TouchableOpacity>
-              </View>
+              <Text style={styles.successIcon}>✓</Text>
+              <Text style={styles.copy}>Kami mengirim tombol verifikasi ke <Text style={styles.strong}>{registeredEmail}</Text>. Tautan berlaku selama 5 menit.</Text>
+              <Text style={styles.notice}>Anda tetap dapat login untuk melihat katalog. Penyewaan dan pembelian tiket baru tersedia setelah email terverifikasi.</Text>
+              <Button title="Masuk ke Akun" onPress={() => navigation.navigate('Login')} />
             </View>
           ) : (
             <View style={styles.card}>
@@ -136,8 +99,9 @@ const styles = StyleSheet.create({
   checked: { backgroundColor: COLORS.accent[500], borderColor: COLORS.accent[500] },
   consentText: { flex: 1, color: COLORS.cream[200], fontSize: 12, lineHeight: 18 },
   link: { color: COLORS.accent[400], textDecorationLine: 'underline' },
-  actions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-  disabled: { color: COLORS.cream[200] },
+  successIcon: { color: '#34d399', fontSize: 38, fontWeight: '800', textAlign: 'center', marginBottom: 12 },
+  strong: { color: COLORS.cream[50], fontWeight: '700' },
+  notice: { color: COLORS.cream[200], fontSize: 12, lineHeight: 18, padding: 12, marginBottom: 18, borderRadius: 10, backgroundColor: 'rgba(245,158,11,.10)' },
   or: { color: COLORS.cream[200], textAlign: 'center', marginVertical: 14 },
   social: { borderWidth: 1, borderColor: `${COLORS.cream[50]}30`, borderRadius: 12, padding: 13, marginBottom: 10 },
   socialText: { color: COLORS.cream[50], textAlign: 'center', fontWeight: '600' },

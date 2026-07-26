@@ -63,6 +63,7 @@ Thumbs.db
 *.pfx
 *.keystore
 *.jks
+apps/mobile/releases/*.apk
 *.crt
 *.cert
 *secret*

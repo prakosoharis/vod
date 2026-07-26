@@ -11,6 +11,7 @@ import {
 import { SafeIcon } from '../ui';
 import { COLORS, THEME } from '../../constants';
 import { paymentService, PaymentResponse } from '../../services';
+import { useAuthStore } from '../../store/authStore';
 
 interface PaymentOptionsModalProps {
   visible: boolean;
@@ -34,8 +35,17 @@ const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
   onRentalPaymentCreated,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const isVerified = Boolean(user?.email_verified || user?.email_verified_at || user?.account_status === 'ACTIVE');
 
   const handleRentContent = async () => {
+    if (!isVerified) {
+      Alert.alert(
+        'Verifikasi email diperlukan',
+        'Silakan verifikasi email melalui tombol yang kami kirim. Anda dapat mengirim ulang tautan dari menu Profil.'
+      );
+      return;
+    }
     try {
       setIsProcessing(true);
 

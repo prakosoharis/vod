@@ -98,8 +98,8 @@ class ApiService {
     return response.data;
   }
 
-  async resendRegistration(challengeId: string) {
-    return (await this.client.post('/auth/register/resend', { challenge_id: challengeId })).data;
+  async resendRegistration() {
+    return (await this.client.post('/auth/register/resend', {})).data;
   }
 
   async forgotPassword(email: string) {

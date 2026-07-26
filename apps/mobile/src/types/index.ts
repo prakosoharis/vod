@@ -4,6 +4,9 @@ export interface User {
   full_name: string | null;
   avatar_url: string | null;
   created_at: string;
+  email_verified?: boolean;
+  email_verified_at?: string | null;
+  account_status?: 'PENDING_VERIFICATION' | 'ACTIVE' | 'SUSPENDED' | string;
 }
 
 export interface Content {

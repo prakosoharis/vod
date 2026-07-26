@@ -135,8 +135,8 @@ const BrowseScreen: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.pageHeader}>
           <View>
-            <Text style={styles.eyebrow}>KEPULAUAN CERITA</Text>
             <Text style={styles.pageTitle}>Jelajah</Text>
+            <Text style={styles.pageSubtitle}>Temukan film dan serial pilihan untuk Anda.</Text>
           </View>
           <Text style={styles.resultCount}>{displayContent.length} tayangan</Text>
         </View>
@@ -235,8 +235,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
-  eyebrow: { color: COLORS.accent[500], fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
   pageTitle: { color: COLORS.cream[50], fontSize: 31, fontWeight: '800', marginTop: 3 },
+  pageSubtitle: { color: COLORS.cream[200], fontSize: 11, marginTop: 3 },
   resultCount: { color: COLORS.cream[200], fontSize: 11, marginBottom: 5 },
   searchContainer: {
     paddingHorizontal: 16,
