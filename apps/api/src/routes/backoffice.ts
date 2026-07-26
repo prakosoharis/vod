@@ -110,7 +110,7 @@ export async function backofficeRoutes(fastify: FastifyInstance): Promise<void> 
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const body = request.body as {
-      full_name?: string; password?: string; role?: BackofficeRole;
+      email?: string; full_name?: string; password?: string; role?: BackofficeRole;
       publisher_id?: string | null; is_active?: boolean;
     };
     if (body.role && !['ADMIN', 'PUBLISHER'].includes(body.role)) {
@@ -123,16 +123,27 @@ export async function backofficeRoutes(fastify: FastifyInstance): Promise<void> 
     if (role === 'PUBLISHER' && !body.publisher_id) {
       return reply.code(400).send({ error: 'Akun publisher wajib memilih publisher' });
     }
-    return prisma.backofficeUser.update({
-      where: { id },
-      data: {
-        ...(body.full_name ? { full_name: body.full_name.trim() } : {}),
-        ...(body.password ? { password_hash: await bcrypt.hash(body.password, 12) } : {}),
-        ...(role ? { role, publisher_id: role === 'PUBLISHER' ? body.publisher_id : null } : {}),
-        ...(body.is_active !== undefined ? { is_active: body.is_active } : {}),
-      },
-      select: staffView,
-    });
+    const target = await prisma.backofficeUser.findUnique({ where: { id }, select: { role: true } });
+    if (!target) return reply.code(404).send({ error: 'Akun backoffice tidak ditemukan' });
+    if (target.role === 'SUPERUSER' && (body.role || body.is_active === false)) {
+      return reply.code(400).send({ error: 'Role dan status superuser tidak dapat diubah' });
+    }
+    try {
+      return await prisma.backofficeUser.update({
+        where: { id },
+        data: {
+          ...(body.email ? { email: body.email.trim().toLowerCase() } : {}),
+          ...(body.full_name ? { full_name: body.full_name.trim() } : {}),
+          ...(body.password ? { password_hash: await bcrypt.hash(body.password, 12) } : {}),
+          ...(role ? { role, publisher_id: role === 'PUBLISHER' ? body.publisher_id : null } : {}),
+          ...(body.is_active !== undefined ? { is_active: body.is_active } : {}),
+        },
+        select: staffView,
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2002') return reply.code(409).send({ error: 'Email backoffice sudah digunakan' });
+      throw error;
+    }
   });
 
   fastify.get('/publishers', { preHandler: [authenticateBackoffice] }, async (request) => {

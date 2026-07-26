@@ -103,7 +103,7 @@ export const staffApi = {
   getAll: async (): Promise<User[]> => (await api.get('/api/backoffice/staff')).data,
   create: async (data: { email: string; full_name: string; password: string; role: Exclude<BackofficeRole, 'SUPERUSER'>; publisher_id?: string | null }): Promise<User> =>
     (await api.post('/api/backoffice/staff', data)).data,
-  update: async (id: string, data: { full_name?: string; password?: string; role?: Exclude<BackofficeRole, 'SUPERUSER'>; publisher_id?: string | null; is_active?: boolean }): Promise<User> =>
+  update: async (id: string, data: { email?: string; full_name?: string; password?: string; role?: Exclude<BackofficeRole, 'SUPERUSER'>; publisher_id?: string | null; is_active?: boolean }): Promise<User> =>
     (await api.patch(`/api/backoffice/staff/${id}`, data)).data,
 }
 
