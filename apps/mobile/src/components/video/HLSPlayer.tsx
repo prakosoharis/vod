@@ -101,8 +101,10 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
   const [showMoreModal, setShowMoreModal] = useState(false);
   const [showSpeedModal, setShowSpeedModal] = useState(false);
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
-  const [selectedQuality, setSelectedQuality] = useState('Auto');
-  const [selectedQualityHeight, setSelectedQualityHeight] = useState<number | null>(null);
+  // Start conservatively so emulators and slower devices do not attempt the
+  // first (often 4K) variant before ExoPlayer has a bandwidth estimate.
+  const [selectedQuality, setSelectedQuality] = useState('360p');
+  const [selectedQualityHeight, setSelectedQualityHeight] = useState<number | null>(360);
   const [qualityOptions, setQualityOptions] = useState<QualityOption[]>(DEFAULT_QUALITY_OPTIONS);
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>([]);
   const [externalTextTracks, setExternalTextTracks] = useState<ExternalTextTrack[]>([]);
@@ -660,6 +662,12 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({ source, onBack, title, contentId,
           progressUpdateInterval={250}
           repeat={false}
           reportBandwidth={true}
+          bufferConfig={{
+            minBufferMs: 5000,
+            maxBufferMs: 30000,
+            bufferForPlaybackMs: 1500,
+            bufferForPlaybackAfterRebufferMs: 3000,
+          }}
           selectedVideoTrack={
             selectedQualityHeight === null
               ? { type: 'auto' }
