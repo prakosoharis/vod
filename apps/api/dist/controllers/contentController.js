@@ -224,8 +224,8 @@ export async function searchContent(request, reply) {
 export async function createContent(request, reply) {
     try {
         const body = request.body;
-        if (!body?.title || !body?.description || !body?.genre || !body?.year || !body?.rating || !body?.duration || !body?.type || !body?.thumbnail_url || !body.rental_price_amount || !body.rental_duration_hours) {
-            reply.code(400).send({ error: 'Data film, tarif sewa, dan durasi sewa wajib diisi' });
+        if (!body?.title || !body?.description || !body?.genre || !body?.year || !body?.rating || !body?.duration || !body?.type || !body?.thumbnail_url || !body.rental_price_amount || !body.rental_duration_hours || !body.publisher_id) {
+            reply.code(400).send({ error: 'Data film, publisher, tarif sewa, dan durasi sewa wajib diisi' });
             return;
         }
         if (body.rental_price_amount < 1 || !Number.isInteger(body.rental_duration_hours) || body.rental_duration_hours < 1) {
@@ -260,6 +260,7 @@ export async function createContent(request, reply) {
                 show_in_latest: body.type === 'MOVIE' && (body.show_in_latest ?? false),
                 show_in_movie_picks: body.type === 'MOVIE' && (body.show_in_movie_picks ?? false),
                 show_in_popular_series: body.type === 'SERIES' && (body.show_in_popular_series ?? false),
+                publisher_id: body.publisher_id || null,
                 rental_price: {
                     create: {
                         price: new Prisma.Decimal(body.rental_price_amount),
@@ -273,7 +274,7 @@ export async function createContent(request, reply) {
                     },
                 } : {}),
             },
-            include: { rental_price: true, episodes: episodeInclude, _count: { select: { rentals: true } } },
+            include: { rental_price: true, episodes: episodeInclude, publisher: true, _count: { select: { rentals: true } } },
         });
         reply.code(201).send(content);
     }
@@ -335,6 +336,8 @@ export async function updateContent(request, reply) {
             updateData.hls_url = body.hls_url;
         if (body.trailer_url !== undefined)
             updateData.trailer_url = body.trailer_url;
+        if (body.publisher_id !== undefined)
+            updateData.publisher_id = body.publisher_id || null;
         if (body.cast !== undefined)
             updateData.cast = body.cast;
         if (body.type !== undefined)
@@ -386,7 +389,7 @@ export async function updateContent(request, reply) {
         const updated = await prisma.content.update({
             where: { id },
             data: updateData,
-            include: { rental_price: true, episodes: episodeInclude, _count: { select: { rentals: true } } },
+            include: { rental_price: true, episodes: episodeInclude, publisher: true, _count: { select: { rentals: true } } },
         });
         reply.send(updated);
     }

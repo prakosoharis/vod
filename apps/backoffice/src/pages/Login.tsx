@@ -18,9 +18,9 @@ export default function Login() {
       const response = await authApi.login(data)
       login(response.token, response.user)
       toast.success('Login berhasil!')
-      navigate('/dashboard')
+      navigate(response.user.role === 'PUBLISHER' ? '/movies' : '/dashboard')
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login gagal. Periksa kembali username dan password Anda.')
+      toast.error(error.response?.data?.error || 'Login gagal. Periksa kembali email dan password Anda.')
     } finally {
       setLoading(false)
     }

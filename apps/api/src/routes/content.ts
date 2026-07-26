@@ -5,23 +5,11 @@ import {
   getFeaturedContent,
   getTrendingContent,
   searchContent,
-  createContent,
-  updateContent,
-  getContentRentals,
 } from '../controllers/contentController.js';
-import { authenticateRequest } from '../middleware/auth.js';
 
 export async function contentRoutes(fastify: FastifyInstance): Promise<void> {
   // Get all content with pagination and filters (public)
   fastify.get('/', getAllContent);
-
-  // Admin Content Management
-  fastify.post('/', { preHandler: [authenticateRequest] }, createContent);
-  fastify.put('/:id', { preHandler: [authenticateRequest] }, updateContent);
-  fastify.get('/:id/rentals', { preHandler: [authenticateRequest] }, getContentRentals);
-
-  // Get single content by ID (public)
-  fastify.get('/:id', getContentById);
 
   // Get featured content (public)
   fastify.get('/featured', getFeaturedContent);
@@ -31,4 +19,7 @@ export async function contentRoutes(fastify: FastifyInstance): Promise<void> {
 
   // Search content (public)
   fastify.get('/search', searchContent);
+
+  // Get single content by ID (public)
+  fastify.get('/:id', getContentById);
 }

@@ -29,39 +29,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    console.log('AuthProvider - useEffect called')
-    const token = localStorage.getItem('token')
-    console.log('AuthProvider - token from localStorage:', token ? 'exists' : 'none')
+    const token = localStorage.getItem('backoffice_token')
 
     if (token) {
-      console.log('AuthProvider - Calling getProfile API')
       authApi.getProfile()
         .then((userData) => {
-          console.log('AuthProvider - User data received:', userData)
           setUser(userData)
         })
         .catch((error) => {
           console.error('AuthProvider - Error getting profile:', error)
-          localStorage.removeItem('token')
+          localStorage.removeItem('backoffice_token')
         })
         .finally(() => {
-          console.log('AuthProvider - Setting loading to false')
           setLoading(false)
         })
     } else {
-      console.log('AuthProvider - No token, setting loading to false')
       setLoading(false)
     }
   }, [])
 
   const login = (token: string, userData: User) => {
-    console.log('useAuth - login called with:', { token: token.substring(0, 20) + '...', userData })
-    localStorage.setItem('token', token)
+    localStorage.setItem('backoffice_token', token)
     setUser(userData)
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
+    localStorage.removeItem('backoffice_token')
     setUser(null)
   }
 

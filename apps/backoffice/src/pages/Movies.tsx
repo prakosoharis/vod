@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FilmIcon, MagnifyingGlassIcon, PencilIcon, PlusIcon, RectangleStackIcon, TrashIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 import { toast } from 'react-toastify'
-import { moviesApi } from '../services/api'
-import type { Episode, Movie, RentalReport } from '../types'
+import { moviesApi, publishersApi } from '../services/api'
+import type { Episode, Movie, RentalReport, Publisher } from '../types'
+import { useAuth } from '../hooks/useAuth'
 
 type FormState = {
   title: string; description: string; genre: string; year: number; rating: string; duration: string
@@ -10,13 +11,14 @@ type FormState = {
   cast: string; type: 'MOVIE' | 'SERIES'; featured: boolean; rental_price: number
   show_in_latest: boolean; show_in_movie_picks: boolean; show_in_popular_series: boolean
   rental_duration_hours: number; rental_active: boolean; episodes: Episode[]
+  publisher_id: string
 }
 
 const emptyForm = (type: 'MOVIE' | 'SERIES' = 'MOVIE'): FormState => ({
   title: '', description: '', genre: '', year: new Date().getFullYear(), rating: '4.0', duration: '',
   thumbnail_url: '', backdrop_url: '', video_url: '', hls_url: '', trailer_url: '', cast: '', type,
   featured: false, show_in_latest: false, show_in_movie_picks: false, show_in_popular_series: false,
-  rental_price: 15000, rental_duration_hours: 48, rental_active: true, episodes: [],
+  rental_price: 15000, rental_duration_hours: 48, rental_active: true, episodes: [], publisher_id: '',
 })
 
 const blankEpisode = (episodes: Episode[]): Episode => ({
@@ -25,6 +27,8 @@ const blankEpisode = (episodes: Episode[]): Episode => ({
 })
 
 export default function Movies() {
+  const { user } = useAuth()
+  const readOnly = user?.role === 'PUBLISHER'
   const [contents, setContents] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -34,6 +38,7 @@ export default function Movies() {
   const [form, setForm] = useState<FormState>(emptyForm())
   const [reportFor, setReportFor] = useState<Movie | null>(null)
   const [report, setReport] = useState<RentalReport | null>(null)
+  const [publishers, setPublishers] = useState<Publisher[]>([])
 
   const load = async () => {
     try {
@@ -41,7 +46,10 @@ export default function Movies() {
       setContents(response.data || [])
     } catch { toast.error('Gagal memuat konten') } finally { setLoading(false) }
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    if (!readOnly) publishersApi.getAll().then(setPublishers).catch(() => toast.error('Gagal memuat publisher'))
+  }, [readOnly])
 
   const visible = useMemo(() => contents.filter((item) =>
     (filter === 'ALL' || item.type === filter) &&
@@ -63,6 +71,7 @@ export default function Movies() {
       rental_price: Number(item.rental_price?.price || 15000),
       rental_duration_hours: item.rental_price?.duration_hours || 48,
       rental_active: item.rental_price?.is_active ?? true, episodes: item.episodes || [],
+      publisher_id: item.publisher_id || '',
     })
     setShowForm(true)
   }
@@ -87,7 +96,7 @@ export default function Movies() {
       video_url: episode.video_url || '',
       hls_url: episode.hls_url || '',
       is_published: episode.is_published,
-    })) : [],
+    })) : [], publisher_id: form.publisher_id || null,
   }
   const save = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -109,11 +118,11 @@ export default function Movies() {
 
   return <div>
     <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-      <div><h1 className="text-3xl font-bold text-gray-900">Film & Series</h1><p className="mt-2 text-sm text-gray-600">Kelola katalog, tarif rental, dan episode series.</p></div>
-      <div className="flex gap-2">
+      <div><h1 className="text-3xl font-bold text-gray-900">Film & Series</h1><p className="mt-2 text-sm text-gray-600">{readOnly ? `Katalog milik ${user?.publisher?.name || 'publisher Anda'} (read-only).` : 'Kelola katalog, publisher, tarif rental, dan episode series.'}</p></div>
+      {!readOnly && <div className="flex gap-2">
         <button onClick={() => openCreate('MOVIE')} className="btn-primary flex items-center"><PlusIcon className="mr-2 h-5 w-5"/>Tambah Film</button>
         <button onClick={() => openCreate('SERIES')} className="btn-secondary flex items-center"><RectangleStackIcon className="mr-2 h-5 w-5"/>Tambah Series</button>
-      </div>
+      </div>}
     </div>
     <div className="mb-6 flex flex-wrap gap-3">
       <div className="relative min-w-[280px] flex-1"><MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400"/><input className="input-field pl-10" placeholder="Cari film atau series..." value={search} onChange={(e) => setSearch(e.target.value)}/></div>
@@ -124,7 +133,7 @@ export default function Movies() {
         <div className="relative mb-4 aspect-[3/4] overflow-hidden rounded-lg bg-gray-100">
           {item.thumbnail_url ? <img src={item.thumbnail_url} className="h-full w-full object-cover" alt={item.title}/> : <FilmIcon className="m-auto h-full w-16 text-gray-400"/>}
           <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-xs font-bold ${item.type === 'SERIES' ? 'bg-purple-600 text-white' : 'bg-blue-500 text-white'}`}>{item.type === 'SERIES' ? `SERIES · ${item.episodes?.length || 0} EPISODE` : 'FILM'}</span>
-          <button onClick={() => openEdit(item)} className="absolute right-2 top-2 rounded-full bg-white p-2 shadow"><PencilIcon className="h-4 w-4"/></button>
+          {!readOnly && <button onClick={() => openEdit(item)} className="absolute right-2 top-2 rounded-full bg-white p-2 shadow"><PencilIcon className="h-4 w-4"/></button>}
         </div>
         <h3 className="font-semibold text-gray-900">{item.title}</h3><p className="mt-1 line-clamp-2 text-sm text-gray-500">{item.description}</p>
         <div className="mt-3 rounded-lg bg-emerald-50 p-3"><b className="text-emerald-800">Rp {Number(item.rental_price?.price || 0).toLocaleString('id-ID')} · {item.rental_price?.duration_hours || 0} jam</b>
@@ -137,6 +146,12 @@ export default function Movies() {
         <div className="mb-5 flex justify-between"><div><h2 className="text-xl font-bold">{editing ? 'Edit' : 'Tambah'} {form.type === 'SERIES' ? 'Series' : 'Film'}</h2><p className="text-sm text-gray-500">Tarif dan masa sewa berlaku untuk keseluruhan konten.</p></div><button onClick={() => setShowForm(false)} className="btn-secondary">Tutup</button></div>
         <form onSubmit={save} className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
+            <label className="md:col-span-2 text-sm font-medium">Publisher
+              <select required className="input-field mt-1" value={form.publisher_id} onChange={(e) => setForm({...form,publisher_id:e.target.value})}>
+                <option value="">Pilih publisher</option>
+                {publishers.map((publisher) => <option key={publisher.id} value={publisher.id}>{publisher.name}</option>)}
+              </select>
+            </label>
             <label className="md:col-span-2 text-sm font-medium">Judul<input required className="input-field mt-1" value={form.title} onChange={(e) => setForm({...form,title:e.target.value})}/></label>
             <label className="md:col-span-2 text-sm font-medium">Deskripsi<textarea required className="input-field mt-1" rows={3} value={form.description} onChange={(e) => setForm({...form,description:e.target.value})}/></label>
             <label className="text-sm font-medium">Genre<input required className="input-field mt-1" value={form.genre} onChange={(e) => setForm({...form,genre:e.target.value})} placeholder="Drama, Action"/></label>

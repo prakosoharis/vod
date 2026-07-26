@@ -7,9 +7,16 @@ import Users from './pages/Users'
 import Movies from './pages/Movies'
 import Uploads from './pages/Uploads'
 import Login from './pages/Login'
+import Publishers from './pages/Publishers'
+import StaffUsers from './pages/StaffUsers'
+
+function RoleRoute({ roles, children }: { roles: string[]; children: React.ReactNode }) {
+  const { user } = useAuth()
+  return user?.role && roles.includes(user.role) ? <>{children}</> : <Navigate to="/movies" replace />
+}
 
 function AppContent() {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, user } = useAuth()
 
   if (loading) {
     return (
@@ -27,17 +34,19 @@ function AppContent() {
       <Route
         path="/login"
         element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+          isAuthenticated ? <Navigate to={user?.role === 'PUBLISHER' ? '/movies' : '/dashboard'} replace /> : <Login />
         }
       />
       <Route path="/" element={
         isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" replace />
       }>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="users" element={<Users />} />
+        <Route path="dashboard" element={<RoleRoute roles={['SUPERUSER','ADMIN']}><Dashboard /></RoleRoute>} />
+        <Route path="users" element={<RoleRoute roles={['SUPERUSER','ADMIN']}><Users /></RoleRoute>} />
         <Route path="movies" element={<Movies />} />
-        <Route path="uploads" element={<Uploads />} />
-        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="uploads" element={<RoleRoute roles={['SUPERUSER','ADMIN']}><Uploads /></RoleRoute>} />
+        <Route path="publishers" element={<RoleRoute roles={['SUPERUSER','ADMIN']}><Publishers /></RoleRoute>} />
+        <Route path="staff" element={<RoleRoute roles={['SUPERUSER']}><StaffUsers /></RoleRoute>} />
+        <Route index element={<Navigate to={user?.role === 'PUBLISHER' ? '/movies' : '/dashboard'} replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

@@ -13,6 +13,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "seed": "tsx prisma/seed.ts",
+    "backoffice:bootstrap": "tsx src/scripts/bootstrapBackoffice.ts",
     "update-movies": "tsx scripts/updateMovieImages.ts",
     "update-posters": "tsx scripts/updatePosters.ts"
   },

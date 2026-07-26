@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { UserGroupIcon, FilmIcon, PlayIcon } from '@heroicons/react/24/outline'
 import { usersApi, moviesApi } from '../services/api'
 import { User, Movie } from '../types'
+import { useAuth } from '../hooks/useAuth'
 
 interface StatCard {
   title: string
@@ -11,19 +12,18 @@ interface StatCard {
 }
 
 export default function Dashboard() {
+  const { user } = useAuth()
+  const isPublisher = user?.role === 'PUBLISHER'
   const [users, setUsers] = useState<User[]>([])
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
 
-  console.log('Dashboard component - Rendering with loading:', loading)
-
   useEffect(() => {
-    console.log('Dashboard component - useEffect called')
     const fetchData = async () => {
       try {
         const [usersData, moviesData] = await Promise.all([
-          usersApi.getAll(),
-          moviesApi.getAll({ type: 'MOVIE' })
+          isPublisher ? Promise.resolve([]) : usersApi.getAll(),
+          moviesApi.getAll()
         ])
         setUsers(usersData)
         setMovies(moviesData.data || [])
@@ -35,15 +35,15 @@ export default function Dashboard() {
     }
 
     fetchData()
-  }, [])
+  }, [isPublisher])
 
   const stats: StatCard[] = [
-    {
+    ...(!isPublisher ? [{
       title: 'Total User SMASH',
       value: users.length,
       icon: UserGroupIcon,
       color: 'bg-blue-500',
-    },
+    }] : []),
     {
       title: 'Total Konten Film',
       value: movies.length,
@@ -100,8 +100,7 @@ export default function Dashboard() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Recent Users */}
-        <div className="card">
+        {!isPublisher && <div className="card">
           <h3 className="text-lg font-medium text-gray-900 mb-4">User Terbaru</h3>
           <div className="overflow-hidden">
             <ul className="divide-y divide-gray-200">
@@ -128,7 +127,7 @@ export default function Dashboard() {
               )}
             </ul>
           </div>
-        </div>
+        </div>}
 
         {/* Recent Movies */}
         <div className="card">

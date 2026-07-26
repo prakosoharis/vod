@@ -6,6 +6,23 @@ export interface User {
   created_at: string
   updated_at: string
   _count?: { rentals: number }
+  role?: BackofficeRole
+  publisher_id?: string | null
+  publisher?: Pick<Publisher, 'id' | 'name'> | null
+  is_active?: boolean
+}
+
+export type BackofficeRole = 'SUPERUSER' | 'ADMIN' | 'PUBLISHER'
+
+export interface Publisher {
+  id: string
+  name: string
+  address: string
+  pic_name: string
+  pic_phone: string
+  created_at: string
+  updated_at: string
+  _count?: { contents: number; staff_users: number }
 }
 
 export interface CastMember {
@@ -57,6 +74,8 @@ export interface Movie {
   rental_price_amount?: number
   episodes?: Episode[]
   _count?: { rentals: number }
+  publisher_id?: string | null
+  publisher?: Publisher | null
 }
 
 export interface RentalRecord {

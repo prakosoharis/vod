@@ -13,6 +13,7 @@ import { eventRoutes } from './routes/event.js';
 import paymentRoutes from './routes/payment.js';
 import { broadcastRoutes } from './routes/broadcastRoutes.js';
 import { legalRoutes } from './routes/legal.js';
+import { backofficeRoutes } from './routes/backoffice.js';
 import { getChatWebSocket } from './websocket/chatWebSocket.js';
 import prisma from './config/database.js';
 // Load environment variables
@@ -104,6 +105,7 @@ export async function build(options = {}) {
     await fastify.register(uploadRoutes, { prefix: '/api' });
     await fastify.register(broadcastRoutes, { prefix: '/api' });
     await fastify.register(legalRoutes, { prefix: '/api' });
+    await fastify.register(backofficeRoutes, { prefix: '/api/backoffice' });
     // Start WebSocket server for chat
     if (options.startWebSocket !== false) {
         const wsPath = process.env.WEBSOCKET_PATH || '/ws';

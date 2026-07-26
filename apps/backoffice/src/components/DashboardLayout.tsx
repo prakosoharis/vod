@@ -8,20 +8,25 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
+  BuildingOfficeIcon,
+  KeyIcon,
 } from '@heroicons/react/24/outline'
 import { useAuth } from '../hooks/useAuth'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'User SMASH', href: '/users', icon: UserGroupIcon },
-  { name: 'Konten Film', href: '/movies', icon: FilmIcon },
-  { name: 'Upload Assets', href: '/uploads', icon: CloudArrowUpIcon },
+  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['SUPERUSER','ADMIN'] },
+  { name: 'User SMASH', href: '/users', icon: UserGroupIcon, roles: ['SUPERUSER','ADMIN'] },
+  { name: 'Konten Film', href: '/movies', icon: FilmIcon, roles: ['SUPERUSER','ADMIN','PUBLISHER'] },
+  { name: 'Publisher', href: '/publishers', icon: BuildingOfficeIcon, roles: ['SUPERUSER','ADMIN'] },
+  { name: 'Akun Backoffice', href: '/staff', icon: KeyIcon, roles: ['SUPERUSER'] },
+  { name: 'Upload Assets', href: '/uploads', icon: CloudArrowUpIcon, roles: ['SUPERUSER','ADMIN'] },
 ]
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout } = useAuth()
   const location = useLocation()
+  const visibleNavigation = navigation.filter(item => user?.role && item.roles.includes(user.role))
 
   const handleLogout = () => {
     logout()
@@ -61,7 +66,7 @@ export default function DashboardLayout() {
               <ul role="list" className="flex flex-1 flex-col gap-y-7">
                 <li>
                   <ul role="list" className="-mx-2 space-y-1">
-                    {navigation.map((item) => {
+                    {visibleNavigation.map((item) => {
                       const isActive = location.pathname === item.href
                       return (
                         <li key={item.name}>
@@ -103,7 +108,7 @@ export default function DashboardLayout() {
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
-                  {navigation.map((item) => {
+                  {visibleNavigation.map((item) => {
                     const isActive = location.pathname === item.href
                     return (
                       <li key={item.name}>
@@ -160,6 +165,7 @@ export default function DashboardLayout() {
                     <span className="text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">
                       {user?.full_name || user?.email}
                     </span>
+                    <span className="ml-2 rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">{user?.role}</span>
                   </span>
                   <button
                     onClick={handleLogout}

@@ -15,6 +15,44 @@ enum ContentType {
   SERIES
 }
 
+enum BackofficeRole {
+  SUPERUSER
+  ADMIN
+  PUBLISHER
+}
+
+model Publisher {
+  id          String           @id @default(uuid())
+  name        String
+  address     String           @db.Text
+  pic_name    String
+  pic_phone   String
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+  contents    Content[]
+  staff_users BackofficeUser[]
+
+  @@index([name])
+  @@map("publishers")
+}
+
+model BackofficeUser {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  full_name     String
+  password_hash String
+  role          BackofficeRole
+  publisher_id  String?
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  publisher     Publisher?     @relation(fields: [publisher_id], references: [id], onDelete: SetNull)
+
+  @@index([role])
+  @@index([publisher_id])
+  @@map("backoffice_users")
+}
+
 enum EventType {
   GALA_PREMIERE
   STANDUP_COMEDY
@@ -280,6 +318,7 @@ model Content {
   show_in_movie_picks    Boolean     @default(false)
   show_in_popular_series Boolean     @default(false)
   created_at             DateTime    @default(now())
+  publisher_id           String?
 
   // HLS Transcoding Fields
   hls_video_id       String?   @db.Uuid
@@ -293,6 +332,7 @@ model Content {
   rental_price   RentalPrice?
   rentals        UserRental[]
   episodes       Episode[]
+  publisher      Publisher?      @relation(fields: [publisher_id], references: [id], onDelete: SetNull)
 
   @@index([featured])
   @@index([show_in_latest])
@@ -301,6 +341,7 @@ model Content {
   @@index([type])
   @@index([hls_video_id])
   @@index([transcoding_status])
+  @@index([publisher_id])
   @@map("contents")
 }
 

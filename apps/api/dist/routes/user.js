@@ -1,15 +1,9 @@
-import { getProfile, updateProfile, getWatchlist, addToWatchlist, removeFromWatchlist, getWatchProgress, updateWatchProgress, getContinueWatching, getAllUsers, createUser, updateUser, getUserById, getUserRentalsAdmin, } from '../controllers/userController.js';
+import { getProfile, updateProfile, getWatchlist, addToWatchlist, removeFromWatchlist, getWatchProgress, updateWatchProgress, getContinueWatching, } from '../controllers/userController.js';
 import { authenticateRequest } from '../middleware/auth.js';
 export async function userRoutes(fastify) {
     // Profile
     fastify.get('/profile', { preHandler: [authenticateRequest] }, getProfile);
     fastify.put('/profile', { preHandler: [authenticateRequest] }, updateProfile);
-    // Admin User Management
-    fastify.get('/all', { preHandler: [authenticateRequest] }, getAllUsers);
-    fastify.post('/', { preHandler: [authenticateRequest] }, createUser);
-    fastify.get('/:id', getUserById);
-    fastify.get('/:id/rentals', { preHandler: [authenticateRequest] }, getUserRentalsAdmin);
-    fastify.put('/:id', { preHandler: [authenticateRequest] }, updateUser);
     // Watchlist
     fastify.get('/watchlist', { preHandler: [authenticateRequest] }, getWatchlist);
     fastify.post('/watchlist', { preHandler: [authenticateRequest] }, addToWatchlist);
