@@ -35,7 +35,9 @@ services:
       - "${API_PORT:-3001}:3001"
       - "${WS_PORT:-3002}:3002"
     environment:
-      - NODE_ENV=production
+      # development: compose lokal memakai AUTH_PROVIDER_MODE=mock,
+      # yang ditolak server saat NODE_ENV=production
+      - NODE_ENV=${API_NODE_ENV:-development}
       - PORT=3001
       - WEBSOCKET_PORT=3002
       - WEBSOCKET_PATH=/socket.io/
@@ -138,7 +140,9 @@ services:
   # MinIO - S3 Compatible Storage
   # ================================================================
   minio:
-    image: minio/minio:latest
+    # minio/minio sudah ditarik dari registry publik; pakai arsip Bitnami
+    # (entrypoint bawaan image ini sudah menjalankan server + console :9001)
+    image: bitnamilegacy/minio:2025.7.23-debian-12-r5
     container_name: vod-minio
     restart: unless-stopped
     ports:
@@ -147,9 +151,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
-    command: server /data --console-address ":9001"
     volumes:
-      - minio_data:/data
+      - minio_data:/bitnami/minio/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s

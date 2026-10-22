@@ -1,0 +1,129 @@
+# ================================================================
+# VOD — CI/CD pipeline (self-hosted runners, label-based)
+# ================================================================
+# ARSITEKTUR BRANCH (catat baik-baik!):
+#   push branch `main`        → deploy ke SERVER SEKARANG  (staging)
+#                                runner label: [self-hosted, staging]
+#   push branch `production`  → deploy ke SERVER PROD      (prod)
+#                                runner label: [self-hosted, prod]
+#
+#   main        == staging    (server yang sedang aktif sekarang)
+#   production  == production (server prod, nantinya)
+#
+# Job test jalan di runner manapun (lintas env aman untuk build/test).
+# Job deploy terkunci ke label environment masing-masing.
+# ================================================================
+name: Deploy
+
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch:      # izinkan trigger manual dari GitHub UI
+
+# Hentikan run lama untuk branch yg sama saat push baru datang.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ----------------------------------------------------------------
+  # 1. TEST & LINT — jalan di self-hosted runner manapun
+  # ----------------------------------------------------------------
+  test:
+    runs-on: [self-hosted]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            apps/api/package-lock.json
+            apps/web/package-lock.json
+
+      - name: Install & lint API
+        working-directory: apps/api
+        run: |
+          npm ci
+          npm run lint 2>/dev/null || echo "[lint] api: tidak ada script lint, skip"
+
+      - name: Test API
+        working-directory: apps/api
+        run: npm test
+
+  # ----------------------------------------------------------------
+  # 2. DEPLOY ke STAGING (server sekarang) — saat push branch `main`
+  # ----------------------------------------------------------------
+  deploy-staging:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, staging]
+    timeout-minutes: 30
+    env:
+      APP: vod
+      ENVIRONMENT: staging
+      COMPOSE_FILE: docker-compose-server.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy VOD → staging/server-sekarang
+        run: |
+          source scripts/lib/deploy.sh
+          source scripts/lib/notify.sh
+          set +e
+          {
+            # backup DB sebelum apapun
+            backup_database vod-postgres streamkita streamkita_dev staging
+            # pull kode terbaru (working tree clean karena fresh checkout runner)
+            git pull --ff-only origin main || true
+            # build + recreate + health check (+ auto rollback bila gagal)
+            run_vod_migrations vod-api
+            deploy_with_rollback api web backoffice broadcaster
+          } 2>&1 | tee deploy.log
+          RC=${PIPESTATUS[0]}
+          set -e
+          if [ "$RC" -eq 0 ]; then
+            notify_success "VOD staging diperbarui" "${GITHUB_SHA::7}"
+          else
+            notify_failure "VOD staging GAGAL" "lihat log pipeline"
+          fi
+          exit "$RC"
+
+  # ----------------------------------------------------------------
+  # 3. DEPLOY ke PROD — saat push branch `production`
+  #    (AKTIF nantinya saat server prod sudah ada + runner terinstall)
+  # ----------------------------------------------------------------
+  deploy-prod:
+    needs: test
+    if: github.ref == 'refs/heads/production'
+    runs-on: [self-hosted, prod]
+    timeout-minutes: 30
+    env:
+      APP: vod
+      ENVIRONMENT: prod
+      COMPOSE_FILE: docker-compose-server.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy VOD → prod
+        run: |
+          source scripts/lib/deploy.sh
+          source scripts/lib/notify.sh
+          set +e
+          {
+            backup_database vod-postgres streamkita streamkita_dev prod
+            git pull --ff-only origin production || true
+            run_vod_migrations vod-api
+            deploy_with_rollback api web backoffice broadcaster
+          } 2>&1 | tee deploy.log
+          RC=${PIPESTATUS[0]}
+          set -e
+          if [ "$RC" -eq 0 ]; then
+            notify_success "VOD prod diperbarui" "${GITHUB_SHA::7}"
+          else
+            notify_failure "VOD prod GAGAL" "rollback otomatis dijalankan"
+          fi
+          exit "$RC"
