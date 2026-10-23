@@ -408,14 +408,35 @@ async function processVideoInBackground(videoId, localRawPath, originalFilename,
  * Transcode with progress updates - Creates HLS adaptive bitrate with multiple resolutions
  */
 async function transcodeToHLSWithProgress(inputPath, outputDir, videoId) {
-  const variants = [
+  let variants = [
     { name: '1080p', width: 1920, height: 1080, videoBitrate: '5000k', maxrate: '5350k', bufsize: '7500k' },
     { name: '720p', width: 1280, height: 720, videoBitrate: '2800k', maxrate: '2996k', bufsize: '4200k' },
     { name: '480p', width: 854, height: 480, videoBitrate: '1400k', maxrate: '1498k', bufsize: '2100k' },
     { name: '360p', width: 640, height: 360, videoBitrate: '800k', maxrate: '856k', bufsize: '1200k' }
   ];
 
-  logger.info(`Starting HLS transcoding for video: ${videoId} with adaptive bitrate (1080p, 720p, 480p, 360p)`);
+  // Deteksi orientasi sumber: video portrait (mis. short drama 9:16) memakai
+  // ladder portrait, bukan dipaksa ke canvas landscape.
+  const isPortrait = await new Promise((resolve) => {
+    ffmpeg.ffprobe(inputPath, (err, data) => {
+      if (err || !data) return resolve(false);
+      const stream = (data.streams || []).find((s) => s.codec_type === 'video');
+      if (!stream || !stream.width || !stream.height) return resolve(false);
+      const rotation = Math.abs(parseInt(
+        (stream.tags && stream.tags.rotate) ||
+        ((stream.side_data_list || []).find((d) => d.rotation != null) || {}).rotation ||
+        0, 10)) % 180;
+      const rotated = rotation === 90;
+      const width = rotated ? stream.height : stream.width;
+      const height = rotated ? stream.width : stream.height;
+      resolve(height > width);
+    });
+  });
+  if (isPortrait) {
+    variants = variants.map((v) => ({ ...v, width: v.height, height: v.width }));
+  }
+
+  logger.info(`Starting HLS transcoding for video: ${videoId} with adaptive bitrate (1080p, 720p, 480p, 360p)${isPortrait ? ' [portrait]' : ''}`);
 
   // Transcode each variant sequentially
   let overallProgress = 0;
@@ -434,8 +455,10 @@ async function transcodeToHLSWithProgress(inputPath, outputDir, videoId) {
           '-c:v libx264',
           '-preset medium',
           '-profile:v main',
+          '-pix_fmt yuv420p',
           '-crf 23',
-          `-s ${variant.width}x${variant.height}`,
+          // scale menjaga aspect ratio lalu pad ke canvas target (tanpa distorsi)
+          '-vf', `scale=${variant.width}:${variant.height}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=${variant.width}:${variant.height}:(ow-iw)/2:(oh-ih)/2`,
           `-b:v ${variant.videoBitrate}`,
           `-maxrate ${variant.maxrate}`,
           `-bufsize ${variant.bufsize}`,
@@ -470,17 +493,10 @@ async function transcodeToHLSWithProgress(inputPath, outputDir, videoId) {
 
   // Generate master playlist
   const masterPlaylistPath = path.join(outputDir, 'playlist.m3u8');
-  const masterPlaylistContent = `#EXTM3U
-#EXT-X-VERSION:3
-#EXT-X-STREAM-INF:BANDWIDTH=5350000,RESOLUTION=1920x1080,NAME="1080p"
-1080p/playlist.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=2996000,RESOLUTION=1280x720,NAME="720p"
-720p/playlist.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=1498000,RESOLUTION=854x480,NAME="480p"
-480p/playlist.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=856000,RESOLUTION=640x360,NAME="360p"
-360p/playlist.m3u8
-`;
+  const bandwidthByName = { '1080p': 5350000, '720p': 2996000, '480p': 1498000, '360p': 856000 };
+  const masterPlaylistContent = '#EXTM3U\n#EXT-X-VERSION:3\n' + variants.map((v) =>
+    `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidthByName[v.name]},RESOLUTION=${v.width}x${v.height},NAME="${v.name}"\n${v.name}/playlist.m3u8`
+  ).join('\n') + '\n';
 
   await fs.writeFile(masterPlaylistPath, masterPlaylistContent, 'utf8');
   logger.info(`[${videoId}] Master playlist created with 4 variants`);
