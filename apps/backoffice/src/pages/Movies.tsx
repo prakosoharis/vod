@@ -160,8 +160,8 @@ export default function Movies() {
             <label className="text-sm font-medium">Rating<input required type="number" min="1" max="5" step=".1" className="input-field mt-1" value={form.rating} onChange={(e) => setForm({...form,rating:e.target.value})}/></label>
             <label className="text-sm font-medium">Durasi / jumlah episode<input required className="input-field mt-1" value={form.duration} onChange={(e) => setForm({...form,duration:e.target.value})} placeholder={form.type === 'SERIES' ? '8 episode' : '120 min'}/></label>
             <label className="text-sm font-medium">Trailer URL<input type="url" className="input-field mt-1" value={form.trailer_url} onChange={(e) => setForm({...form,trailer_url:e.target.value})}/></label>
-            <label className="text-sm font-medium">Thumbnail URL<input required type="url" className="input-field mt-1" value={form.thumbnail_url} onChange={(e) => setForm({...form,thumbnail_url:e.target.value})}/></label>
-            <label className="text-sm font-medium">Backdrop URL<input type="url" className="input-field mt-1" value={form.backdrop_url} onChange={(e) => setForm({...form,backdrop_url:e.target.value})}/></label>
+            <label className="text-sm font-medium">Thumbnail URL<input required type="text" className="input-field mt-1" value={form.thumbnail_url} onChange={(e) => setForm({...form,thumbnail_url:e.target.value})}/></label>
+            <label className="text-sm font-medium">Backdrop URL<input type="text" className="input-field mt-1" value={form.backdrop_url} onChange={(e) => setForm({...form,backdrop_url:e.target.value})}/></label>
           </div>
           <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
             <h3 className="mb-3 font-bold text-emerald-900">Pengaturan Rental</h3>
@@ -187,7 +187,7 @@ export default function Movies() {
                 <label className="text-xs md:col-span-3">Deskripsi<input className="input-field mt-1" value={episode.description || ''} onChange={(e)=>updateEpisode(index,{description:e.target.value})}/></label>
                 <label className="text-xs md:col-span-2">Video URL<input type="url" className="input-field mt-1" value={episode.video_url || ''} onChange={(e)=>updateEpisode(index,{video_url:e.target.value})}/></label>
                 <label className="text-xs md:col-span-2">HLS URL<input type="url" className="input-field mt-1" value={episode.hls_url || ''} onChange={(e)=>updateEpisode(index,{hls_url:e.target.value})}/></label>
-                <label className="text-xs md:col-span-4">Thumbnail episode<input type="url" className="input-field mt-1" value={episode.thumbnail_url || ''} onChange={(e)=>updateEpisode(index,{thumbnail_url:e.target.value})}/></label>
+                <label className="text-xs md:col-span-4">Thumbnail episode<input type="text" className="input-field mt-1" value={episode.thumbnail_url || ''} onChange={(e)=>updateEpisode(index,{thumbnail_url:e.target.value})}/></label>
               </div></div>)}
               {!form.episodes.length && <p className="py-6 text-center text-sm text-gray-500">Belum ada episode. Klik “Tambah Episode”.</p>}</div>
           </section>}
