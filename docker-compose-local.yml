@@ -142,7 +142,7 @@ services:
   minio:
     # minio/minio sudah ditarik dari registry publik; pakai arsip Bitnami
     # (entrypoint bawaan image ini sudah menjalankan server + console :9001)
-    image: bitnamilegacy/minio:2025.7.23-debian-12-r5
+    image: bitnamilegacy/minio:2025.4.22-debian-12-r2
     container_name: vod-minio
     restart: unless-stopped
     ports:
